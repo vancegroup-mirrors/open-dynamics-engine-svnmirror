@@ -25,5 +25,7 @@
 # or
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
 
-CVSROOT $CVSROOT/CVSROOT/syncmail %{sVv} ode-cvs@q12.org
-DEFAULT $CVSROOT/CVSROOT/syncmail %{sVv} ode-cvs@q12.org
+CVSROOT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} russ@q12.org
+DEFAULT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} ode-cvs@q12.org
+
+# local script: DEFAULT $CVSROOT/CVSROOT/syncmail %{sVv} ode-cvs@q12.org
