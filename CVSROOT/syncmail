@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+# Modified by RLS to add "Cc: ode-cvs@q12.org" to the outgoing message.
+
 # Copyright (c) 2002, 2003, 2004 Barry Warsaw, Fred Drake, and contributors
 # All rights reserved.
 # See the accompanying LICENSE file for details.
@@ -241,6 +243,7 @@ To: %(people)s''' % vars
         if replyto:
             print >> s, 'Reply-To: %s' % replyto
         print >>s, '''\
+Cc: ode-cvs@q12.org
 Subject: %(subject)s
 Date: %(date)s
 X-Mailer: Python syncmail %(version)s <http://sf.net/projects/cvs-syncmail>
