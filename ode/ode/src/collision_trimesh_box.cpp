@@ -1203,6 +1203,11 @@ int dCollideBTL(dxGeom* g1, dxGeom* BoxGeom, int Flags, dContactGeom* Contacts, 
 		Collider.Collide(dxTriMesh::defaultBoxCache, Box, TriMesh->Data->BVTree, null, 
 						 &MakeMatrix(vPosMesh, mRotMesh, amatrix));	
 	}
+
+  if (!Collider.GetContactStatus()) {
+     /* no collision occurred */
+     return 0;
+  }
 	    
   // Retrieve data
   int TriCount = Collider.GetNbTouchedPrimitives();
