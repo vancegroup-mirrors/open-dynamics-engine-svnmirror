@@ -9,6 +9,11 @@ the rules for this file:
 
 ------------------------------------------------------------------------------
 
+07/01/05 adam
+
+	* dRandInt changed for a non-double all-int version
+	* misc minor fixes and improvements
+
 12/07/04 adam
 
         * Important AMotors bugfix
