@@ -129,6 +129,14 @@ void dsDrawTriangle (const float pos[3], const float R[12],
 		     const float *v0, const float *v1, const float *v2, int solid);
 void dsDrawCylinder (const float pos[3], const float R[12],
 		     float length, float radius);
+void dsDrawCone(const float pos[3], const float R[12],
+		     float length, float radius);
+
+void dsDrawCylinder2 (const float pos[3], const float R[12],
+		     float length, float radius,float radius2);
+
+
+
 void dsDrawCappedCylinder (const float pos[3], const float R[12],
 			   float length, float radius);
 void dsDrawLine (const float pos1[3], const float pos2[3]);
