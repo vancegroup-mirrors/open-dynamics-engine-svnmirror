@@ -489,8 +489,10 @@ static void drawSphere()
     glNewList (listnum,GL_COMPILE);
     glBegin (GL_TRIANGLES);
     for (int i=0; i<20; i++) {
-      drawPatch (&idata[index[i][2]][0],&idata[index[i][1]][0],
-		 &idata[index[i][0]][0],sphere_quality);
+      drawPatch (&idata[index[i][2]][0],
+		  &idata[index[i][1]][0],
+		 &idata[index[i][0]][0],
+		 sphere_quality);
     }
     glEnd();
     glEndList();
@@ -669,10 +671,9 @@ static void drawCappedCylinder (float l, float r)
   glPopMatrix();
 }
 
-
 // draw a cylinder of length l and radius r, aligned along the z axis
 
-static void drawCylinder (float l, float r, float zoffset)
+static void drawCylinder2 (float l, float radius1, float radius2,float zoffset)
 {
   int i;
   float tmp,ny,nz,a,ca,sa;
@@ -688,9 +689,9 @@ static void drawCylinder (float l, float r, float zoffset)
   glBegin (GL_TRIANGLE_STRIP);
   for (i=0; i<=n; i++) {
     glNormal3d (ny,nz,0);
-    glVertex3d (ny*r,nz*r,l+zoffset);
+    glVertex3d (ny*radius1,nz*radius1,l+zoffset);
     glNormal3d (ny,nz,0);
-    glVertex3d (ny*r,nz*r,-l+zoffset);
+    glVertex3d (ny*radius2,nz*radius2,-l+zoffset);
     // rotate ny,nz
     tmp = ca*ny - sa*nz;
     nz = sa*ny + ca*nz;
@@ -708,7 +709,7 @@ static void drawCylinder (float l, float r, float zoffset)
     if (i==1 || i==n/2+1)
       setColor (color[0]*0.75f,color[1]*0.75f,color[2]*0.75f,color[3]);
     glNormal3d (0,0,1);
-    glVertex3d (ny*r,nz*r,l+zoffset);
+    glVertex3d (ny*radius1,nz*radius1,l+zoffset);
     if (i==1 || i==n/2+1)
       setColor (color[0],color[1],color[2],color[3]);
 
@@ -728,7 +729,7 @@ static void drawCylinder (float l, float r, float zoffset)
     if (i==1 || i==n/2+1)
       setColor (color[0]*0.75f,color[1]*0.75f,color[2]*0.75f,color[3]);
     glNormal3d (0,0,-1);
-    glVertex3d (ny*r,nz*r,-l+zoffset);
+    glVertex3d (ny*radius2,nz*radius2,-l+zoffset);
     if (i==1 || i==n/2+1)
       setColor (color[0],color[1],color[2],color[3]);
 
@@ -738,6 +739,21 @@ static void drawCylinder (float l, float r, float zoffset)
     ny = tmp;
   }
   glEnd();
+}
+
+static void drawCone(float l, float r, float zoffset)
+{
+	drawCylinder2(l,0,r,zoffset);
+}
+
+
+
+// draw a cylinder of length l and radius r, aligned along the z axis
+
+static void drawCylinder (float l, float r, float zoffset)
+{
+	drawCylinder2(l,r,r,zoffset);
+
 }
 
 //***************************************************************************
@@ -1332,6 +1348,48 @@ extern "C" void dsDrawTriangle (const float pos[3], const float R[12],
   setTransform (pos,R);
   drawTriangle (v0, v1, v2, solid);
   glPopMatrix();
+}
+
+void dsDrawCone(const float pos[3], const float R[12],
+		     float length, float radius)
+{
+
+	 if (current_state != 2) dsError ("drawing function called outside simulation loop");
+  setupDrawingMode();
+  glShadeModel (GL_SMOOTH);
+  setTransform (pos,R);
+  drawCone(length,radius,0);
+  glPopMatrix();
+
+  if (use_shadows) {
+    setShadowDrawingMode();
+    setShadowTransform();
+    setTransform (pos,R);
+    drawCone (length,radius,0);
+    glPopMatrix();
+    glPopMatrix();
+    glDepthRange (0,1);
+  }
+}
+void dsDrawCylinder2 (const float pos[3], const float R[12],
+		     float length, float radius1,float radius2)
+{
+	 if (current_state != 2) dsError ("drawing function called outside simulation loop");
+  setupDrawingMode();
+  glShadeModel (GL_SMOOTH);
+  setTransform (pos,R);
+  drawCylinder2 (length,radius1,radius2,0);
+  glPopMatrix();
+
+  if (use_shadows) {
+    setShadowDrawingMode();
+    setShadowTransform();
+    setTransform (pos,R);
+    drawCylinder2 (length,radius1,radius2,0);
+    glPopMatrix();
+    glPopMatrix();
+    glDepthRange (0,1);
+  }
 }
 
 
