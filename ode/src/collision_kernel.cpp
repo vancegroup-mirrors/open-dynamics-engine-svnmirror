@@ -146,6 +146,17 @@ static void initColliders()
   setCollider (dTriMeshClass,dTriMeshClass,&dCollideTTL);
   setCollider (dTriMeshClass,dCCylinderClass,&dCollideCCTL);
 #endif
+
+#ifdef BULLET_CONVEX_SUPPORT
+  ///see collision_convex.cpp
+  setCollider (dConvexClass,dConvexClass,&dCollideConvexConvex);
+  setCollider (dConvexClass,dPlaneClass,&dCollideConvexConvex);
+  setCollider (dConvexClass,dBoxClass,&dCollideConvexConvex);
+  setCollider (dConvexClass,dSphereClass,&dCollideConvexConvex);
+  setCollider (dConvexClass,dCCylinderClass,&dCollideConvexConvex);
+  setCollider( dTriMeshClass,dConvexClass, dCollideConvexConvex);
+#endif //BULLET_CONVEX_SUPPORT
+
   setAllColliders (dGeomTransformClass,&dCollideTransform);
 }
 

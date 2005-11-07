@@ -37,6 +37,7 @@ the standard ODE geometry primitives.
 // the same interface as dCollide(). the first and second geom arguments must
 // have the specified types.
 
+
 int dCollideSphereSphere (dxGeom *o1, dxGeom *o2, int flags,
 			  dContactGeom *contact, int skip);
 int dCollideSphereBox (dxGeom *o1, dxGeom *o2, int flags,
@@ -63,6 +64,9 @@ int dCollideRayCCylinder (dxGeom *o1, dxGeom *o2,
 			  int flags, dContactGeom *contact, int skip);
 int dCollideRayPlane (dxGeom *o1, dxGeom *o2, int flags,
 		      dContactGeom *contact, int skip);
+///dCollideConvexConvex: see collision_convex.cpp for details
+int dCollideConvexConvex(dxGeom *o1, dxGeom *o2, int flags,
+			  dContactGeom *contact, int skip);
 
 
 #endif

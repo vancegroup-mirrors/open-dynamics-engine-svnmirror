@@ -84,6 +84,7 @@ enum {
   dRayClass,
   dGeomTransformClass,
   dTriMeshClass,
+  dConvexClass,
 
   dFirstSpaceClass,
   dSimpleSpaceClass = dFirstSpaceClass,
