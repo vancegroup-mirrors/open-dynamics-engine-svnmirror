@@ -27,8 +27,7 @@
 
 # new:
 CVSROOT $CVSROOT/CVSROOT/syncmail -u %{sVv} russ_smith@users.sourceforge.net
-DEFAULT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} ode_cvs@users.sourceforge.net
-#DEFAULT $CVSROOT/CVSROOT/syncmail -u %{sVv} ode_cvs@users.sourceforge.net
+DEFAULT $CVSROOT/CVSROOT/syncmail -u %{sVv} ode_cvs@users.sourceforge.net
 
 # old:
 # CVSROOT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} russ_smith@users.sourceforge.net
