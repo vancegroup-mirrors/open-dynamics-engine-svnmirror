@@ -40,18 +40,14 @@ project.name = "ode"
   end
     
 	
--- Remove toolset directories and generated config.h on clean
+-- Since package.path is set to target, --clean doesn't work as
+-- expected. Remove what I can from here.
 
   function doclean(cmd, arg)
     docommand(cmd, arg)
     if (options["target"] == "") then
       os.remove("../include/ode/config.h")
     end
-    os.rmdir("vs6")
-    os.rmdir("vs2002")
-    os.rmdir("vs2003")
-    os.rmdir("vs2005")
-    os.rmdir("gnu")
     os.rmdir("../lib/debug")
     os.rmdir("../lib/release")
   end
@@ -60,11 +56,10 @@ project.name = "ode"
 -- Generate all toolsets in one go
 
   function domakeall(cmd, arg)
-    os.execute("premake --with-tests --clean")
-    os.execute("premake --with-tests --target vs6")
-    os.execute("premake --with-tests --target vs2002")
-    os.execute("premake --with-tests --target vs2003")
-    os.execute("premake --with-tests --target vs2005")
-    -- os.execute("premake --with-tests --target gnu") -- not ready yet
+    os.execute("premake --with-tests --clean --target vs6")
+    os.execute("premake --with-tests --clean --target vs2002")
+    os.execute("premake --with-tests --clean --target vs2003")
+    os.execute("premake --with-tests --clean --target vs2005")
+    -- os.execute("premake --with-tests --clean --target gnu") -- not ready yet
   end
   
