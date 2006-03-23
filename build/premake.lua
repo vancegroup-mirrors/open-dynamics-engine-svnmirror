@@ -1,5 +1,8 @@
 project.name = "ode"
 
+project.configs = { "DebugDLL", "ReleaseDLL", "DebugLib", "ReleaseLib" }
+
+
 -- Project options
 
   addoption("enable-static", "Build ODE as a static library instead of a DLL")
@@ -24,11 +27,17 @@ project.name = "ode"
 
 -- Set the output directories
 
-  project.config["Debug"].bindir = "../lib/debug"
-  project.config["Debug"].libdir = "../lib/debug"
+  project.config["DebugDLL"].bindir = "../lib/DebugDLL"
+  project.config["DebugDLL"].libdir = "../lib/DebugDLL"
 
-  project.config["Release"].bindir = "../lib/release"
-  project.config["Release"].libdir = "../lib/release"
+  project.config["ReleaseDLL"].bindir = "../lib/ReleaseDLL"
+  project.config["ReleaseDLL"].libdir = "../lib/ReleaseDLL"
+
+  project.config["DebugLib"].bindir = "../lib/DebugLib"
+  project.config["DebugLib"].libdir = "../lib/DebugLib"
+
+  project.config["ReleaseLib"].bindir = "../lib/ReleaseLib"
+  project.config["ReleaseLib"].libdir = "../lib/ReleaseLib"
   
 
 -- Build packages

@@ -6,39 +6,44 @@ package.objdir = "obj/ode"
 
 -- Write a custom <config.h> to include/ode, based on the specified flags
 
-  os.copyfile("config.in", "../include/ode/config.h")
-  local f = io.open("../include/ode/config.h", "a")
-
+  io.input("config.in")
+  local text = io.read("*a")
+  
   if (options["with-doubles"]) then
-    f:write("#define dDOUBLE 1\n")
-    f:write("#define dInfinity ODE_INFINITY8\n")
-    f:write("#define dEpsilon DBL_EPSILON\n")
+    text = string.gsub(text, "{PRECISION}", "dDOUBLE")
   else
-    f:write("#define dSINGLE 1\n")
-    f:write("#define dInfinity ODE_INFINITY4\n")
-    f:write("#define dEpsilon FLT_EPSILON\n")
-  end
-
-  if (not options["no-cylinder"]) then
-    f:write("#define dCYLINDER_ENABLED 1\n")
+    text = string.gsub(text, "{PRECISION}", "dSINGLE")
   end
   
-  if (not options["no-trimesh"]) then
-    f:write("#define dTRIMESH_ENABLED 1\n")
+  if (options["no-cylinder"]) then
+    text = string.gsub(text, "{CYLINDER}", "0")
+  else
+    text = string.gsub(text, "{CYLINDER}", "1")
   end
-
-  f:write("\n#endif\n")	
-  f:close()
+    
+  if (options["no-trimesh"]) then
+    text = string.gsub(text, "{TRIMESH}", "0")
+  else
+    text = string.gsub(text, "{TRIMESH}", "1")
+  end
+    
+  io.output("../include/ode/config.h")
+  io.write(text)
+  io.close()
 
   
 -- Package Build Settings
 
-  if (options["enable-static"]) then
-    package.kind = "lib"
-  else
-    package.kind = "dll"
-    table.insert(package.defines, "ODE_DLL_EXPORT")
-  end
+  package.config["DebugDLL"].kind = "dll"
+  package.config["DebugLib"].kind = "lib"
+  package.config["ReleaseDLL"].kind = "dll"
+  package.config["ReleaseLib"].kind = "lib"
+
+  table.insert(package.config["DebugDLL"].defines, "ODE_DLL")
+  table.insert(package.config["ReleaseDLL"].defines, "ODE_DLL")
+  
+  table.insert(package.config["DebugLib"].defines, "ODE_LIB")
+  table.insert(package.config["ReleaseLib"].defines, "ODE_LIB")
   
   package.includepaths =
   {

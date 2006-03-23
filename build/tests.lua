@@ -10,6 +10,8 @@
     "../../include"
   }
   
+  package.defines = { "_CRT_SECURE_NO_DEPRECATE" }
+
   package.files = 
   {
     matchfiles("../../include/drawstuff/*.h"),
