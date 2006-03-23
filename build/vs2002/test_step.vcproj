@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.00"
 	Name="test_step"
-	ProjectGUID="{4764CE4A-92DF-2340-BBAC-F7D6DA86ECB1}"
+	ProjectGUID="{28CDE6FE-B98F-1C4F-846A-60682FCFD352}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_step.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../lib/debug"
@@ -82,7 +82,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_step.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib/release"

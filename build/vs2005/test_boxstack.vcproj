@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test_boxstack"
-	ProjectGUID="{045413DA-3FF3-904C-8BF8-7B73F7F2F9E5}"
+	ProjectGUID="{527DB7B2-7862-B14E-BF3F-E0EEA9D749DC}"
 	RootNamespace="test_boxstack"
 	Keyword="Win32Proj"
 	>
@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_boxstack.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../lib/debug"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_boxstack.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib/release"

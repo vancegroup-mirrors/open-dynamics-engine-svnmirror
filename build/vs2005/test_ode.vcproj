@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test_ode"
-	ProjectGUID="{813E65E0-2E2C-FD49-AE18-21EE6954D172}"
+	ProjectGUID="{CAB0191C-662A-374B-8E24-521E3C22E7BB}"
 	RootNamespace="test_ode"
 	Keyword="Win32Proj"
 	>
@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_ode.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../lib/debug"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_ode.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib/release"

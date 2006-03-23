@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="test_friction"
-	ProjectGUID="{C13A1AB1-3D29-BE40-B70C-928318C21272}"
+	ProjectGUID="{B1C97495-AB9E-0C49-BE62-F5159918227B}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_friction.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../lib/debug"
@@ -88,7 +88,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_friction.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib/release"

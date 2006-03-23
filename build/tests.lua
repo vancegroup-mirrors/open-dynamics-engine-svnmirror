@@ -42,7 +42,7 @@
 	
     package.links = { "ode", "drawstuff" }
     if (windows) then
-      table.insert(package.links, { "gdi32", "opengl32", "glu32" })
+      table.insert(package.links, { "user32", "gdi32", "opengl32", "glu32" })
     else
       table.insert(package.links, { "GL", "GLU" })
     end

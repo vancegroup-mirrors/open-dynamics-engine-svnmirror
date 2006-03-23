@@ -55,7 +55,14 @@ package.objdir = "obj/ode"
     table.insert(package.defines, "_CRT_SECURE_NO_DEPRECATE")
   end
   
-  
+
+-- Libraries
+
+  if (windows) then
+    table.insert(package.links, "user32")
+  end
+
+    
 -- Files
 
   core_files =

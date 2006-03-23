@@ -89,11 +89,19 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=../../tests/CppTestHarness/CheckMacros.h
+SOURCE=../../tests/CppTestHarness/Checks.h
 # End Source File
 # Begin Source File
 
-SOURCE=../../tests/CppTestHarness/Checks.h
+SOURCE=../../tests/CppTestHarness/TestLauncher.h
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/TestResults.h
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/TestReporter.h
 # End Source File
 # Begin Source File
 
@@ -101,7 +109,23 @@ SOURCE=../../tests/CppTestHarness/CppTestHarness.h
 # End Source File
 # Begin Source File
 
-SOURCE=../../tests/CppTestHarness/HTMLTestReporter.h
+SOURCE=../../tests/CppTestHarness/TypedTestLauncher.h
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/TestRunner.h
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/Test.h
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/CheckMacros.h
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/TestMacros.h
 # End Source File
 # Begin Source File
 
@@ -113,43 +137,7 @@ SOURCE=../../tests/CppTestHarness/SignalTranslator.h
 # End Source File
 # Begin Source File
 
-SOURCE=../../tests/CppTestHarness/Test.h
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/TestLauncher.h
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/TestMacros.h
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/TestReporter.h
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/TestResults.h
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/TestRunner.h
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/TypedTestLauncher.h
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/HTMLTestReporter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/PrintfTestReporter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=../../tests/CppTestHarness/Test.cpp
+SOURCE=../../tests/CppTestHarness/HTMLTestReporter.h
 # End Source File
 # Begin Source File
 
@@ -157,15 +145,27 @@ SOURCE=../../tests/CppTestHarness/TestLauncher.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=../../tests/CppTestHarness/TestReporter.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=../../tests/CppTestHarness/TestResults.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=../../tests/CppTestHarness/TestReporter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=../../tests/CppTestHarness/TestRunner.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/Test.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/PrintfTestReporter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=../../tests/CppTestHarness/HTMLTestReporter.cpp
 # End Source File
 # End Group
 # Begin Group "colliders"

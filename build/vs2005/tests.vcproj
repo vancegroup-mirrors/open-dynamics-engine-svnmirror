@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="tests"
-	ProjectGUID="{3A95AEE7-915B-6A41-BCE3-58BA5B479C0E}"
+	ProjectGUID="{12E21B1B-04F8-B447-9715-D51D74894997}"
 	RootNamespace="tests"
 	Keyword="Win32Proj"
 	>
@@ -194,16 +194,34 @@
 				Filter=""
 				>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\CheckMacros.h">
+					RelativePath="..\..\tests\CppTestHarness\Checks.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\Checks.h">
+					RelativePath="..\..\tests\CppTestHarness\TestLauncher.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestResults.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestReporter.h">
 				</File>
 				<File
 					RelativePath="..\..\tests\CppTestHarness\CppTestHarness.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.h">
+					RelativePath="..\..\tests\CppTestHarness\TypedTestLauncher.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestRunner.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\Test.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\CheckMacros.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestMacros.h">
 				</File>
 				<File
 					RelativePath="..\..\tests\CppTestHarness\PrintfTestReporter.h">
@@ -212,46 +230,28 @@
 					RelativePath="..\..\tests\CppTestHarness\SignalTranslator.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\Test.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestLauncher.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestMacros.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestReporter.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestResults.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestRunner.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TypedTestLauncher.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.cpp">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\PrintfTestReporter.cpp">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\Test.cpp">
+					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.h">
 				</File>
 				<File
 					RelativePath="..\..\tests\CppTestHarness\TestLauncher.cpp">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\TestReporter.cpp">
-				</File>
-				<File
 					RelativePath="..\..\tests\CppTestHarness\TestResults.cpp">
 				</File>
 				<File
+					RelativePath="..\..\tests\CppTestHarness\TestReporter.cpp">
+				</File>
+				<File
 					RelativePath="..\..\tests\CppTestHarness\TestRunner.cpp">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\Test.cpp">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\PrintfTestReporter.cpp">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.cpp">
 				</File>
 			</Filter>
 			<Filter
