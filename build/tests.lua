@@ -1,9 +1,9 @@
 -- DrawStuff library
 
   package.name = "drawstuff"
-  package.path = options["target"]
   package.kind = "lib"
   package.language = "c++"
+  package.path = packagepath
 
   package.includepaths =
   {
@@ -34,9 +34,9 @@
   function maketest(name)
     package = newpackage()
     package.name = "test_" .. name
-    package.path = options["target"]
     package.kind = "exe"
     package.language = "c++"
+    package.path = packagepath
     package.objdir = "obj/"..name
   
     package.includepaths = { "../../include" }
@@ -91,9 +91,9 @@
 
   package = newpackage()
   package.name = "tests"
-  package.path = options["target"]
   package.kind = "exe"
   package.language = "c++"
+  package.path = packagepath
   package.objdir = "obj/tests"
   
   package.includepaths =

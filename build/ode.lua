@@ -1,8 +1,8 @@
 package.name = "ode"
-package.path = options["target"]
 package.language = "c++"
 package.objdir = "obj/ode"
-
+package.path = packagepath
+  
 
 -- Write a custom <config.h> to include/ode, based on the specified flags
 
@@ -34,16 +34,24 @@ package.objdir = "obj/ode"
   
 -- Package Build Settings
 
-  package.config["DebugDLL"].kind = "dll"
-  package.config["DebugLib"].kind = "lib"
-  package.config["ReleaseDLL"].kind = "dll"
-  package.config["ReleaseLib"].kind = "lib"
+  if (options["enable-shared-only"]) then
+    package.kind = "dll"
+    table.insert(package.defines, "ODE_DLL")
+  elseif (options["enable-static-only"]) then
+    package.kind = "lib"
+    table.insert(package.defines, "ODE_LIB")
+  else
+    package.config["DebugDLL"].kind = "dll"
+    package.config["DebugLib"].kind = "lib"
+    package.config["ReleaseDLL"].kind = "dll"
+    package.config["ReleaseLib"].kind = "lib"
 
-  table.insert(package.config["DebugDLL"].defines, "ODE_DLL")
-  table.insert(package.config["ReleaseDLL"].defines, "ODE_DLL")
+    table.insert(package.config["DebugDLL"].defines, "ODE_DLL")
+    table.insert(package.config["ReleaseDLL"].defines, "ODE_DLL")
   
-  table.insert(package.config["DebugLib"].defines, "ODE_LIB")
-  table.insert(package.config["ReleaseLib"].defines, "ODE_LIB")
+    table.insert(package.config["DebugLib"].defines, "ODE_LIB")
+    table.insert(package.config["ReleaseLib"].defines, "ODE_LIB")
+  end
   
   package.includepaths =
   {
@@ -55,7 +63,7 @@ package.objdir = "obj/ode"
     table.insert(package.defines, "WIN32")
   end
  
- -- disable VS2005 CRT security warnings
+  -- disable VS2005 CRT security warnings
   if (options["target"] == "vs2005") then
     table.insert(package.defines, "_CRT_SECURE_NO_DEPRECATE")
   end

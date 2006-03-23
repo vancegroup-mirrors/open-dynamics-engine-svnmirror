@@ -1,43 +1,46 @@
 project.name = "ode"
 
-project.configs = { "DebugDLL", "ReleaseDLL", "DebugLib", "ReleaseLib" }
+if (not options["enable-shared-only"] and not options["enable-static-only"]) then
+  project.configs = { "DebugDLL", "ReleaseDLL", "DebugLib", "ReleaseLib" }
+end
 
 
 -- Project options
 
-  addoption("enable-static", "Build ODE as a static library instead of a DLL")
   addoption("with-doubles",  "Enables double-precision math")
   addoption("with-tests",    "Builds the test applications and DrawStuff library")
   addoption("no-cylinder",   "Disable cylinder collision geometry")
   addoption("no-dif",        "Exclude DIF (Dynamics Interchange Format) exports")
-  addoption("no-trimesh",    "Exclude trimesh support")
+  addoption("no-trimesh",    "Exclude trimesh collision geometry")
   
   
--- Bit of a hack right of the bat: I want to put each set of project files
--- into a directory with the same name as the target toolset, so I key off
--- of options["target"]. But if I run `--clean`, there is no target and
--- Premake bombs. So make sure there is always a target specified.
+-- Separate package files into a subdirectory
 
-  if (not options["target"]) then
-    options["target"] = ""
+  if (options["usetargetpath"]) then
+    project.path = options["target"]
+    packagepath = options["target"]
+  else
+    packagepath = "custom"
   end
-
-  project.path = options["target"]
 
 
 -- Set the output directories
 
-  project.config["DebugDLL"].bindir = "../lib/DebugDLL"
-  project.config["DebugDLL"].libdir = "../lib/DebugDLL"
-
-  project.config["ReleaseDLL"].bindir = "../lib/ReleaseDLL"
-  project.config["ReleaseDLL"].libdir = "../lib/ReleaseDLL"
-
-  project.config["DebugLib"].bindir = "../lib/DebugLib"
-  project.config["DebugLib"].libdir = "../lib/DebugLib"
-
-  project.config["ReleaseLib"].bindir = "../lib/ReleaseLib"
-  project.config["ReleaseLib"].libdir = "../lib/ReleaseLib"
+  if (options["enable-shared-only"] or options["enable-static-only"]) then
+    project.config["Debug"].bindir   = "../lib/debug"
+    project.config["Debug"].libdir   = "../lib/debug"
+    project.config["Release"].bindir = "../lib/release"
+    project.config["Release"].bindir = "../lib/release"
+  else
+    project.config["DebugDLL"].bindir   = "../lib/DebugDLL"
+    project.config["DebugDLL"].libdir   = "../lib/DebugDLL"
+    project.config["ReleaseDLL"].bindir = "../lib/ReleaseDLL"
+    project.config["ReleaseDLL"].libdir = "../lib/ReleaseDLL"
+    project.config["DebugLib"].bindir   = "../lib/DebugLib"
+    project.config["DebugLib"].libdir   = "../lib/DebugLib"
+    project.config["ReleaseLib"].bindir = "../lib/ReleaseLib"
+    project.config["ReleaseLib"].libdir = "../lib/ReleaseLib"
+  end
   
 
 -- Build packages
@@ -49,26 +52,35 @@ project.configs = { "DebugDLL", "ReleaseDLL", "DebugLib", "ReleaseLib" }
   end
     
 	
--- Since package.path is set to target, --clean doesn't work as
--- expected. Remove what I can from here.
+-- Remove all intermediate files
 
   function doclean(cmd, arg)
     docommand(cmd, arg)
     if (options["target"] == "") then
       os.remove("../include/ode/config.h")
     end
+    os.rmdir("custom")
     os.rmdir("../lib/debug")
     os.rmdir("../lib/release")
+    os.rmdir("../lib/DebugDLL")
+    os.rmdir("../lib/DebugLib")
+    os.rmdir("../lib/ReleaseDLL")
+    os.rmdir("../lib/ReleaseLib")
+    os.rmdir("gnu/obj")
+    os.rmdir("vs6/obj")
+    os.rmdir("vs2002/obj")
+    os.rmdir("vs2003/obj")
+    os.rmdir("vs2005/obj")
   end
 
 
 -- Generate all toolsets in one go
 
   function domakeall(cmd, arg)
-    os.execute("premake --with-tests --clean --target vs6")
-    os.execute("premake --with-tests --clean --target vs2002")
-    os.execute("premake --with-tests --clean --target vs2003")
-    os.execute("premake --with-tests --clean --target vs2005")
-    -- os.execute("premake --with-tests --clean --target gnu") -- not ready yet
+    os.execute("premake --usetargetpath --with-tests --clean --target vs6")
+    os.execute("premake --usetargetpath --with-tests --clean --target vs2002")
+    os.execute("premake --usetargetpath --with-tests --clean --target vs2003")
+    os.execute("premake --usetargetpath --with-tests --clean --target vs2005")
+    os.execute("premake --usetargetpath --with-tests --clean --target gnu")
   end
   
