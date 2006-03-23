@@ -14,13 +14,10 @@ end
   addoption("no-trimesh",    "Exclude trimesh collision geometry")
   
   
--- Separate package files into a subdirectory
+-- Separate distribution files into toolset subdirectories
 
   if (options["usetargetpath"]) then
     project.path = options["target"]
-    packagepath = options["target"]
-  else
-    packagepath = "custom"
   end
 
 

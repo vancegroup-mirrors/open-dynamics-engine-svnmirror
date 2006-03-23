@@ -1,7 +1,14 @@
 package.name = "ode"
 package.language = "c++"
 package.objdir = "obj/ode"
-package.path = packagepath
+
+-- Separate distribution files into toolset subdirectories
+
+  if (options["usetargetpath"]) then
+    package.path = options["target"]
+  else
+    package.path = "custom"
+  end
   
 
 -- Write a custom <config.h> to include/ode, based on the specified flags

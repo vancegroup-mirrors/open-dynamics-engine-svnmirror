@@ -1,3 +1,12 @@
+-- Separate distribution files into toolset subdirectories
+
+  if (options["usetargetpath"]) then
+    packagepath = options["target"]
+  else
+    packagepath = "custom"
+  end
+
+
 -- DrawStuff library
 
   package.name = "drawstuff"
