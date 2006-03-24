@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.00"
 	Name="test_crash"
-	ProjectGUID="{A7DDBFD8-5102-DD42-B0D1-83FC4107B4DD}"
+	ProjectGUID="{815A8C70-485D-7C4C-B874-09BD620655A6}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -11,9 +11,9 @@
 	</Platforms>
 	<Configurations>
 		<Configuration
-			Name="Debug|Win32"
-			OutputDirectory="../../lib/debug"
-			IntermediateDirectory="obj/crash/Debug"
+			Name="DebugDLL|Win32"
+			OutputDirectory="../../lib/DebugDLL"
+			IntermediateDirectory="obj/crash/DebugDLL"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
@@ -34,10 +34,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/debug/ode.lib ../../lib/debug/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/DebugDLL/ode.lib ../../lib/DebugDLL/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_crash.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../lib/debug"
+				AdditionalLibraryDirectories="../../lib/DebugDLL"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/test_crash.pdb"
 				SubSystem="1"
@@ -60,36 +60,134 @@
 				Name="VCWebDeploymentTool"/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="../../lib/release"
-			IntermediateDirectory="obj/crash/Release"
+			Name="ReleaseDLL|Win32"
+			OutputDirectory="../../lib/ReleaseDLL"
+			IntermediateDirectory="obj/crash/ReleaseDLL"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="0"
 				AdditionalIncludeDirectories="../../include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32"
-				StringPooling="TRUE"
-				RuntimeLibrary="2"
+				MinimalRebuild="TRUE"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="0"/>
+				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/release/ode.lib ../../lib/release/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
+				AdditionalDependencies="../../lib/ReleaseDLL/ode.lib ../../lib/ReleaseDLL/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
 				OutputFile="$(OutDir)/test_crash.exe"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../lib/release"
-				GenerateDebugInformation="FALSE"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../../lib/ReleaseDLL"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/test_crash.pdb"
 				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
+				EntryPointSymbol="mainCRTStartup"
+				TargetMachine="1"/>
+			<Tool
+				Name="VCMIDLTool"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="../../include"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+		</Configuration>
+		<Configuration
+			Name="DebugLib|Win32"
+			OutputDirectory="../../lib/DebugLib"
+			IntermediateDirectory="obj/crash/DebugLib"
+			ConfigurationType="1"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../include"
+				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32"
+				MinimalRebuild="TRUE"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				EnableFunctionLevelLinking="TRUE"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="TRUE"
+				DebugInformationFormat="4"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="../../lib/DebugLib/ode.lib ../../lib/DebugLib/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
+				OutputFile="$(OutDir)/test_crash.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../../lib/DebugLib"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/test_crash.pdb"
+				SubSystem="1"
+				EntryPointSymbol="mainCRTStartup"
+				TargetMachine="1"/>
+			<Tool
+				Name="VCMIDLTool"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="../../include"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+		</Configuration>
+		<Configuration
+			Name="ReleaseLib|Win32"
+			OutputDirectory="../../lib/ReleaseLib"
+			IntermediateDirectory="obj/crash/ReleaseLib"
+			ConfigurationType="1"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../include"
+				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32"
+				MinimalRebuild="TRUE"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				EnableFunctionLevelLinking="TRUE"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="TRUE"
+				DebugInformationFormat="4"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="../../lib/ReleaseLib/ode.lib ../../lib/ReleaseLib/drawstuff.lib user32.lib gdi32.lib opengl32.lib glu32.lib"
+				OutputFile="$(OutDir)/test_crash.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../../lib/ReleaseLib"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/test_crash.pdb"
+				SubSystem="1"
 				EntryPointSymbol="mainCRTStartup"
 				TargetMachine="1"/>
 			<Tool

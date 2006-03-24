@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="tests"
-	ProjectGUID="{4A3511CD-485C-5A43-BDE3-D4EC892AA522}"
+	ProjectGUID="{C4638E41-A6D1-E64C-A554-90D0E0CBA0EE}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -11,9 +11,9 @@
 	</Platforms>
 	<Configurations>
 		<Configuration
-			Name="Debug|Win32"
-			OutputDirectory="../../lib/debug"
-			IntermediateDirectory="obj/tests/Debug"
+			Name="DebugDLL|Win32"
+			OutputDirectory="../../lib/DebugDLL"
+			IntermediateDirectory="obj/tests/DebugDLL"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
@@ -34,10 +34,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/debug/ode.lib"
+				AdditionalDependencies="../../lib/DebugDLL/ode.lib"
 				OutputFile="$(OutDir)/tests.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../lib/debug"
+				AdditionalLibraryDirectories="../../lib/DebugDLL"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/tests.pdb"
 				SubSystem="1"
@@ -66,36 +66,146 @@
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="../../lib/release"
-			IntermediateDirectory="obj/tests/Release"
+			Name="ReleaseDLL|Win32"
+			OutputDirectory="../../lib/ReleaseDLL"
+			IntermediateDirectory="obj/tests/ReleaseDLL"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="0"
 				AdditionalIncludeDirectories="../../include;../../tests/CppTestHarness"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE"
-				StringPooling="TRUE"
-				RuntimeLibrary="2"
+				MinimalRebuild="TRUE"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="0"/>
+				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../lib/release/ode.lib"
+				AdditionalDependencies="../../lib/ReleaseDLL/ode.lib"
 				OutputFile="$(OutDir)/tests.exe"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../lib/release"
-				GenerateDebugInformation="FALSE"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../../lib/ReleaseDLL"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/tests.pdb"
 				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
+				EntryPointSymbol="mainCRTStartup"
+				TargetMachine="1"/>
+			<Tool
+				Name="VCMIDLTool"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="../../include;../../tests/CppTestHarness"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
+		<Configuration
+			Name="DebugLib|Win32"
+			OutputDirectory="../../lib/DebugLib"
+			IntermediateDirectory="obj/tests/DebugLib"
+			ConfigurationType="1"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../include;../../tests/CppTestHarness"
+				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE"
+				MinimalRebuild="TRUE"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				EnableFunctionLevelLinking="TRUE"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="TRUE"
+				DebugInformationFormat="4"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="../../lib/DebugLib/ode.lib"
+				OutputFile="$(OutDir)/tests.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../../lib/DebugLib"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/tests.pdb"
+				SubSystem="1"
+				EntryPointSymbol="mainCRTStartup"
+				TargetMachine="1"/>
+			<Tool
+				Name="VCMIDLTool"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="../../include;../../tests/CppTestHarness"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
+		<Configuration
+			Name="ReleaseLib|Win32"
+			OutputDirectory="../../lib/ReleaseLib"
+			IntermediateDirectory="obj/tests/ReleaseLib"
+			ConfigurationType="1"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../include;../../tests/CppTestHarness"
+				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE"
+				MinimalRebuild="TRUE"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				EnableFunctionLevelLinking="TRUE"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="TRUE"
+				DebugInformationFormat="4"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="../../lib/ReleaseLib/ode.lib"
+				OutputFile="$(OutDir)/tests.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../../lib/ReleaseLib"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/tests.pdb"
+				SubSystem="1"
 				EntryPointSymbol="mainCRTStartup"
 				TargetMachine="1"/>
 			<Tool
@@ -131,34 +241,16 @@
 				Name="CppTestHarness"
 				Filter="">
 				<File
+					RelativePath="..\..\tests\CppTestHarness\CheckMacros.h">
+				</File>
+				<File
 					RelativePath="..\..\tests\CppTestHarness\Checks.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestLauncher.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestResults.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestReporter.h">
 				</File>
 				<File
 					RelativePath="..\..\tests\CppTestHarness\CppTestHarness.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\TypedTestLauncher.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestRunner.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\Test.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\CheckMacros.h">
-				</File>
-				<File
-					RelativePath="..\..\tests\CppTestHarness\TestMacros.h">
+					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.h">
 				</File>
 				<File
 					RelativePath="..\..\tests\CppTestHarness\PrintfTestReporter.h">
@@ -167,28 +259,46 @@
 					RelativePath="..\..\tests\CppTestHarness\SignalTranslator.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.h">
+					RelativePath="..\..\tests\CppTestHarness\Test.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\TestLauncher.cpp">
+					RelativePath="..\..\tests\CppTestHarness\TestLauncher.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\TestResults.cpp">
+					RelativePath="..\..\tests\CppTestHarness\TestMacros.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\TestReporter.cpp">
+					RelativePath="..\..\tests\CppTestHarness\TestReporter.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\TestRunner.cpp">
+					RelativePath="..\..\tests\CppTestHarness\TestResults.h">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\Test.cpp">
+					RelativePath="..\..\tests\CppTestHarness\TestRunner.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TypedTestLauncher.h">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.cpp">
 				</File>
 				<File
 					RelativePath="..\..\tests\CppTestHarness\PrintfTestReporter.cpp">
 				</File>
 				<File
-					RelativePath="..\..\tests\CppTestHarness\HTMLTestReporter.cpp">
+					RelativePath="..\..\tests\CppTestHarness\Test.cpp">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestLauncher.cpp">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestReporter.cpp">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestResults.cpp">
+				</File>
+				<File
+					RelativePath="..\..\tests\CppTestHarness\TestRunner.cpp">
 				</File>
 			</Filter>
 			<Filter
