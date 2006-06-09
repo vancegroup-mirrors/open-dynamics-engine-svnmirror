@@ -1,12 +1,12 @@
 @echo off
 rem ***********************************************************
-rem * ODE Windows Release Script
+rem * ODE Windows Binary Release Script
 rem * Originally written by Jason Perkins (starkos@gmail.com)
 rem *
 rem * Prerequisites:
 rem *  Command-line svn installed on path
 rem *  Command-line zip installed on path
-rem *  Run within Visual Studio command prompt
+rem *  Run within Visual Studio 2003 command prompt
 rem ***********************************************************
 
 rem * Check arguments
@@ -33,12 +33,12 @@ echo.
 echo Is the Changelog up to date?
 pause
 echo.
-echo Okay, ready to build the Windows binary package for version %1!
+echo Okay, ready to build the source and Windows binary packages for version %1!
 pause
 
 
 rem ***********************************************************
-rem * Prepare source code
+rem * Retrieve source code
 rem ***********************************************************
 
 echo.
@@ -46,18 +46,24 @@ echo RETRIEVING SOURCE CODE FROM REPOSITORY...
 echo.
 
 svn export https://svn.sourceforge.net/svnroot/opende/branches/%2 ode-%1
-copy ode-%1\build\config-default.h ode-%1\include\ode\config.h
 
 
-###################################################################
-# Package source code
-###################################################################
 
-echo ""
-echo "PACKAGING SOURCE CODE..."
-echo ""
+rem ***********************************************************
+rem * Prepare source code
+rem ***********************************************************
 
-zip -r9 ode-src-%1.zip ode-%1/*
+echo.
+echo PREPARING SOURCE CODE FROM REPOSITORY...
+echo.
+
+cd ode-%1
+copy build\config-default.h include\ode\config.h
+
+cd ode\doc
+doxygen
+
+cd ..\..\..
 
 
 rem ***********************************************************
@@ -81,7 +87,7 @@ rem ***********************************************************
 
 cd ..\..\..
 rename lib\ReleaseDLL\ode.lib lib\ReleaseDLL\ode-imports.lib
-zip -r9 ode-win32-%1.zip ode-%1\*.txt ode-%1\include\ode\*.h ode-%1\lib\*
+zip -r9 ode-win32-%1.zip ode-%1\*.txt ode-%1\include\ode\*.h ode-%1\lib\* ode-%1\docs\*
 
 
 rem ***********************************************************

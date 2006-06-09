@@ -114,6 +114,27 @@ static void start()
 }
 
 
+
+static void reset_state(void)
+{
+  float sx=-4, sy=-4, sz=2;
+  dQuaternion q;
+  dQFromAxisAndAngle (q,1,0,0,M_PI*0.5);
+#ifdef BOX
+  dBodySetPosition (boxbody, sx, sy+1, sz);
+  dBodySetLinearVel (boxbody, 0,0,0);
+  dBodySetAngularVel (boxbody, 0,0,0);
+  dBodySetQuaternion (boxbody, q);
+#endif
+#ifdef CYL
+  dBodySetPosition (cylbody, sx, sy, sz);
+  dBodySetLinearVel (cylbody, 0,0,0);
+  dBodySetAngularVel (cylbody, 0,0,0);
+  dBodySetQuaternion (cylbody, q);
+#endif
+}
+
+
 // called when a key pressed
 
 static void command (int cmd)
@@ -121,6 +142,7 @@ static void command (int cmd)
   switch (cmd) 
   {
     case ' ':
+	  reset_state();
       break;
   }
 }
@@ -131,9 +153,15 @@ static void command (int cmd)
 
 static void simLoop (int pause)
 {
-  dSpaceCollide (space,0,&nearCallback);
-  dWorldQuickStep (world,0.02); // assume 50 fps
-  dJointGroupEmpty (contactgroup);
+  double simstep = 0.005; // 5ms simulation steps
+  double dt = dsElapsedTime();
+  int nrofsteps = (int) ceilf(dt/simstep);
+  for (int i=0; i<nrofsteps && !pause; i++)
+  {
+    dSpaceCollide (space,0,&nearCallback);
+    dWorldQuickStep (world, simstep);
+    dJointGroupEmpty (contactgroup);
+  }
 
   dsSetColor (1,1,1);
 #ifdef BOX
@@ -213,18 +241,14 @@ int main (int argc, char **argv)
   space = dHashSpaceCreate (0);
   contactgroup = dJointGroupCreate (0);
   dWorldSetGravity (world,0,0,-9.8);
-  dWorldSetQuickStepNumIterations (world, 64);
+  dWorldSetQuickStepNumIterations (world, 12);
 
 
   // Create a static world using a triangle mesh that we can collide with.
-  int numv = sizeof(world_vertices)/sizeof(dReal);
+  int numv = sizeof(world_vertices)/(3*sizeof(float));
   int numi = sizeof(world_indices)/ sizeof(int);
   printf("numv=%d, numi=%d\n", numv, numi);
   dTriMeshDataID Data = dGeomTriMeshDataCreate();
-
-  // Super weird: comment out next printf, and run with single-precision:
-  // collisions are not detected.
-//  fprintf(stderr,"Building Single Precision Mesh\n");
 
   dGeomTriMeshDataBuildSingle
   (
@@ -242,13 +266,9 @@ int main (int argc, char **argv)
   dRFromAxisAndAngle (R, 0,1,0, 0.0);
   dGeomSetRotation (world_mesh, R);
 
-  float sx=-4, sy=-4, sz=2;
-  dQuaternion q;
-  dQFromAxisAndAngle (q,1,0,0,M_PI*0.5);
+
 #ifdef BOX
   boxbody = dBodyCreate (world);
-  dBodySetPosition (boxbody,sx,sy+1.0,sz);
-  dBodySetQuaternion (boxbody,q);
   dMassSetBox (&m,1, BOXSZ, BOXSZ, BOXSZ);
   dMassAdjust (&m, 1);
   dBodySetMass (boxbody,&m);
@@ -258,32 +278,32 @@ int main (int argc, char **argv)
 #endif
 #ifdef CYL
   cylbody = dBodyCreate (world);
-  dBodySetQuaternion (cylbody,q);
   dMassSetSphere (&m,1,RADIUS);
   dMassAdjust (&m,WMASS);
   dBodySetMass (cylbody,&m);
   cylgeom = dCreateCylinder(0, RADIUS, WHEELW);
   dGeomSetBody (cylgeom,cylbody);
-  dBodySetPosition (cylbody, sx, sy, sz);
   dSpaceAdd (space, cylgeom);
 #endif
+  reset_state();
 
   // run simulation
   dsSimulationLoop (argc,argv,352,288,&fn);
 
   dJointGroupEmpty (contactgroup);
   dJointGroupDestroy (contactgroup);
-  dSpaceDestroy (space);
-  dWorldDestroy (world);
 
-  // Causes segm violation? Why?
+  // First destroy geoms, then space, then the world.
 #ifdef CYL
-//  dGeomDestroy (cylgeom);
+  dGeomDestroy (cylgeom);
 #endif
 #ifdef BOX
-//  dGeomDestroy (boxgeom);
+  dGeomDestroy (boxgeom);
 #endif
-//  dGeomDestroy (world_mesh);
+  dGeomDestroy (world_mesh);
+
+  dSpaceDestroy (space);
+  dWorldDestroy (world);
 
   return 0;
 }

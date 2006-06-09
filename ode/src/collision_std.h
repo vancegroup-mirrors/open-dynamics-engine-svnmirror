@@ -64,7 +64,6 @@ int dCollideRayCapsule (dxGeom *o1, dxGeom *o2,
 int dCollideRayPlane (dxGeom *o1, dxGeom *o2, int flags,
 		      dContactGeom *contact, int skip);
 
-#ifdef dCYLINDER_ENABLED
 // Cylinder - Box/Sphere by (C) CroTeam
 // Ported by Nguyen Binh
 int dCollideCylinderBox(dxGeom *o1, dxGeom *o2, 
@@ -73,7 +72,86 @@ int dCollideCylinderSphere(dxGeom *gCylinder, dxGeom *gSphere,
                            int flags, dContactGeom *contact, int skip); 
 int dCollideCylinderPlane(dxGeom *gCylinder, dxGeom *gPlane, 
                            int flags, dContactGeom *contact, int skip); 
-#endif
+
+//--> Convex Collision
+int dCollideConvexPlane (dxGeom *o1, dxGeom *o2, int flags,
+			 dContactGeom *contact, int skip);
+int dCollideSphereConvex (dxGeom *o1, dxGeom *o2, int flags,
+			  dContactGeom *contact, int skip);
+int dCollideConvexBox (dxGeom *o1, dxGeom *o2, int flags,
+		       dContactGeom *contact, int skip);
+int dCollideConvexCapsule (dxGeom *o1, dxGeom *o2,
+			   int flags, dContactGeom *contact, int skip);
+int dCollideConvexConvex (dxGeom *o1, dxGeom *o2, int flags, 
+			  dContactGeom *contact, int skip);
+//<-- Convex Collision
+
+//****************************************************************************
+// the basic geometry objects
+
+struct dxSphere : public dxGeom {
+  dReal radius;		// sphere radius
+  dxSphere (dSpaceID space, dReal _radius);
+  void computeAABB();
+};
+
+
+struct dxBox : public dxGeom {
+  dVector3 side;	// side lengths (x,y,z)
+  dxBox (dSpaceID space, dReal lx, dReal ly, dReal lz);
+  void computeAABB();
+};
+
+
+struct dxCapsule : public dxGeom {
+  dReal radius,lz;	// radius, length along z axis
+  dxCapsule (dSpaceID space, dReal _radius, dReal _length);
+  void computeAABB();
+};
+
+
+struct dxCylinder : public dxGeom {
+        dReal radius,lz;        // radius, length along z axis
+        dxCylinder (dSpaceID space, dReal _radius, dReal _length);
+        void computeAABB();
+};
+
+
+struct dxPlane : public dxGeom {
+  dReal p[4];
+  dxPlane (dSpaceID space, dReal a, dReal b, dReal c, dReal d);
+  void computeAABB();
+};
+
+
+struct dxRay : public dxGeom {
+  dReal length;
+  dxRay (dSpaceID space, dReal _length);
+  void computeAABB();
+};
+
+struct dxConvex : public dxGeom 
+{
+  dReal *planes; /*!< An array of planes in the form:
+		   normal X, normal Y, normal Z,Distance
+		 */
+  dReal *points; /*!< An array of points X,Y,Z */  
+  unsigned int *polygons; /*! An array of indices to the points of each polygon, it should be the number of vertices followed by that amount of indices to "points" in counter clockwise order*/
+  unsigned int planecount; /*!< Amount of planes in planes */
+  unsigned int pointcount;/*!< Amount of points in points */
+  dReal saabb[6];/*!< Static AABB */
+  dxConvex(dSpaceID space,
+	   dReal *planes,
+	   unsigned int planecount,
+	   dReal *points,
+	   unsigned int pointcount,
+	   unsigned int *polygons);
+  ~dxConvex()
+  {
+    //fprintf(stdout,"dxConvex Destroy\n");
+  }
+  void computeAABB();
+};
 
 
 #endif

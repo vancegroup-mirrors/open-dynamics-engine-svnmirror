@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="ode"
-	ProjectGUID="{76AA41D4-0DB2-3142-8045-5EBA28CF667A}"
+	ProjectGUID="{B073FDC0-BF91-7446-89C1-55BD20A6870D}"
 	RootNamespace="ode"
 	Keyword="Win32Proj"
 	>
@@ -122,17 +122,17 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="2"
+				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../include;../../OPCODE"
 				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_DEPRECATE;ODE_DLL"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				StringPooling="true"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -148,11 +148,12 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="user32.lib"
 				OutputFile="$(OutDir)/ode.dll"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib/ReleaseDLL"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/ode.pdb"
+				GenerateDebugInformation="false"
 				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				ImportLibrary="../../lib/ReleaseDLL/ode.lib"
 				TargetMachine="1"
 			/>
@@ -280,17 +281,17 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="2"
+				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../include;../../OPCODE"
 				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_DEPRECATE;ODE_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				StringPooling="true"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -483,6 +484,12 @@
 					RelativePath="..\..\ode\src\array.cpp">
 				</File>
 				<File
+					RelativePath="..\..\ode\src\box.cpp">
+				</File>
+				<File
+					RelativePath="..\..\ode\src\capsule.cpp">
+				</File>
+				<File
 					RelativePath="..\..\ode\src\collision_cylinder_box.cpp">
 				</File>
 				<File
@@ -502,9 +509,6 @@
 				</File>
 				<File
 					RelativePath="..\..\ode\src\collision_space.cpp">
-				</File>
-				<File
-					RelativePath="..\..\ode\src\collision_std.cpp">
 				</File>
 				<File
 					RelativePath="..\..\ode\src\collision_transform.cpp">
@@ -532,6 +536,12 @@
 				</File>
 				<File
 					RelativePath="..\..\ode\src\collision_util.cpp">
+				</File>
+				<File
+					RelativePath="..\..\ode\src\convex.cpp">
+				</File>
+				<File
+					RelativePath="..\..\ode\src\cylinder.cpp">
 				</File>
 				<File
 					RelativePath="..\..\ode\src\error.cpp">
@@ -570,10 +580,19 @@
 					RelativePath="..\..\ode\src\odemath.cpp">
 				</File>
 				<File
+					RelativePath="..\..\ode\src\plane.cpp">
+				</File>
+				<File
 					RelativePath="..\..\ode\src\quickstep.cpp">
 				</File>
 				<File
+					RelativePath="..\..\ode\src\ray.cpp">
+				</File>
+				<File
 					RelativePath="..\..\ode\src\rotation.cpp">
+				</File>
+				<File
+					RelativePath="..\..\ode\src\sphere.cpp">
 				</File>
 				<File
 					RelativePath="..\..\ode\src\step.cpp">

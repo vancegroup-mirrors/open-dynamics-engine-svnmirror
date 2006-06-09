@@ -1,18 +1,18 @@
 dnl Initial configure.in by Rodrigo Hernandez
 dnl Modified in 26/10/2005 by Rodrigo Hernandez
-AC_INIT(ODE,0.5.0,ode@q12.org)
+AC_INIT(ODE,0.6.0-rc1,ode@q12.org)
 
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE(ODE,0.5.0)
+AM_INIT_AUTOMAKE(ODE,0.6.0-rc1)
 AM_CONFIG_HEADER(include/ode/config.h)
 AC_C_BIGENDIAN
 AC_PATH_X
 AC_PATH_XTRA
 
 ODE_CURRENT=0
-ODE_REVISION=5
+ODE_REVISION=6
 ODE_AGE=0
 ODE_RELEASE=[$ODE_CURRENT].[$ODE_REVISION].[$ODE_AGE]
 AC_SUBST(ODE_CURRENT)
@@ -56,27 +56,30 @@ dnl other Intel based extensions such as 3DNow, SSE2, MMX, etc.
 esac
 
 dnl check for required headers
-AC_CHECK_HEADERS( alloca.h ieeefp.h stdio.h stdlib.h math.h string.h stdarg.h malloc.h values.h float.h )
+AC_CHECK_HEADERS( alloca.h ieeefp.h stdio.h stdlib.h math.h string.h stdarg.h malloc.h values.h float.h time.h sys/time.h )
 
 AC_MSG_CHECKING(if OPCODE support is requested)
-AC_ARG_WITH(opcode,AC_HELP_STRING([--with-opcode],
-[Configure ODE to work with the OPCODE collision detection library for trimesh support]),
-opcode=$withval,opcode=yes)
+AC_ARG_ENABLE(opcode,AC_HELP_STRING([--disable-opcode],
+[Configure ODE to work without OPCODE (disables trimesh support)]),
+opcode=$enableval,opcode=yes)
 AC_MSG_RESULT($opcode)
 AM_CONDITIONAL(OPCODE, test x$opcode = xyes)
 
-AC_MSG_CHECKING(if cylinder support is requested)
-AC_ARG_WITH(cylinder,AC_HELP_STRING([--with-cylinder],
-[Configure ODE to have non capped cylinder support]),
-cylinder=$withval,cylinder=yes)
-AC_MSG_RESULT($cylinder)
-AM_CONDITIONAL(CYLINDER, test x$cylinder = xyes)
+AC_MSG_CHECKING(if gyroscopic term should be used)
+AC_ARG_ENABLE(gyroscopic,AC_HELP_STRING([--disable-gyroscopic],
+[Configure ODE to work without gyroscopic term (may improve stability)]),
+gyroscopic=$enableval,gyroscopic=yes)
+AC_MSG_RESULT($gyroscopic)
+if test x"$gyroscopic" = xyes
+then
+AC_DEFINE(dGYROSCOPIC,,[Use gyroscopic terms])
+fi
 
 dnl Check Precision, define the dInfinity constant--------------------------/
 AC_MSG_CHECKING(if double precision is requested)
-AC_ARG_WITH(double-precision,AC_HELP_STRING([--with-double-precision],
-[Cofigure ODE to work with double precision, if not specified, single precision is used]),
-precision=$withval,precision=no)
+AC_ARG_ENABLE(double-precision,AC_HELP_STRING([--enable-double-precision],
+[Configure ODE to work with double precision, if not specified, single precision is used]),
+precision=$enableval,precision=no)
 if test "$precision" != no
 then
 dnl DOUBLE was chosen
@@ -226,16 +229,18 @@ then
 AC_DEFINE(X86_64_SYSTEM,1,[is this a X86_64 system on a gcc-based platform?])
 fi
 AC_MSG_RESULT($cpu64)
+AM_CONDITIONAL(X86_64_SYSTEM, test x$cpu64 = xyes)
 
 AC_MSG_CHECKING(if building a release library)
 AC_ARG_ENABLE(release,AC_HELP_STRING([--enable-release],
 [build a release library with -fomit-frame-pointer and -ffast-math]),
-release=$withval,release=no)
+release=$enableval,release=no)
 if test "x$release" == xyes
 then
     CFLAGS="-fomit-frame-pointer -ffast-math"
     CPPFLAGS="-fomit-frame-pointer -ffast-math"
     CXXFLAGS="-fomit-frame-pointer -ffast-math"
+    AC_DEFINE(dNODEBUG,,[Disable debug output])
 else
     CFLAGS="-g"
     CPPFLAGS="-g"
@@ -250,20 +255,72 @@ AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(long int)
 AC_CHECK_SIZEOF(void*)
 
+dnl Set some Platform Specific Variables
+case "$host_os" in
+  cygwin* | mingw*)
+    so_ext=".dll"
+    DLLDEFINE="-DODE_DLL"
+    SHARED_LDFLAGS="-shared"
+    drawstuff="Win32" # if in a Windows enviroment
+    ;;
+  *apple* | *darwin*) # For Mac OS X
+    so_ext=".dylib"
+    DLLDEFINE=""
+    SHARED_LDFLAGS="-dynamiclib"
+    drawstuff="OSX"
+    dnl We need to use C++ compilation and linking for ode on Mac
+    dnl Might as well do it for all code.
+    CC="$CXX"
+    LINK="$CXXLINK"
+    ;;
+  *)
+   drawstuff="X11" # if anything else default to X11
+   so_ext=".so"
+    DLLDEFINE=""
+    SHARED_LDFLAGS="-shared"
+    ;;
+esac
+dnl Set Conditionals
+AM_CONDITIONAL(WIN32, test x$drawstuff = xWin32)
+AM_CONDITIONAL(X11, test x$drawstuff = xX11)
+AM_CONDITIONAL(OSX, test x$drawstuff = xOSX)
+dnl Set Drawstuff variables
+AC_MSG_CHECKING(which drawstuff lib to build)
+AC_MSG_RESULT($drawstuff)
+AC_SUBST(DRAWSTUFF)
+dnl Set shared library variables
+AC_MSG_CHECKING(for the suffix of shared libraries)
+AC_MSG_RESULT($so_ext)
+AC_DEFINE_UNQUOTED(SO_EXT,"$so_ext",[The extension for shared libraries.])
+AC_SUBST(so_ext)
+AC_SUBST(SHARED_LDFLAGS)
 
 dnl Check for OpenGL
-AC_CHECK_HEADERS(GL/gl.h GL/glu.h GL/glext.h,,,
-     [[#if HAVE_GL_GL_H
-       #include <GL/gl.h>
-       #endif
-	   #if HAVE_GL_GLU_H
-       #include <GL/glu.h>
-       #endif
-     ]])
-AC_CHECK_LIB(GL, main,[GL_LIBS="$GL_LIBS -lGL"])
-AC_CHECK_LIB(GLU, main,[GL_LIBS="$GL_LIBS -lGLU"])
-AC_CHECK_LIB(opengl32, main,[GL_LIBS="$GL_LIBS -lopengl32"])
-AC_CHECK_LIB(glu32, main,[GL_LIBS="$GL_LIBS -lglu32"])
+if test "x$drawstuff" = "xOSX"; then
+  AC_DEFINE([HAVE_APPLE_OPENGL_FRAMEWORK], [1],
+            [Use the Apple OpenGL framework.])
+  GL_LIBS="-framework OpenGL -framework Carbon -framework AGL"
+else
+  AC_CHECK_HEADERS(GL/gl.h GL/glu.h GL/glext.h,,,
+       [[#if HAVE_GL_GL_H
+         #include <GL/gl.h>
+         #endif
+  	   #if HAVE_GL_GLU_H
+         #include <GL/glu.h>
+         #endif
+       ]])
+  AC_CHECK_LIB(GL, main,[GL_LIBS="$GL_LIBS -lGL"])
+  TEMP_LDFLAGS="$LDFLAGS"
+  LDFLAGS="$LDFLAGS $GL_LIBS"
+  AC_CHECK_LIB(GLU, main,[GL_LIBS="$GL_LIBS -lGLU"])
+  LDFLAGS="$TEMP_LDFLAGS"
+  AC_CHECK_LIB(opengl32, main,[GL_LIBS="$GL_LIBS -lopengl32"])
+  AC_CHECK_LIB(glu32, main,[GL_LIBS="$GL_LIBS -lglu32"])
+  AC_CHECK_LIB(Xmu, main,[GL_LIBS="$GL_LIBS -lXmu"])
+  AC_CHECK_LIB(Xi, main,[GL_LIBS="$GL_LIBS -lXi"])
+  AC_CHECK_LIB(X, main,[GL_LIBS="$GL_LIBS -lX"])
+  AC_CHECK_LIB(X11, main,[GL_LIBS="$GL_LIBS -lX11"])
+fi
 AC_SUBST(GL_LIBS)
 
 dnl Add some Windows libraries if found
@@ -271,27 +328,13 @@ AC_CHECK_LIB(comctl32,main,[LIBS="$LIBS -lcomctl32"])
 AC_CHECK_LIB(kernel32,main,[LIBS="$LIBS -lkernel32"])
 AC_CHECK_LIB(user32,main,[LIBS="$LIBS -luser32"])
 AC_CHECK_LIB(gdi32,main,[LIBS="$LIBS -lgdi32"])
+AC_CHECK_LIB(winmm,main,[LIBS="$LIBS -lwinmm"])
 
 dnl Add math and standard c++ lib just in case
 AC_CHECK_LIB(stdc++,main,[LIBS="$LIBS -lstdc++"])
 AC_CHECK_LIB(m,main,[LIBS="$LIBS -lm"])
 AC_CHECK_LIB(pthread,main,[LIBS="$LIBS -lpthread"])
 
-dnl Decide which version of the drawstuff library we should build
-AC_MSG_CHECKING(which drawstuff lib to build)
-case "$host_os" in
-  cygwin* | mingw*)
-    drawstuff="Win32" # if in a Windows enviroment
-    ;;
-  *)
-   drawstuff="X11" # if anything else default to X11
-    ;;
-esac
-AC_MSG_RESULT($drawstuff)
-AM_CONDITIONAL(WIN32, test x$drawstuff = xWin32)
-AM_CONDITIONAL(X11, test x$drawstuff = xX11)
-
-AC_SUBST(DRAWSTUFF)
 
 TOPDIR=`cd $srcdir;pwd`
 AC_SUBST(TOPDIR)
@@ -299,7 +342,7 @@ AC_SUBST(TOPDIR)
 dnl Check if the user wants to profile ODE using gprof
 AC_MSG_CHECKING(for gprof)
 AC_ARG_ENABLE(gprof,
-[       --enable-gprof          enable profiling with gprof],
+AC_HELP_STRING([--enable-gprof],[enable profiling with gprof]),
 gprof=$enableval,gprof=no)
 if test "$gprof" != no
 then
@@ -313,7 +356,7 @@ else
 fi
 
 dnl Check for autoscan sugested functions
-AC_CHECK_FUNCS([floor memmove memset select sqrt sqrtf sinf cosf fabsf atan2f fmodf copysignf copysign snprintf vsnprintf])
+AC_CHECK_FUNCS([floor memmove memset select sqrt sqrtf sinf cosf fabsf atan2f fmodf copysignf copysign snprintf vsnprintf gettimeofday isnan isnanf _isnan _isnanf __isnan __isnanf])
 AC_FUNC_ALLOCA 
 AC_FUNC_MALLOC
 AC_FUNC_OBSTACK 
@@ -333,7 +376,7 @@ AH_BOTTOM([
 #endif
 #if defined(HAVE_IEEEFP_H) && !defined(__CYGWIN__)
 // This header creates conflicts with math.h in Cygwin.
-#include <alloca.h>
+#include <ieeefp.h>
 #endif
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -389,10 +432,15 @@ typedef unsigned int intP;
 typedef unsigned long int intP;
 #endif
 
-/* Handle Windows DLL odities */
-#if defined(ODE_DLL) && defined(WIN32)
+/* 
+Handle Windows DLL odities
+Its easier to export all symbols using the -shared flag
+for MinGW than differentiating with declspec,
+so only do it for MSVC
+*/
+#if defined(ODE_DLL) && defined(WIN32) && defined(_MSC_VER)
 #define ODE_API __declspec( dllexport )
-#elif !defined(ODE_DLL) && defined(WIN32)
+#elif !defined(ODE_DLL) && defined(WIN32) && defined(MSC_VER)
 #define ODE_API __declspec( dllimport )
 #else
 #define ODE_API
@@ -401,28 +449,6 @@ typedef unsigned long int intP;
 #endif /* #define ODE_CONFIG_H */
 ])
 
-AC_MSG_CHECKING(for the suffix of shared libraries)
-case "$host_os" in
-  hpux9* | hpux10* | hpux11*)  # taken from ltconfig
-    so_ext=".sl"
-    DLLDEFINE=""
-    ;;
-  cygwin* | mingw*)
-    so_ext=".dll"
-    DLLDEFINE="-DODE_DLL"
-    ;;
-  *apple*) # For Mac OS X
-    so_ext=".dylib"
-    DLLDEFINE=""
-    ;;
-  *)
-   so_ext=".so"
-    DLLDEFINE=""
-    ;;
-esac
-AC_MSG_RESULT($so_ext)
-AC_DEFINE_UNQUOTED(SO_EXT,"$so_ext",[The extension for shared libraries.])
-AC_SUBST(so_ext)
 
 dnl Finally write our Makefiles
 AC_OUTPUT([
@@ -447,7 +473,7 @@ echo "  Build  system type:      $build"
 echo "  Host   system type:      $host"
 echo "  Use double precision:    $precision"
 echo "  Use OPCODE:              $opcode"
-echo "  Support cylinder:        $cylinder"
+echo "  Use gyroscopic term:     $gyroscopic"
 echo "  Is this a Pentium:       $pentium"
 echo "  Is the CPU x86-64:       $cpu64"
 echo "  Is this a release build: $release"

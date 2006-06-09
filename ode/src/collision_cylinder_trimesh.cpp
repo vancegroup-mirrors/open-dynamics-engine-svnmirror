@@ -40,7 +40,6 @@
 static const int	nCYLINDER_AXIS				= 2;
 static const int    nCYLINDER_CIRCLE_SEGMENTS	= 8;
 static const int    nMAX_CYLINDER_TRIANGLE_CLIP_POINTS	= 12;
-static const int	gMaxLocalContacts = 32;
 
 #define OPTIMIZE_CONTACTS 1
 
@@ -50,6 +49,7 @@ typedef struct _sLocalContactData
 	dVector3	vPos;
 	dVector3	vNormal;
 	dReal		fDepth;
+	int			triIndex;
 	int			nFlags; // 0 = filtered out, 1 = OK
 }sLocalContactData;
 
@@ -90,7 +90,7 @@ typedef struct _sCylinderTrimeshColliderData
 	int					iFlags;
 	int					iSkip;
 	int					nContacts;// = 0;
-	sLocalContactData	gLocalContacts[gMaxLocalContacts];
+	sLocalContactData*	gLocalContacts;
 } sCylinderTrimeshColliderData;
 
 // Short type name
@@ -197,6 +197,7 @@ inline int	_ProcessLocalContacts(sData& cData)
 			dVector3Copy(cData.gLocalContacts[iContact].vPos,Contact->pos);
 			Contact->g1 = cData.gCylinder;
 			Contact->g2 = cData.gTrimesh;
+			Contact->side2 = cData.gLocalContacts[iContact].triIndex;
 			dVector3Inv(Contact->normal);
 
 			nFinalContact++;
@@ -643,6 +644,8 @@ bool _cldClipCylinderEdgeToTriangle(sData& cData, const dVector3 &v0, const dVec
 		dVector3Copy(vCEdgePoint0,cData.gLocalContacts[cData.nContacts].vPos);
 		cData.gLocalContacts[cData.nContacts].nFlags = 1;
 		cData.nContacts++;
+		if(cData.nContacts >= (cData.iFlags & NUMC_MASK)) 
+			return true;
 	}
 
 	// Generate contact 1
@@ -757,6 +760,8 @@ void _cldClipCylinderToTriangle(sData& cData,const dVector3 &v0, const dVector3 
 				dVector3Copy(vPoint,cData.gLocalContacts[cData.nContacts].vPos);
 				cData.gLocalContacts[cData.nContacts].nFlags = 1;
 				cData.nContacts++;
+				if(cData.nContacts >= (cData.iFlags & NUMC_MASK)) 
+					return;;
 			}
 		}
 	}
@@ -780,6 +785,8 @@ void _cldClipCylinderToTriangle(sData& cData,const dVector3 &v0, const dVector3 
 				dVector3Copy(vPoint,cData.gLocalContacts[cData.nContacts].vPos);
 				cData.gLocalContacts[cData.nContacts].nFlags = 1;
 				cData.nContacts++;
+				if(cData.nContacts >= (cData.iFlags & NUMC_MASK)) 
+					return;;
 			}
 		}
 	}
@@ -1004,7 +1011,10 @@ int dCollideCylinderTrimesh(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *con
 			cData.gTrimesh->ArrayCallback(cData.gTrimesh, cData.gCylinder, Triangles, TriCount);
 		}
 
-		int OutTriCount = 0;
+		// allocate buffer for local contacts on stack
+		cData.gLocalContacts = (sLocalContactData*)dALLOCA16(sizeof(sLocalContactData)*(cData.iFlags & NUMC_MASK));
+
+	    int ctContacts0 = 0;
 
 		// loop through all intersecting triangles
 		for (int i = 0; i < TriCount; i++)
@@ -1023,6 +1033,10 @@ int dCollideCylinderTrimesh(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *con
 			
 			// test this triangle
 			TestOneTriangleVsCylinder(cData , dv[0],dv[1],dv[2], false);
+
+			// fill-in tri index for generated contacts
+			for (; ctContacts0<cData.nContacts; ctContacts0++)
+				cData.gLocalContacts[ctContacts0].triIndex = Triint;
 		}
 	}
 

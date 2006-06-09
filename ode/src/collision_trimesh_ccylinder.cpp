@@ -152,6 +152,7 @@ typedef struct _sLocalContactData
 	dVector3	vPos;
 	dVector3	vNormal;
 	dReal		fDepth;
+	int			triIndex;
 	int			nFlags; // 0 = filtered out, 1 = OK
 }sLocalContactData;
 
@@ -273,7 +274,6 @@ inline int	_ProcessLocalContacts()
 {
 	if (ctContacts == 0)
 	{
-        delete[] gLocalContacts;
 		return 0;
 	}
 
@@ -304,8 +304,9 @@ inline int	_ProcessLocalContacts()
 				Contact->depth = gLocalContacts[iContact].fDepth;
 				SET(Contact->normal,gLocalContacts[iContact].vNormal);
 				SET(Contact->pos,gLocalContacts[iContact].vPos);
-				Contact->g1 = gCylinder;
-				Contact->g2 = gTriMesh;
+				Contact->g1 = gTriMesh;
+				Contact->g2 = gCylinder;
+				Contact->side2 = gLocalContacts[iContact].triIndex;
 
 				nFinalContact++;
 		}
@@ -316,7 +317,6 @@ inline int	_ProcessLocalContacts()
 	//	printf("[Info] %d contacts generated,%d  filtered.\n",ctContacts,ctContacts-nFinalContact);
 	//}
 
-    delete[] gLocalContacts;
 	return nFinalContact;
 }
 
@@ -947,13 +947,14 @@ int dCollideCCTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int s
 
 	// reset contact counter
 	ctContacts = 0;	
-	// allocate local contact workspace
-	gLocalContacts = new sLocalContactData[(iFlags & NUMC_MASK)];
 
 	// reset best depth
 	fBestDepth  = - MAX_REAL;
 	fBestCenter = 0;
 	fBestrt     = 0;
+
+
+
 
 	// reset collision normal
 	vNormal[0] = REAL(0.0);
@@ -1016,7 +1017,6 @@ int dCollideCCTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int s
 	 
 	 if (! Collider.GetContactStatus()) {
 	 	// no collision occurred
-		delete[] gLocalContacts;
 	 	return 0;
 	 }
 
@@ -1031,7 +1031,10 @@ int dCollideCCTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int s
 			 TriMesh->ArrayCallback(TriMesh, gCylinder, Triangles, TriCount);
 		 }
 
-		int OutTriCount = 0;
+		// allocate buffer for local contacts on stack
+		gLocalContacts = (sLocalContactData*)dALLOCA16(sizeof(sLocalContactData)*(iFlags & NUMC_MASK));
+
+	    int ctContacts0 = ctContacts;
 
 		uint8* UseFlags = TriMesh->Data->UseFlags;
 
@@ -1055,6 +1058,9 @@ int dCollideCCTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int s
 			// test this triangle
 			_cldTestOneTriangleVSCapsule(dv[0],dv[1],dv[2], flags);
 			
+			// fill-in tri index for generated contacts
+			for (; ctContacts0<ctContacts; ctContacts0++)
+				gLocalContacts[ctContacts0].triIndex = Triint;
 		}
 	 }
 

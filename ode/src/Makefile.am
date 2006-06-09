@@ -1,8 +1,12 @@
 AM_CXXFLAGS = @ARCHFLAGS@ -I$(top_srcdir)/include -I$(top_builddir)/include
 AM_CPPFLAGS = @ARCHFLAGS@ -I$(top_srcdir)/include -I$(top_builddir)/include
-AM_CFLAGS = @ARCHFLAGS@ -I$(topsrcdir)/include -I$(top_builddir)/include
+AM_CFLAGS = @ARCHFLAGS@ -I$(top_srcdir)/include -I$(top_builddir)/include
 lib_LIBRARIES = libode.a
 libode_a_CPPFLAGS = -O2
+
+if X86_64_SYSTEM
+libode_a_CPPFLAGS += -fPIC
+endif
 
 # Fake an executable in order to get a shared library
 # Note the elegant and cunning way to trick Autotools to install a program
@@ -10,18 +14,23 @@ libode_a_CPPFLAGS = -O2
 traplibdir=$(prefix)/lib
 EXEEXT=@so_ext@
 traplib_PROGRAMS=libode
+libode_SOURCES=
 libode_DEPENDENCIES = libfast.a libode.a
-libode_LDFLAGS=-shared -fPIC
-libode_SOURCES=$(libode_a_SOURCES) $(libfast_a_SOURCES)
+libode_LDFLAGS= @SHARED_LDFLAGS@
+libode_LDADD=$(libode_a_OBJECTS) $(libfast_a_OBJECTS)
 if OPCODE
 libode_DEPENDENCIES+= libOPCODE.a
-libode_SOURCES+=$(libOPCODE_a_SOURCES)
+libode_LDADD+=$(libOPCODE_a_OBJECTS)
 endif
 
 # convenience library to simulate per object cflags
 noinst_LIBRARIES= libfast.a
 libfast_a_CFLAGS= -O1
 libfast_a_SOURCES= fastldlt.c fastltsolve.c fastdot.c fastlsolve.c
+
+if X86_64_SYSTEM
+libfast_a_CFLAGS += -fPIC
+endif
 
 libode_a_DEPENDENCIES = libfast.a
 libode_a_LIBADD= $(libfast_a_OBJECTS)
@@ -45,7 +54,13 @@ libode_a_SOURCES = 	objects.h \
 			rotation.cpp \
 			collision_space.cpp \
 			collision_space_internal.h \
-			collision_std.cpp \
+			sphere.cpp \
+			box.cpp \
+			capsule.cpp \
+			plane.cpp \
+			ray.cpp \
+			cylinder.cpp \
+			convex.cpp \
 			joint.cpp \
 			stack.h \
 			collision_std.h \
@@ -71,7 +86,12 @@ libode_a_SOURCES = 	objects.h \
 
 if OPCODE
 noinst_LIBRARIES+= libOPCODE.a
-libOPCODE_a_CPPFLAGS= -O2 -fno-strict-aliasing
+libOPCODE_a_CPPFLAGS= -O2 -fno-strict-aliasing -fPIC
+
+if X86_64_SYSTEM
+libOPCODE_a_CPPFLAGS += -fPIC
+endif
+
 libOPCODE_a_SOURCES=	@TOPDIR@/OPCODE/OPC_AABBCollider.cpp \
 			@TOPDIR@/OPCODE/OPC_AABBTree.cpp \
 			@TOPDIR@/OPCODE/OPC_BaseModel.cpp \
@@ -120,14 +140,11 @@ libode_a_SOURCES+=	collision_trimesh_trimesh.cpp \
 			collision_trimesh_box.cpp \
 			collision_trimesh_ccylinder.cpp \
 			collision_trimesh_distance.cpp \
-			collision_trimesh_internal.h
-endif
-
-if CYLINDER
-AM_CXXFLAGS += -DdCYLINDER_ENABLED
-libode_a_SOURCES+=      collision_cylinder_box.cpp \
+			collision_trimesh_internal.h \
+                        collision_cylinder_box.cpp \
                         collision_cylinder_sphere.cpp \
                         collision_cylinder_plane.cpp \
                         collision_cylinder_trimesh.cpp
 endif
+
 

@@ -185,16 +185,20 @@ static void initColliders()
   setCollider (dTriMeshClass,dRayClass,&dCollideRTL);
   setCollider (dTriMeshClass,dTriMeshClass,&dCollideTTL);
   setCollider (dTriMeshClass,dCapsuleClass,&dCollideCCTL);
-#ifdef dCYLINDER_ENABLED
   setCollider (dCylinderClass,dTriMeshClass,&dCollideCylinderTrimesh);
 #endif
-#endif
-#ifdef dCYLINDER_ENABLED
   setCollider (dCylinderClass,dBoxClass,&dCollideCylinderBox);
   setCollider (dCylinderClass,dSphereClass,&dCollideCylinderSphere);
   setCollider (dCylinderClass,dPlaneClass,&dCollideCylinderPlane);
   //setCollider (dCylinderClass,dCylinderClass,&dCollideCylinderCylinder);
-#endif
+//--> Convex Collision
+  setCollider (dConvexClass,dPlaneClass,&dCollideConvexPlane);
+  setCollider (dSphereClass,dConvexClass,&dCollideSphereConvex);
+  setCollider (dConvexClass,dBoxClass,&dCollideConvexBox);
+  setCollider (dConvexClass,dCapsuleClass,&dCollideConvexCapsule);
+  setCollider (dConvexClass,dConvexClass,&dCollideConvexConvex);
+//<-- Convex Collision
+
   setAllColliders (dGeomTransformClass,&dCollideTransform);
 }
 
@@ -229,6 +233,9 @@ int dCollide (dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact,
 	dxGeom *tmp = c->g1;
 	c->g1 = c->g2;
 	c->g2 = tmp;
+	int tmpint = c->side1;
+	c->side1 = c->side2;
+	c->side2 = tmpint;
       }
     }
     else {
@@ -277,10 +284,11 @@ dxGeom::dxGeom (dSpaceID _space, int is_placeable)
 
 dxGeom::~dxGeom()
 {
-  if (parent_space) dSpaceRemove (parent_space,this);
-  if ((gflags & GEOM_PLACEABLE) && !body) dFreePosr(final_posr);
-  if (offset_posr) dFreePosr(offset_posr);
-  bodyRemove();
+   if (parent_space) dSpaceRemove (parent_space,this);
+   if ((gflags & GEOM_PLACEABLE) && (!body || (body && offset_posr)))
+     dFreePosr(final_posr);
+   if (offset_posr) dFreePosr(offset_posr);
+   bodyRemove();
 }
 
 

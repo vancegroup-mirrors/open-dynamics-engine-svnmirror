@@ -31,46 +31,536 @@
 extern "C" {
 #endif
 
+/**
+ * @defgroup collide Collision Detection
+ *
+ * ODE has two main components: a dynamics simulation engine and a collision 
+ * detection engine. The collision engine is given information about the 
+ * shape of each body. At each time step it figures out which bodies touch 
+ * each other and passes the resulting contact point information to the user. 
+ * The user in turn creates contact joints between bodies.
+ *
+ * Using ODE's collision detection is optional - an alternative collision 
+ * detection system can be used as long as it can supply the right kinds of 
+ * contact information. 
+ */
+
+
 /* ************************************************************************ */
 /* general functions */
 
-ODE_API void dGeomDestroy (dGeomID);
-ODE_API void dGeomSetData (dGeomID, void *);
-ODE_API void *dGeomGetData (dGeomID);
-ODE_API void dGeomSetBody (dGeomID, dBodyID);
-ODE_API dBodyID dGeomGetBody (dGeomID);
-ODE_API void dGeomSetPosition (dGeomID, dReal x, dReal y, dReal z);
-ODE_API void dGeomSetRotation (dGeomID, const dMatrix3 R);
-ODE_API void dGeomSetQuaternion (dGeomID, const dQuaternion);
-ODE_API const dReal * dGeomGetPosition (dGeomID);
-ODE_API const dReal * dGeomGetRotation (dGeomID);
-ODE_API void dGeomGetQuaternion (dGeomID, dQuaternion result);
-ODE_API void dGeomGetAABB (dGeomID, dReal aabb[6]);
-ODE_API int dGeomIsSpace (dGeomID);
+/**
+ * @brief Destroy a geom, removing it from any space.
+ *
+ * Destroy a geom, removing it from any space it is in first. This one 
+ * function destroys a geom of any type, but to create a geom you must call 
+ * a creation function for that type.
+ *
+ * When a space is destroyed, if its cleanup mode is 1 (the default) then all 
+ * the geoms in that space are automatically destroyed as well. 
+ *
+ * @param geom the geom to be destroyed.
+ * @ingroup collide
+ */
+ODE_API void dGeomDestroy (dGeomID geom);
+
+
+/**
+ * @brief Set the user-defined data pointer stored in the geom.
+ *
+ * @param geom the geom to hold the data
+ * @param data the data pointer to be stored
+ * @ingroup collide
+ */
+ODE_API void dGeomSetData (dGeomID geom, void* data);
+
+
+/**
+ * @brief Get the user-defined data pointer stored in the geom.
+ *
+ * @param geom the geom containing the data
+ * @ingroup collide
+ */
+ODE_API void *dGeomGetData (dGeomID geom);
+
+
+/**
+ * @brief Set the body associated with a placeable geom. 
+ *
+ * Setting a body on a geom automatically combines the position vector and 
+ * rotation matrix of the body and geom, so that setting the position or 
+ * orientation of one will set the value for both objects. Setting a body 
+ * ID of zero gives the geom its own position and rotation, independent 
+ * from any body. If the geom was previously connected to a body then its 
+ * new independent position/rotation is set to the current position/rotation 
+ * of the body.
+ *
+ * Calling these functions on a non-placeable geom results in a runtime 
+ * error in the debug build of ODE. 
+ *
+ * @param geom the geom to connect
+ * @param body the body to attach to the geom
+ * @ingroup collide
+ */
+ODE_API void dGeomSetBody (dGeomID geom, dBodyID body);
+
+
+/**
+ * @brief Get the body associated with a placeable geom. 
+ * @param geom the geom to query.
+ * @sa dGeomSetBody
+ * @ingroup collide
+ */
+ODE_API dBodyID dGeomGetBody (dGeomID geom);
+
+
+/**
+ * @brief Set the position vector of a placeable geom.
+ *
+ * If the geom is attached to a body, the body's position will also be changed.
+ * Calling this function on a non-placeable geom results in a runtime error in 
+ * the debug build of ODE. 
+ *
+ * @param geom the geom to set.
+ * @param x the new X coordinate.
+ * @param y the new Y coordinate.
+ * @param z the new Z coordinate.
+ * @sa dBodySetPosition
+ * @ingroup collide
+ */
+ODE_API void dGeomSetPosition (dGeomID geom, dReal x, dReal y, dReal z);
+
+
+/**
+ * @brief Set the rotation matrix of a placeable geom.
+ *
+ * If the geom is attached to a body, the body's rotation will also be changed.
+ * Calling this function on a non-placeable geom results in a runtime error in 
+ * the debug build of ODE. 
+ *
+ * @param geom the geom to set.
+ * @param R the new rotation matrix.
+ * @sa dBodySetRotation
+ * @ingroup collide
+ */
+ODE_API void dGeomSetRotation (dGeomID geom, const dMatrix3 R);
+
+
+/**
+ * @brief Set the rotation of a placeable geom.
+ *
+ * If the geom is attached to a body, the body's rotation will also be changed.
+ *
+ * Calling this function on a non-placeable geom results in a runtime error in 
+ * the debug build of ODE. 
+ *
+ * @param geom the geom to set.
+ * @param Q the new rotation.
+ * @sa dBodySetQuaternion
+ * @ingroup collide
+ */
+ODE_API void dGeomSetQuaternion (dGeomID geom, const dQuaternion Q);
+
+
+/**
+ * @brief Get the position vector of a placeable geom.
+ *
+ * If the geom is attached to a body, the body's position will be returned.
+ *
+ * Calling this function on a non-placeable geom results in a runtime error in 
+ * the debug build of ODE. 
+ *
+ * @param geom the geom to query.
+ * @returns A pointer to the geom's position vector.
+ * @remarks The returned value is a pointer to the geom's internal
+ *          data structure. It is valid until any changes are made
+ *          to the geom.
+ * @sa dBodyGetPosition
+ * @ingroup collide
+ */
+ODE_API const dReal * dGeomGetPosition (dGeomID geom);
+
+
+/**
+ * @brief Get the rotation matrix of a placeable geom.
+ *
+ * If the geom is attached to a body, the body's rotation will be returned.
+ *
+ * Calling this function on a non-placeable geom results in a runtime error in 
+ * the debug build of ODE. 
+ *
+ * @param geom the geom to query.
+ * @returns A pointer to the geom's rotation matrix.
+ * @remarks The returned value is a pointer to the geom's internal
+ *          data structure. It is valid until any changes are made
+ *          to the geom.
+ * @sa dBodyGetRotation
+ * @ingroup collide
+ */
+ODE_API const dReal * dGeomGetRotation (dGeomID geom);
+
+
+/**
+ * @brief Get the rotation quaternion of a placeable geom.
+ *
+ * If the geom is attached to a body, the body's quaternion will be returned.
+ *
+ * Calling this function on a non-placeable geom results in a runtime error in 
+ * the debug build of ODE. 
+ *
+ * @param geom the geom to query.
+ * @param result a copy of the rotation quaternion.
+ * @sa dBodyGetQuaternion
+ * @ingroup collide
+ */
+ODE_API void dGeomGetQuaternion (dGeomID geom, dQuaternion result);
+
+
+/**
+ * @brief Return the axis-aligned bounding box.
+ *
+ * Return in aabb an axis aligned bounding box that surrounds the given geom. 
+ * The aabb array has elements (minx, maxx, miny, maxy, minz, maxz). If the 
+ * geom is a space, a bounding box that surrounds all contained geoms is 
+ * returned.
+ *
+ * This function may return a pre-computed cached bounding box, if it can 
+ * determine that the geom has not moved since the last time the bounding 
+ * box was computed.
+ *
+ * @param geom the geom to query
+ * @param aabb the returned bounding box
+ * @ingroup collide
+ */
+ODE_API void dGeomGetAABB (dGeomID geom, dReal aabb[6]);
+
+
+/**
+ * @brief Determing if a geom is a space.
+ * @param geom the geom to query
+ * @returns Non-zero if the geom is a space, zero otherwise.
+ * @ingroup collide
+ */
+ODE_API int dGeomIsSpace (dGeomID geom);
+
+
+/**
+ * @brief Query for the space containing a particular geom.
+ * @param geom the geom to query
+ * @returns The space that contains the geom, or NULL if the geom is
+ *          not contained by a space.
+ * @ingroup collide
+ */
 ODE_API dSpaceID dGeomGetSpace (dGeomID);
-ODE_API int dGeomGetClass (dGeomID);
-ODE_API void dGeomSetCategoryBits (dGeomID, unsigned long bits);
-ODE_API void dGeomSetCollideBits (dGeomID, unsigned long bits);
+
+
+/**
+ * @brief Given a geom, this returns its class.
+ *
+ * The ODE classes are:
+ *  @li dSphereClass
+ *  @li dBoxClass
+ *  @li dCylinderClass
+ *  @li dPlaneClass
+ *  @li dRayClass
+ *  @li dConvexClass
+ *  @li dGeomTransformClass
+ *  @li dTriMeshClass
+ *  @li dSimpleSpaceClass
+ *  @li dHashSpaceClass
+ *  @li dQuadTreeSpaceClass
+ *  @li dFirstUserClass
+ *  @li dLastUserClass
+ *
+ * User-defined class will return their own number.
+ *
+ * @param geom the geom to query
+ * @returns The geom class ID.
+ * @ingroup collide
+ */
+ODE_API int dGeomGetClass (dGeomID geom);
+
+
+/**
+ * @brief Set the "category" bitfield for the given geom. 
+ *
+ * The category bitfield is used by spaces to govern which geoms will 
+ * interact with each other. The bitfield is guaranteed to be at least 
+ * 32 bits wide. The default category values for newly created geoms 
+ * have all bits set.
+ *
+ * @param geom the geom to set
+ * @param bits the new bitfield value
+ * @ingroup collide
+ */
+ODE_API void dGeomSetCategoryBits (dGeomID geom, unsigned long bits);
+
+
+/**
+ * @brief Set the "collide" bitfield for the given geom. 
+ *
+ * The collide bitfield is used by spaces to govern which geoms will 
+ * interact with each other. The bitfield is guaranteed to be at least 
+ * 32 bits wide. The default category values for newly created geoms 
+ * have all bits set.
+ *
+ * @param geom the geom to set
+ * @param bits the new bitfield value
+ * @ingroup collide
+ */
+ODE_API void dGeomSetCollideBits (dGeomID geom, unsigned long bits);
+
+
+/**
+ * @brief Get the "category" bitfield for the given geom. 
+ *
+ * @param geom the geom to set
+ * @param bits the new bitfield value
+ * @sa dGeomSetCategoryBits
+ * @ingroup collide
+ */
 ODE_API unsigned long dGeomGetCategoryBits (dGeomID);
+
+
+/**
+ * @brief Get the "collide" bitfield for the given geom. 
+ *
+ * @param geom the geom to set
+ * @param bits the new bitfield value
+ * @sa dGeomSetCollideBits
+ * @ingroup collide
+ */
 ODE_API unsigned long dGeomGetCollideBits (dGeomID);
-ODE_API void dGeomEnable (dGeomID);
-ODE_API void dGeomDisable (dGeomID);
-ODE_API int dGeomIsEnabled (dGeomID);
+
+
+/**
+ * @brief Enable a geom. 
+ *
+ * Disabled geoms are completely ignored by dSpaceCollide and dSpaceCollide2,
+ * although they can still be members of a space. New geoms are created in 
+ * the enabled state. 
+ *
+ * @param geom   the geom to enable
+ * @sa dGeomDisable
+ * @sa dGeomIsEnabled
+ * @ingroup collide
+ */
+ODE_API void dGeomEnable (dGeomID geom);
+
+
+/**
+ * @brief Disable a geom. 
+ *
+ * Disabled geoms are completely ignored by dSpaceCollide and dSpaceCollide2,
+ * although they can still be members of a space. New geoms are created in 
+ * the enabled state. 
+ *
+ * @param geom   the geom to disable
+ * @sa dGeomDisable
+ * @sa dGeomIsEnabled
+ * @ingroup collide
+ */
+ODE_API void dGeomDisable (dGeomID geom);
+
+
+/**
+ * @brief Check to see if a geom is enabled.
+ *
+ * Disabled geoms are completely ignored by dSpaceCollide and dSpaceCollide2,
+ * although they can still be members of a space. New geoms are created in 
+ * the enabled state. 
+ *
+ * @param geom   the geom to query
+ * @returns Non-zero if the geom is enabled, zero otherwise.
+ * @sa dGeomDisable
+ * @sa dGeomIsEnabled
+ * @ingroup collide
+ */
+ODE_API int dGeomIsEnabled (dGeomID geom);
 
 /* ************************************************************************ */
 /* geom offset from body */
 
-ODE_API void dGeomSetOffsetPosition (dGeomID, dReal x, dReal y, dReal z);
-ODE_API void dGeomSetOffsetRotation (dGeomID, const dMatrix3 R);
-ODE_API void dGeomSetOffsetQuaternion (dGeomID, const dQuaternion);
-ODE_API void dGeomSetOffsetWorldPosition (dGeomID, dReal x, dReal y, dReal z);
-ODE_API void dGeomSetOffsetWorldRotation (dGeomID, const dMatrix3 R);
-ODE_API void dGeomSetOffsetWorldQuaternion (dGeomID, const dQuaternion);
-ODE_API void dGeomClearOffset(dGeomID);
-ODE_API int dGeomIsOffset(dGeomID);
-ODE_API const dReal * dGeomGetOffsetPosition (dGeomID);
-ODE_API const dReal * dGeomGetOffsetRotation (dGeomID);
-ODE_API void dGeomGetOffsetQuaternion (dGeomID, dQuaternion result);
+/**
+ * @brief Set the local offset position of a geom from its body.
+ *
+ * Sets the geom's positional offset in local coordinates.
+ * After this call, the geom will be at a new position determined from the
+ * body's position and the offset.
+ * The geom must be attached to a body.
+ * If the geom did not have an offset, it is automatically created.
+ *
+ * @param geom the geom to set.
+ * @param x the new X coordinate.
+ * @param y the new Y coordinate.
+ * @param z the new Z coordinate.
+ * @ingroup collide
+ */
+ODE_API void dGeomSetOffsetPosition (dGeomID geom, dReal x, dReal y, dReal z);
+
+
+/**
+ * @brief Set the local offset rotation matrix of a geom from its body.
+ *
+ * Sets the geom's rotational offset in local coordinates.
+ * After this call, the geom will be at a new position determined from the
+ * body's position and the offset.
+ * The geom must be attached to a body.
+ * If the geom did not have an offset, it is automatically created.
+ *
+ * @param geom the geom to set.
+ * @param R the new rotation matrix.
+ * @ingroup collide
+ */
+ODE_API void dGeomSetOffsetRotation (dGeomID geom, const dMatrix3 R);
+
+
+/**
+ * @brief Set the local offset rotation of a geom from its body.
+ *
+ * Sets the geom's rotational offset in local coordinates.
+ * After this call, the geom will be at a new position determined from the
+ * body's position and the offset.
+ * The geom must be attached to a body.
+ * If the geom did not have an offset, it is automatically created.
+ *
+ * @param geom the geom to set.
+ * @param Q the new rotation.
+ * @ingroup collide
+ */
+ODE_API void dGeomSetOffsetQuaternion (dGeomID geom, const dQuaternion Q);
+
+
+/**
+ * @brief Set the offset position of a geom from its body.
+ *
+ * Sets the geom's positional offset to move it to the new world
+ * coordinates.
+ * After this call, the geom will be at the world position passed in,
+ * and the offset will be the difference from the current body position.
+ * The geom must be attached to a body.
+ * If the geom did not have an offset, it is automatically created.
+ *
+ * @param geom the geom to set.
+ * @param x the new X coordinate.
+ * @param y the new Y coordinate.
+ * @param z the new Z coordinate.
+ * @ingroup collide
+ */
+ODE_API void dGeomSetOffsetWorldPosition (dGeomID geom, dReal x, dReal y, dReal z);
+
+
+/**
+ * @brief Set the offset rotation of a geom from its body.
+ *
+ * Sets the geom's rotational offset to orient it to the new world
+ * rotation matrix.
+ * After this call, the geom will be at the world orientation passed in,
+ * and the offset will be the difference from the current body orientation.
+ * The geom must be attached to a body.
+ * If the geom did not have an offset, it is automatically created.
+ *
+ * @param geom the geom to set.
+ * @param R the new rotation matrix.
+ * @ingroup collide
+ */
+ODE_API void dGeomSetOffsetWorldRotation (dGeomID geom, const dMatrix3 R);
+
+
+/**
+ * @brief Set the offset rotation of a geom from its body.
+ *
+ * Sets the geom's rotational offset to orient it to the new world
+ * rotation matrix.
+ * After this call, the geom will be at the world orientation passed in,
+ * and the offset will be the difference from the current body orientation.
+ * The geom must be attached to a body.
+ * If the geom did not have an offset, it is automatically created.
+ *
+ * @param geom the geom to set.
+ * @param Q the new rotation.
+ * @ingroup collide
+ */
+ODE_API void dGeomSetOffsetWorldQuaternion (dGeomID geom, const dQuaternion);
+
+
+/**
+ * @brief Clear any offset from the geom.
+ *
+ * If the geom has an offset, it is eliminated and the geom is
+ * repositioned at the body's position.  If the geom has no offset,
+ * this function does nothing.
+ * This is more efficient than calling dGeomSetOffsetPosition(zero)
+ * and dGeomSetOffsetRotation(identiy), because this function actually
+ * eliminates the offset, rather than leaving it as the identity transform.
+ *
+ * @param geom the geom to have its offset destroyed.
+ * @ingroup collide
+ */
+ODE_API void dGeomClearOffset(dGeomID geom);
+
+
+/**
+ * @brief Check to see whether the geom has an offset.
+ *
+ * This function will return non-zero if the offset has been created.
+ * Note that there is a difference between a geom with no offset,
+ * and a geom with an offset that is the identity transform.
+ * In the latter case, although the observed behaviour is identical,
+ * there is a unnecessary computation involved because the geom will
+ * be applying the transform whenever it needs to recalculate its world
+ * position.
+ *
+ * @param geom the geom to query.
+ * @returns Non-zero if the geom has an offset, zero otherwise.
+ * @ingroup collide
+ */
+ODE_API int dGeomIsOffset(dGeomID geom);
+
+
+/**
+ * @brief Get the offset position vector of a geom.
+ *
+ * Returns the positional offset of the geom in local coordinates.
+ * If the geom has no offset, this function returns the zero vector.
+ *
+ * @param geom the geom to query.
+ * @returns A pointer to the geom's offset vector.
+ * @remarks The returned value is a pointer to the geom's internal
+ *          data structure. It is valid until any changes are made
+ *          to the geom.
+ * @ingroup collide
+ */
+ODE_API const dReal * dGeomGetOffsetPosition (dGeomID geom);
+
+
+/**
+ * @brief Get the offset position vector of a geom.
+ *
+ * Returns the positional offset of the geom in local coordinates.
+ * If the geom has no offset, this function returns the zero vector.
+ *
+ * @param geom the geom to query.
+ * @returns A pointer to the geom's offset vector.
+ * @remarks The returned value is a pointer to the geom's internal
+ *          data structure. It is valid until any changes are made
+ *          to the geom.
+ * @ingroup collide
+ */
+ODE_API const dReal * dGeomGetOffsetRotation (dGeomID geom);
+
+
+/**
+ * @brief Get the offset rotation quaternion of a geom.
+ *
+ * Returns the rotation offset of the geom as a quaternion.
+ * If the geom has no offset, the identity quaternion is returned.
+ *
+ * @param geom the geom to query.
+ * @param result a copy of the rotation quaternion.
+ * @ingroup collide
+ */
+ODE_API void dGeomGetOffsetQuaternion (dGeomID geom, dQuaternion result);
 
 /* ************************************************************************ */
 /* collision detection */
@@ -97,6 +587,7 @@ enum {
   dCylinderClass,
   dPlaneClass,
   dRayClass,
+  dConvexClass,
   dGeomTransformClass,
   dTriMeshClass,
 
@@ -116,6 +607,20 @@ ODE_API dGeomID dCreateSphere (dSpaceID space, dReal radius);
 ODE_API void dGeomSphereSetRadius (dGeomID sphere, dReal radius);
 ODE_API dReal dGeomSphereGetRadius (dGeomID sphere);
 ODE_API dReal dGeomSpherePointDepth (dGeomID sphere, dReal x, dReal y, dReal z);
+
+//--> Convex Functions
+ODE_API dGeomID dCreateConvex (dSpaceID space,
+			       dReal *_planes,
+			       unsigned int _planecount,
+			       dReal *_points,
+			       unsigned int _pointcount,unsigned int *_polygons);
+  
+ODE_API void dGeomSetConvex (dGeomID g,
+			     dReal *_planes,
+			     unsigned int _count,
+			     dReal *_points,
+			     unsigned int _pointcount,unsigned int *_polygons);
+//<-- Convex Functions
 
 ODE_API dGeomID dCreateBox (dSpaceID space, dReal lx, dReal ly, dReal lz);
 ODE_API void dGeomBoxSetLengths (dGeomID box, dReal lx, dReal ly, dReal lz);
@@ -139,11 +644,9 @@ ODE_API dReal dGeomCapsulePointDepth (dGeomID ccylinder, dReal x, dReal y, dReal
 #define dGeomCCylinderPointDepth dGeomCapsulePointDepth
 #define dCCylinderClass dCapsuleClass
 
-#ifdef dCYLINDER_ENABLED
 ODE_API dGeomID dCreateCylinder (dSpaceID space, dReal radius, dReal length);
 ODE_API void dGeomCylinderSetParams (dGeomID cylinder, dReal radius, dReal length);
 ODE_API void dGeomCylinderGetParams (dGeomID cylinder, dReal *radius, dReal *length);
-#endif
 
 ODE_API dGeomID dCreateRay (dSpaceID space, dReal length);
 ODE_API void dGeomRaySetLength (dGeomID ray, dReal length);

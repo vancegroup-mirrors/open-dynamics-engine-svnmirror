@@ -25,9 +25,9 @@ ifeq ($(CONFIG),ReleaseDLL)
   OBJDIR := obj/ode/ReleaseDLL
   OUTDIR := ../../lib/ReleaseDLL
   CPPFLAGS := -MD -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE"
-  CFLAGS += $(CPPFLAGS) -g
+  CFLAGS += $(CPPFLAGS) -O3 -fomit-frame-pointer
   CXXFLAGS := $(CFLAGS)
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -luser32
+  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -s -luser32
   LDDEPS :=
   TARGET := ode.dll
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES)
@@ -53,9 +53,9 @@ ifeq ($(CONFIG),ReleaseLib)
   OBJDIR := obj/ode/ReleaseLib
   OUTDIR := ../../lib/ReleaseLib
   CPPFLAGS := -MD -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE"
-  CFLAGS += $(CPPFLAGS) -g
+  CFLAGS += $(CPPFLAGS) -O3 -fomit-frame-pointer
   CXXFLAGS := $(CFLAGS)
-  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -luser32
+  LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -s -luser32
   LDDEPS :=
   TARGET := ode.lib
   BLDCMD = ar -cr $(OUTDIR)/$(TARGET) $(OBJECTS); ranlib $(OUTDIR)/$(TARGET)
@@ -67,6 +67,8 @@ OBJECTS := \
 	$(OBJDIR)/fastlsolve.o \
 	$(OBJDIR)/fastltsolve.o \
 	$(OBJDIR)/array.o \
+	$(OBJDIR)/box.o \
+	$(OBJDIR)/capsule.o \
 	$(OBJDIR)/collision_cylinder_box.o \
 	$(OBJDIR)/collision_cylinder_plane.o \
 	$(OBJDIR)/collision_cylinder_sphere.o \
@@ -74,7 +76,6 @@ OBJECTS := \
 	$(OBJDIR)/collision_kernel.o \
 	$(OBJDIR)/collision_quadtreespace.o \
 	$(OBJDIR)/collision_space.o \
-	$(OBJDIR)/collision_std.o \
 	$(OBJDIR)/collision_transform.o \
 	$(OBJDIR)/collision_trimesh.o \
 	$(OBJDIR)/collision_trimesh_box.o \
@@ -84,6 +85,8 @@ OBJECTS := \
 	$(OBJDIR)/collision_trimesh_sphere.o \
 	$(OBJDIR)/collision_trimesh_trimesh.o \
 	$(OBJDIR)/collision_util.o \
+	$(OBJDIR)/convex.o \
+	$(OBJDIR)/cylinder.o \
 	$(OBJDIR)/error.o \
 	$(OBJDIR)/export-dif.o \
 	$(OBJDIR)/joint.o \
@@ -96,8 +99,11 @@ OBJECTS := \
 	$(OBJDIR)/obstack.o \
 	$(OBJDIR)/ode.o \
 	$(OBJDIR)/odemath.o \
+	$(OBJDIR)/plane.o \
 	$(OBJDIR)/quickstep.o \
+	$(OBJDIR)/ray.o \
 	$(OBJDIR)/rotation.o \
+	$(OBJDIR)/sphere.o \
 	$(OBJDIR)/step.o \
 	$(OBJDIR)/stepfast.o \
 	$(OBJDIR)/testing.o \
@@ -194,6 +200,16 @@ $(OBJDIR)/array.o: ../../ode/src/array.cpp
 	@echo $(notdir $<)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+$(OBJDIR)/box.o: ../../ode/src/box.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/capsule.o: ../../ode/src/capsule.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
 $(OBJDIR)/collision_cylinder_box.o: ../../ode/src/collision_cylinder_box.cpp
 	-@$(CMD_MKOBJDIR)
 	@echo $(notdir $<)
@@ -225,11 +241,6 @@ $(OBJDIR)/collision_quadtreespace.o: ../../ode/src/collision_quadtreespace.cpp
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 $(OBJDIR)/collision_space.o: ../../ode/src/collision_space.cpp
-	-@$(CMD_MKOBJDIR)
-	@echo $(notdir $<)
-	@$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-$(OBJDIR)/collision_std.o: ../../ode/src/collision_std.cpp
 	-@$(CMD_MKOBJDIR)
 	@echo $(notdir $<)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -275,6 +286,16 @@ $(OBJDIR)/collision_trimesh_trimesh.o: ../../ode/src/collision_trimesh_trimesh.c
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 $(OBJDIR)/collision_util.o: ../../ode/src/collision_util.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/convex.o: ../../ode/src/convex.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/cylinder.o: ../../ode/src/cylinder.cpp
 	-@$(CMD_MKOBJDIR)
 	@echo $(notdir $<)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -339,12 +360,27 @@ $(OBJDIR)/odemath.o: ../../ode/src/odemath.cpp
 	@echo $(notdir $<)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+$(OBJDIR)/plane.o: ../../ode/src/plane.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
 $(OBJDIR)/quickstep.o: ../../ode/src/quickstep.cpp
 	-@$(CMD_MKOBJDIR)
 	@echo $(notdir $<)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+$(OBJDIR)/ray.o: ../../ode/src/ray.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
 $(OBJDIR)/rotation.o: ../../ode/src/rotation.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/sphere.o: ../../ode/src/sphere.cpp
 	-@$(CMD_MKOBJDIR)
 	@echo $(notdir $<)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
