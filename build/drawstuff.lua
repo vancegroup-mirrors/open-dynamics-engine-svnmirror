@@ -75,7 +75,8 @@ package.objdir = "obj/drawstuff"
     "user32",
     "opengl32",
     "glu32",
-    "winmm"
+    "winmm",
+    "gdi32"
   }
   
   if (windows) then
