@@ -78,9 +78,18 @@ package.objdir = "obj/drawstuff"
     "winmm",
     "gdi32"
   }
+
+  local x11_libs =
+  {
+    "X11",
+    "GL",
+    "GLU"
+  }
   
   if (windows) then
-    table.insert(package.links, windows_libs )
+    table.insert(package.links, windows_libs)
+  else
+    table.insert(package.links, x11_libs)
   end
 
 
