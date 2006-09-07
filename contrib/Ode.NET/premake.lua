@@ -33,7 +33,7 @@ project.name = "Ode.NET"
 		package.kind = "dll"
 		package.language = "c#"
 		package.files = { "Drawstuff.cs" }
-		package.links = { "System" }
+		package.links = { "System", "Ode.NET" }
 	end
 	
 	
