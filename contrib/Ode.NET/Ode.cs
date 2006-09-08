@@ -11,7 +11,70 @@ namespace Ode.NET
 
 	public static class d
 	{
+		public static dReal Infinity = dReal.MaxValue;
+
+		#region Flags and Enumerations
+
+		[Flags]
+		public enum ContactFlags : int
+		{
+			Mu2 = 0x001,
+			FDir1 = 0x002,
+			Bounce = 0x004,
+			SoftERP = 0x008,
+			SoftCFM = 0x010,
+			Motion1 = 0x020,
+			Motion2 = 0x040,
+			Slip1 = 0x080,
+			Slip2 = 0x100,
+			Approx0 = 0x0000,
+			Approx1_1 = 0x1000,
+			Approx1_2 = 0x2000,
+			Approx1 = 0x3000
+		}
+
+		public enum JointType : int
+		{
+			None,
+			Ball,
+			Hinge,
+			Slider,
+			Contact,
+			Universal,
+			Hinge2,
+			Fixed,
+			Null,
+			AMotor,
+			LMotor,
+			Plane2D
+		}
+
+		#endregion
+
 		#region Type Definitions
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void NearCallback(IntPtr data, IntPtr geom1, IntPtr geom2);
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct Contact
+		{
+			public SurfaceParameters surface;
+			public ContactGeom geom;
+			public Vector3 fdir1;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct ContactGeom
+		{
+			public static readonly int SizeOf = Marshal.SizeOf(typeof(ContactGeom));
+
+			public Vector3 pos;
+			public Vector3 normal;
+			public dReal depth;
+			public IntPtr g1, g2;
+			public int side1, side2;
+		}
 
 		[StructLayout(LayoutKind.Sequential)]
 		public struct Matrix3
@@ -47,6 +110,21 @@ namespace Ode.NET
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
+		public struct SurfaceParameters
+		{
+			public ContactFlags mode;
+			public dReal mu;
+			public dReal mu2;
+			public dReal bounce;
+			public dReal bounce_vel;
+			public dReal soft_erp;
+			public dReal soft_cfm;
+			public dReal motion1;
+			public dReal motion2;
+			public dReal slip1, slip2;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
 		public struct Vector3
 		{
 			public Vector3(dReal x, dReal y, dReal z)
@@ -63,8 +141,14 @@ namespace Ode.NET
 
 		#endregion
 
+		[DllImport("ode", EntryPoint = "dAreConnectedExcluding")]
+		public static extern bool AreConnectedExcluding(IntPtr body0, IntPtr body1, JointType jointType);
+
 		[DllImport("ode", EntryPoint = "dBodyCopyPosition")]
 		public static extern void BodyCopyPosition(IntPtr body, out Vector3 pos);
+
+		[DllImport("ode", EntryPoint = "dBodyCopyRotation")]
+		public static extern void BodyCopyRotation(IntPtr body, out Matrix3 R);
 
 		[DllImport("ode", EntryPoint = "dBodyCopyQuaternion")]
 		public static extern void BodyCopyQuaternion(IntPtr body, out Quaternion quat);
@@ -78,14 +162,23 @@ namespace Ode.NET
 		[DllImport("ode", EntryPoint = "dBodySetPosition")]
 		public static extern void BodySetPosition(IntPtr body, dReal x, dReal y, dReal z);
 
+		[DllImport("ode", EntryPoint = "dBodySetRotation")]
+		public static extern void BodySetRotation(IntPtr body, ref Matrix3 R);
+
 		[DllImport("ode", EntryPoint = "dCloseODE")]
 		public static extern void CloseODE();
+
+		[DllImport("ode", EntryPoint = "dCollide")]
+		public static extern int Collide(IntPtr o1, IntPtr o2, int flags, [In, Out] ContactGeom[] contact, int skip);
 
 		[DllImport("ode", EntryPoint = "dCreateBox")]
 		public static extern IntPtr CreateBox(IntPtr space, dReal lx, dReal ly, dReal lz);
 
 		[DllImport("ode", EntryPoint = "dCreatePlane")]
 		public static extern IntPtr CreatePlane(IntPtr space, dReal a, dReal b, dReal c, dReal d);
+
+		[DllImport("ode", EntryPoint = "dGeomBoxGetLengths")]
+		public static extern void GeomBoxGetLengths(IntPtr geom, out Vector3 len);
 
 		[DllImport("ode", EntryPoint = "dGeomCopyPosition")]
 		public static extern void GeomCopyPosition(IntPtr geom, out Vector3 pos);
@@ -102,6 +195,12 @@ namespace Ode.NET
 		[DllImport("ode", EntryPoint = "dHashSpaceCreate")]
 		public static extern IntPtr HashSpaceCreate(IntPtr space);
 
+		[DllImport("ode", EntryPoint = "dJointAttach")]
+		public static extern void JointAttach(IntPtr joint, IntPtr body1, IntPtr body2);
+
+		[DllImport("ode", EntryPoint = "dJointCreateContact")]
+		public static extern IntPtr JointCreateContact(IntPtr world, IntPtr group, ref Contact contact);
+
 		[DllImport("ode", EntryPoint = "dJointGroupCreate")]
 		public static extern IntPtr JointGroupCreate(int max_size);
 
@@ -116,6 +215,9 @@ namespace Ode.NET
 
 		[DllImport("ode", EntryPoint = "dRFromAxisAndAngle")]
 		public static extern void RFromAxisAndAngle(out Matrix3 R, dReal x, dReal y, dReal z, dReal angle);
+
+		[DllImport("ode", EntryPoint = "dSpaceCollide")]
+		public static extern void SpaceCollide(IntPtr space, IntPtr data, NearCallback callback);
 
 		[DllImport("ode", EntryPoint = "dSpaceDestroy")]
 		public static extern void SpaceDestroy(IntPtr space);

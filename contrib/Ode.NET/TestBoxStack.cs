@@ -17,10 +17,42 @@ namespace Ode.NET
 
 		static Queue<IntPtr> obj = new Queue<IntPtr>();
 
-		static bool random_pos;
-
 		static d.Vector3 xyz = new d.Vector3(2.1640f, -1.3079f, 1.7600f);
 		static d.Vector3 hpr = new d.Vector3(125.5000f, -17.0000f, 0.0000f);
+
+		static d.NearCallback nearCallback = near;
+		static d.ContactGeom[] contacts = new d.ContactGeom[MAX_CONTACTS];
+		static d.Contact contact;
+
+
+		static void near(IntPtr space, IntPtr g1, IntPtr g2)
+		{
+			IntPtr b1 = d.GeomGetBody(g1);
+			IntPtr b2 = d.GeomGetBody(g2);
+			if (b1 != IntPtr.Zero && b2 != IntPtr.Zero && d.AreConnectedExcluding(b1, b2, d.JointType.Contact))
+				return;
+
+			/*
+			d.Contact[] contact = new d.Contact[MAX_CONTACTS];
+			for (int i = 0; i < MAX_CONTACTS; ++i)
+			{
+				contact[i].surface.mode = d.ContactFlags.Bounce | d.ContactFlags.SoftCFM;
+				contact[i].surface.mu = d.Infinity;
+				contact[i].surface.mu2 = 0.0f;
+				contact[i].surface.bounce = 0.1f;
+				contact[i].surface.bounce_vel = 0.1f;
+				contact[i].surface.soft_cfm = 0.01f;
+			}
+			*/
+
+			int count = d.Collide(g1, g2, MAX_CONTACTS, contacts, d.ContactGeom.SizeOf);
+			for (int i = 0; i < count; ++i)
+			{
+				contact.geom = contacts[i];
+				IntPtr c = d.JointCreateContact(world, contactgroup, ref contact);
+				d.JointAttach(c, b1, b2);
+			}
+		}
 
 
 		static void start(int unused)
@@ -51,25 +83,10 @@ namespace Ode.NET
 			obj.Enqueue(geom);
 
 			// Set the position of the new object
-			d.Matrix3 r;
-			if (random_pos)
-			{
-				d.BodySetPosition(body, d.RandReal() * 2 - 1, d.RandReal() * 2 - 1, d.RandReal() + 2);
-			}
-			else
-			{
-				// Just a little higher than the highest object
-				float maxheight = 0;
-				foreach (IntPtr g in obj)
-				{
-					d.Vector3 pos;
-					d.GeomCopyPosition(g, out pos);
-					if (pos.Z > maxheight)
-						maxheight = pos.Z;
-				}
-				d.BodySetPosition(body, 0, 0, maxheight + 1);
-				d.RFromAxisAndAngle(out r, 0, 0, 1, 0);
-			}
+			d.Matrix3 R;
+			d.BodySetPosition(body, d.RandReal() * 2 - 1, d.RandReal() * 2 - 1, d.RandReal() + 2);
+			d.RFromAxisAndAngle(out R, d.RandReal() * 2 - 1, d.RandReal() * 2 - 1, d.RandReal() * 2 - 1, d.RandReal() * 10 - 5);
+			d.BodySetRotation(body, ref R);
 
 			// Cap the total number of objects
 			if (obj.Count > NUM)
@@ -85,12 +102,13 @@ namespace Ode.NET
 		static void command(int cmd)
 		{
 			IntPtr geom;
+			d.Vector3 sides = new d.Vector3(d.RandReal() * 0.5f + 0.1f, d.RandReal() * 0.5f + 0.1f, d.RandReal() * 0.5f + 0.1f);
 
 			Char ch = Char.ToLower((Char)cmd);
 			switch ((Char)ch)
 			{
 			case 'b':
-				geom = d.CreateBox(space, 1.0f, 1.0f, 1.0f);
+				geom = d.CreateBox(space, sides.X, sides.Y, sides.Z);
 				addBody(geom);
 				break;
 			}
@@ -104,16 +122,20 @@ namespace Ode.NET
 			d.Vector3 pos;
 			d.BodyCopyPosition(body, out pos);
 
-			d.Matrix3 r = new d.Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+			// d.Matrix3 r = new d.Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+			d.Matrix3 R;
+			d.BodyCopyRotation(body, out R);
 
-			d.Vector3 sides = new d.Vector3(1, 1, 1);
-
-			ds.DrawBox(ref pos, ref r, ref sides);
+			// if (is box class)
+			d.Vector3 sides;
+			d.GeomBoxGetLengths(geom, out sides);
+			ds.DrawBox(ref pos, ref R, ref sides);
 		}
 
 
 		static void step(int pause)
 		{
+			d.SpaceCollide(space, IntPtr.Zero, nearCallback);
 			if (pause == 0)
 				d.WorldQuickStep(world, 0.02f);
 			d.JointGroupEmpty(contactgroup);
@@ -142,6 +164,13 @@ namespace Ode.NET
 			{
 				fn.path_to_textures = args[0];
 			}
+
+			contact.surface.mode = d.ContactFlags.Bounce | d.ContactFlags.SoftCFM;
+			contact.surface.mu = d.Infinity;
+			contact.surface.mu2 = 0.0f;
+			contact.surface.bounce = 0.1f;
+			contact.surface.bounce_vel = 0.1f;
+			contact.surface.soft_cfm = 0.01f;
 
 			world = d.WorldCreate();
 			space = d.HashSpaceCreate(IntPtr.Zero);
