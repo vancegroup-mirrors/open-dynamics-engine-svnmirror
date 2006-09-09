@@ -22,6 +22,12 @@ project.name = "Ode.NET"
 		package.language = "c#"
 		package.files = { "TestBoxStack.cs" }
 		package.links = { "System", "Drawstuff.NET", "Ode.NET" }
+
+		if (options["with-doubles"]) then
+			package.defines = { "dDOUBLE" }
+		else
+			package.defines = { "dSINGLE" }
+		end
 	end
 	
 	
@@ -34,6 +40,12 @@ project.name = "Ode.NET"
 		package.language = "c#"
 		package.files = { "Drawstuff.cs" }
 		package.links = { "System", "Ode.NET" }
+
+		if (options["with-doubles"]) then
+			package.defines = { "dDOUBLE" }
+		else
+			package.defines = { "dSINGLE" }
+		end
 	end
 	
 	

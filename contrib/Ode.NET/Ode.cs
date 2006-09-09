@@ -33,6 +33,29 @@ namespace Ode.NET
 			Approx1 = 0x3000
 		}
 
+		public enum GeomClass : int
+		{
+			SphereClass,
+			BoxClass,
+			CapsuleClass,
+			CylinderClass,
+			PlaneClass,
+			RayClass,
+			ConvexClass,
+			GeomTransformClass,
+			TriMeshClass,
+			HeightfieldClass,
+			FirstSpaceClass,
+			SimpleSpaceClass = FirstSpaceClass,
+			HashSpaceClass,
+			QuadTreeSpaceClass,
+			LastSpaceClass = QuadTreeSpaceClass,
+			FirstUserClass,
+			LastUserClass = FirstUserClass + MaxUserClasses - 1,
+			NumClasses,
+			MaxUserClasses = 4
+		}
+
 		public enum JointType : int
 		{
 			None,
@@ -74,6 +97,14 @@ namespace Ode.NET
 			public dReal depth;
 			public IntPtr g1, g2;
 			public int side1, side2;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct Mass
+		{
+			public dReal mass;
+			public Vector4 c;
+			public Matrix3 I;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -127,6 +158,9 @@ namespace Ode.NET
 		[StructLayout(LayoutKind.Sequential)]
 		public struct Vector3
 		{
+			public dReal X, Y, Z;
+			private dReal _padding;
+
 			public Vector3(dReal x, dReal y, dReal z)
 			{
 				X = x;
@@ -134,9 +168,20 @@ namespace Ode.NET
 				Z = z;
 				_padding = 0.0f;
 			}
+		}
 
-			public dReal X, Y, Z;
-			private dReal _padding;
+		[StructLayout(LayoutKind.Sequential)]
+		public struct Vector4
+		{
+			public dReal X, Y, Z, W;
+
+			public Vector4(dReal x, dReal y, dReal z, dReal w)
+			{
+				X = x;
+				Y = y;
+				Z = z;
+				W = w;
+			}
 		}
 
 		#endregion
@@ -159,6 +204,9 @@ namespace Ode.NET
 		[DllImport("ode", EntryPoint = "dBodyDestroy")]
 		public static extern void BodyDestroy(IntPtr body);
 
+		[DllImport("ode", EntryPoint = "dBodySetMass")]
+		public static extern void BodySetMass(IntPtr body, ref Mass mass);
+
 		[DllImport("ode", EntryPoint = "dBodySetPosition")]
 		public static extern void BodySetPosition(IntPtr body, dReal x, dReal y, dReal z);
 
@@ -174,11 +222,20 @@ namespace Ode.NET
 		[DllImport("ode", EntryPoint = "dCreateBox")]
 		public static extern IntPtr CreateBox(IntPtr space, dReal lx, dReal ly, dReal lz);
 
+		[DllImport("ode", EntryPoint = "dCreateCapsule")]
+		public static extern IntPtr CreateCapsule(IntPtr space, dReal radius, dReal length);
+
+		[DllImport("ode", EntryPoint = "dCreateConvex")]
+		public static extern IntPtr CreateConvex(IntPtr space, dReal[] planes, int planeCount, dReal[] points, int pointCount, int[] polygons);
+
 		[DllImport("ode", EntryPoint = "dCreatePlane")]
 		public static extern IntPtr CreatePlane(IntPtr space, dReal a, dReal b, dReal c, dReal d);
 
 		[DllImport("ode", EntryPoint = "dGeomBoxGetLengths")]
 		public static extern void GeomBoxGetLengths(IntPtr geom, out Vector3 len);
+
+		[DllImport("ode", EntryPoint = "dGeomCapsuleGetParams")]
+		public static extern void GeomCapsuleGetParams(IntPtr geom, out dReal radius, out dReal length);
 
 		[DllImport("ode", EntryPoint = "dGeomCopyPosition")]
 		public static extern void GeomCopyPosition(IntPtr geom, out Vector3 pos);
@@ -188,6 +245,9 @@ namespace Ode.NET
 
 		[DllImport("ode", EntryPoint = "dGeomGetBody")]
 		public static extern IntPtr GeomGetBody(IntPtr geom);
+
+		[DllImport("ode", EntryPoint = "dGeomGetClass")]
+		public static extern GeomClass GeomGetClass(IntPtr geom);
 
 		[DllImport("ode", EntryPoint = "dGeomSetBody")]
 		public static extern void GeomSetBody(IntPtr geom, IntPtr body);
@@ -209,6 +269,12 @@ namespace Ode.NET
 
 		[DllImport("ode", EntryPoint = "dJointGroupEmpty")]
 		public static extern void JointGroupEmpty(IntPtr group);
+
+		[DllImport("ode", EntryPoint = "dMassSetBox")]
+		public static extern void MassSetBox(out Mass mass, dReal density, dReal lx, dReal ly, dReal lz);
+
+		[DllImport("ode", EntryPoint = "dMassSetCapsule")]
+		public static extern void MassSetCapsule(out Mass mass, dReal density, int direction, dReal radius, dReal length);
 
 		[DllImport("ode", EntryPoint = "dRandReal")]
 		public static extern dReal RandReal();

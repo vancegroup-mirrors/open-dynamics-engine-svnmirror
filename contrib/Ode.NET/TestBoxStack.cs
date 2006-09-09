@@ -4,8 +4,50 @@ using Drawstuff.NET;
 
 namespace Ode.NET
 {
+#if dSINGLE
+	using dReal = System.Single;
+#else
+	using dReal = System.Double;
+#endif
+
 	public class TestBoxStack
 	{
+		#region Description of convex shape
+
+		static dReal[] planes = 
+			{
+				1.0f, 0.0f, 0.0f, 0.25f,
+				0.0f, 1.0f, 0.0f, 0.25f,
+				0.0f, 0.0f, 1.0f, 0.25f,
+				0.0f, 0.0f, -1.0f, 0.25f,
+				0.0f, -1.0f, 0.0f, 0.25f,
+				-1.0f, 0.0f , 0.0f, 0.25f
+			};
+
+		static dReal[] points =
+			{
+				0.25f, 0.25f, 0.25f,
+				-0.25f, 0.25f, 0.25f,
+				0.25f, -0.25f, 0.25f,
+				-0.25f, -0.25f, 0.25f,
+				0.25f, 0.25f, -0.25f,
+				-0.25f,0.25f,-0.25f,
+				0.25f,-0.25f,-0.25f,
+				-0.25f,-0.25f,-0.25f,
+			};
+
+		static int[] polygons =
+		{
+			4, 0, 2, 6, 4,
+			4, 1, 0, 4, 5,
+			4, 0, 1, 3, 2,
+			4, 3, 1, 5, 7,
+			4, 2, 3, 7, 6,
+			4, 5, 4, 6, 7,
+		};
+
+		#endregion
+
 		const int NUM = 100;
 		const float DENSITY = 5.0f;
 		const int GPB = 3;
@@ -31,19 +73,6 @@ namespace Ode.NET
 			IntPtr b2 = d.GeomGetBody(g2);
 			if (b1 != IntPtr.Zero && b2 != IntPtr.Zero && d.AreConnectedExcluding(b1, b2, d.JointType.Contact))
 				return;
-
-			/*
-			d.Contact[] contact = new d.Contact[MAX_CONTACTS];
-			for (int i = 0; i < MAX_CONTACTS; ++i)
-			{
-				contact[i].surface.mode = d.ContactFlags.Bounce | d.ContactFlags.SoftCFM;
-				contact[i].surface.mu = d.Infinity;
-				contact[i].surface.mu2 = 0.0f;
-				contact[i].surface.bounce = 0.1f;
-				contact[i].surface.bounce_vel = 0.1f;
-				contact[i].surface.soft_cfm = 0.01f;
-			}
-			*/
 
 			int count = d.Collide(g1, g2, MAX_CONTACTS, contacts, d.ContactGeom.SizeOf);
 			for (int i = 0; i < count; ++i)
@@ -75,11 +104,12 @@ namespace Ode.NET
 		}
 
 
-		static void addBody(IntPtr geom)
+		static void addBody(IntPtr geom, d.Mass mass)
 		{
 			// Create a body for this object
 			IntPtr body = d.BodyCreate(world);
 			d.GeomSetBody(geom, body);
+			d.BodySetMass(body, ref mass);
 			obj.Enqueue(geom);
 
 			// Set the position of the new object
@@ -102,14 +132,27 @@ namespace Ode.NET
 		static void command(int cmd)
 		{
 			IntPtr geom;
+			d.Mass mass;
 			d.Vector3 sides = new d.Vector3(d.RandReal() * 0.5f + 0.1f, d.RandReal() * 0.5f + 0.1f, d.RandReal() * 0.5f + 0.1f);
 
 			Char ch = Char.ToLower((Char)cmd);
 			switch ((Char)ch)
 			{
 			case 'b':
+				d.MassSetBox(out mass, DENSITY, sides.X, sides.Y, sides.Z);
 				geom = d.CreateBox(space, sides.X, sides.Y, sides.Z);
-				addBody(geom);
+				addBody(geom, mass);
+				break;
+			case 'c':
+				sides.X *= 0.5f;
+				d.MassSetCapsule(out mass, DENSITY, 3, sides.X, sides.Y);
+				geom = d.CreateCapsule(space, sides.X, sides.Y);
+				addBody(geom, mass);
+				break;
+			case 'v':
+				d.MassSetBox(out mass, DENSITY, 0.25f, 0.25f, 0.25f);
+				geom = d.CreateConvex(space, planes, planes.Length / 4, points, points.Length / 3, polygons);
+				addBody(geom, mass);
 				break;
 			}
 		}
@@ -122,14 +165,26 @@ namespace Ode.NET
 			d.Vector3 pos;
 			d.BodyCopyPosition(body, out pos);
 
-			// d.Matrix3 r = new d.Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1);
 			d.Matrix3 R;
 			d.BodyCopyRotation(body, out R);
 
-			// if (is box class)
-			d.Vector3 sides;
-			d.GeomBoxGetLengths(geom, out sides);
-			ds.DrawBox(ref pos, ref R, ref sides);
+			d.GeomClass type = d.GeomGetClass(geom);
+			switch (type)
+			{
+			case d.GeomClass.BoxClass:
+				d.Vector3 sides;
+				d.GeomBoxGetLengths(geom, out sides);
+				ds.DrawBox(ref pos, ref R, ref sides);
+				break;
+			case d.GeomClass.CapsuleClass:
+				dReal radius, length;
+				d.GeomCapsuleGetParams(geom, out radius, out length);
+				ds.DrawCapsule(ref pos, ref R, length, radius);
+				break;
+			case d.GeomClass.ConvexClass:
+				ds.DrawConvex(ref pos, ref R, planes, planes.Length / 4, points, points.Length / 3, polygons);
+				break;
+			}
 		}
 
 

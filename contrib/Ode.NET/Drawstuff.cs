@@ -4,6 +4,12 @@ using Ode.NET;
 
 namespace Drawstuff.NET
 {
+#if dSINGLE
+	using dReal = System.Single;
+#else
+	using dReal = System.Double;
+#endif
+
 	public static class ds
 	{
 		public const int VERSION = 2;
@@ -30,6 +36,12 @@ namespace Drawstuff.NET
 
 		[DllImport("drawstuff", EntryPoint="dsDrawBox")]
 		public static extern void DrawBox(ref d.Vector3 pos, ref d.Matrix3 R, ref d.Vector3 sides);
+
+		[DllImport("drawstuff", EntryPoint = "dsDrawCapsule")]
+		public static extern void DrawCapsule(ref d.Vector3 pos, ref d.Matrix3 R, dReal length, dReal radius);
+
+		[DllImport("drawstuff", EntryPoint = "dsDrawConvex")]
+		public static extern void DrawConvex(ref d.Vector3 pos, ref d.Matrix3 R, dReal[] planes, int planeCount, dReal[] points, int pointCount, int[] polygons);
 
 		[DllImport("drawstuff", EntryPoint="dsSetColor")]
 		public static extern void SetColor(float red, float green, float blue);
