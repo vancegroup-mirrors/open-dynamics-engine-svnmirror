@@ -95,8 +95,10 @@ namespace Ode.NET
 			public Vector3 pos;
 			public Vector3 normal;
 			public dReal depth;
-			public IntPtr g1, g2;
-			public int side1, side2;
+			public IntPtr g1;
+			public IntPtr g2;
+			public int side1;
+			public int side2;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -127,11 +129,11 @@ namespace Ode.NET
 			}
 
 			public dReal M00, M10, M20;
-			dReal _pad30;
+			public dReal _pad30;  // <- should be private, but causes warning on gmcs
 			public dReal M01, M11, M21;
-			dReal _pad31;
+			public dReal _pad31;  // <- should be private, but causes warning on gmcs
 			public dReal M02, M12, M22;
-			dReal _pad32;
+			public dReal _pad32;  // <- should be private, but causes warning on gmcs
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -152,21 +154,22 @@ namespace Ode.NET
 			public dReal soft_cfm;
 			public dReal motion1;
 			public dReal motion2;
-			public dReal slip1, slip2;
+			public dReal slip1;
+			public dReal slip2;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
 		public struct Vector3
 		{
 			public dReal X, Y, Z;
-			private dReal _padding;
+			public dReal _pad;  // <- should be private, but causes warning on gmcs
 
 			public Vector3(dReal x, dReal y, dReal z)
 			{
 				X = x;
 				Y = y;
 				Z = z;
-				_padding = 0.0f;
+				_pad = 0.0f;
 			}
 		}
 
