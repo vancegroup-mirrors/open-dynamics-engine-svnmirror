@@ -55,7 +55,7 @@ project.name = "Ode.NET"
 	package.name = "Ode.NET"
 	package.kind = "dll"
 	package.language = "c#"
-	package.files = { "Ode.cs" }
+	package.files = { "Ode.cs", "AssemblyInfo.cs" }
 	package.links = { "System" }
 	
 	if (options["with-doubles"]) then

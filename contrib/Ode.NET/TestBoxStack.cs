@@ -4,10 +4,10 @@ using Drawstuff.NET;
 
 namespace Ode.NET
 {
-#if dSINGLE
-	using dReal = System.Single;
-#else
+#if dDOUBLE
 	using dReal = System.Double;
+#else
+	using dReal = System.Single;
 #endif
 
 	public class TestBoxStack
@@ -50,7 +50,6 @@ namespace Ode.NET
 
 		const int NUM = 100;
 		const float DENSITY = 5.0f;
-		const int GPB = 3;
 		const int MAX_CONTACTS = 8;
 		
 		static IntPtr world;
@@ -67,23 +66,7 @@ namespace Ode.NET
 		static d.Contact contact;
 
 
-		static void near(IntPtr space, IntPtr g1, IntPtr g2)
-		{
-			IntPtr b1 = d.GeomGetBody(g1);
-			IntPtr b2 = d.GeomGetBody(g2);
-			if (b1 != IntPtr.Zero && b2 != IntPtr.Zero && d.AreConnectedExcluding(b1, b2, d.JointType.Contact))
-				return;
-
-			int count = d.Collide(g1, g2, MAX_CONTACTS, contacts, d.ContactGeom.SizeOf);
-			for (int i = 0; i < count; ++i)
-			{
-				contact.geom = contacts[i];
-				IntPtr c = d.JointCreateContact(world, contactgroup, ref contact);
-				d.JointAttach(c, b1, b2);
-			}
-		}
-
-
+		// Called when window is opened - sets up viewpoint and prints usage
 		static void start(int unused)
 		{
 			ds.SetViewpoint(ref xyz, ref hpr);
@@ -104,7 +87,27 @@ namespace Ode.NET
 		}
 
 
-		static void addBody(IntPtr geom, d.Mass mass)
+		// Near callback - creates contact joints
+		static void near(IntPtr space, IntPtr g1, IntPtr g2)
+		{
+			IntPtr b1 = d.GeomGetBody(g1);
+			IntPtr b2 = d.GeomGetBody(g2);
+			if (b1 != IntPtr.Zero && b2 != IntPtr.Zero && d.AreConnectedExcluding(b1, b2, d.JointType.Contact))
+				return;
+
+			int count = d.Collide(g1, g2, MAX_CONTACTS, contacts, d.ContactGeom.SizeOf);
+			for (int i = 0; i < count; ++i)
+			{
+				contact.geom = contacts[i];
+				IntPtr joint = d.JointCreateContact(world, contactgroup, ref contact);
+				d.JointAttach(joint, b1, b2);
+			}
+		}
+
+
+		// Adds a new object to the scene - attaches a body to the geom and
+		// sets the initial position and orientation
+		static void addObject(IntPtr geom, d.Mass mass)
 		{
 			// Create a body for this object
 			IntPtr body = d.BodyCreate(world);
@@ -129,6 +132,7 @@ namespace Ode.NET
 		}
 
 
+		// Keyboard callback
 		static void command(int cmd)
 		{
 			IntPtr geom;
@@ -141,23 +145,26 @@ namespace Ode.NET
 			case 'b':
 				d.MassSetBox(out mass, DENSITY, sides.X, sides.Y, sides.Z);
 				geom = d.CreateBox(space, sides.X, sides.Y, sides.Z);
-				addBody(geom, mass);
+				addObject(geom, mass);
 				break;
+
 			case 'c':
 				sides.X *= 0.5f;
 				d.MassSetCapsule(out mass, DENSITY, 3, sides.X, sides.Y);
 				geom = d.CreateCapsule(space, sides.X, sides.Y);
-				addBody(geom, mass);
+				addObject(geom, mass);
 				break;
+
 			case 'v':
 				d.MassSetBox(out mass, DENSITY, 0.25f, 0.25f, 0.25f);
 				geom = d.CreateConvex(space, planes, planes.Length / 4, points, points.Length / 3, polygons);
-				addBody(geom, mass);
+				addObject(geom, mass);
 				break;
 			}
 		}
 
 
+		// Draw an object in the scene
 		static void drawGeom(IntPtr geom)
 		{
 			IntPtr body = d.GeomGetBody(geom);
@@ -188,6 +195,7 @@ namespace Ode.NET
 		}
 
 
+		// Called once per frame; updates the scene
 		static void step(int pause)
 		{
 			d.SpaceCollide(space, IntPtr.Zero, nearCallback);
@@ -214,12 +222,13 @@ namespace Ode.NET
 			fn.step = new ds.CallbackFunction(step);
 			fn.command = new ds.CallbackFunction(command);
 			fn.stop = null;
-			fn.path_to_textures = "../../drawstuff/textures";
+			fn.path_to_textures = "../../../../drawstuff/textures";
 			if (args.Length > 0)
 			{
 				fn.path_to_textures = args[0];
 			}
 
+			// Set up contact response parameters
 			contact.surface.mode = d.ContactFlags.Bounce | d.ContactFlags.SoftCFM;
 			contact.surface.mu = d.Infinity;
 			contact.surface.mu2 = 0.0f;
@@ -227,6 +236,7 @@ namespace Ode.NET
 			contact.surface.bounce_vel = 0.1f;
 			contact.surface.soft_cfm = 0.01f;
 
+			// Initialize the scene
 			world = d.WorldCreate();
 			space = d.HashSpaceCreate(IntPtr.Zero);
 			contactgroup = d.JointGroupCreate(0);
@@ -237,8 +247,10 @@ namespace Ode.NET
 			d.WorldSetContactSurfaceLayer(world, 0.001f);
 			d.CreatePlane(space, 0, 0, 1, 0);
 
+			// Run the scene
 			ds.SimulationLoop(args.Length, args, 352, 288, ref fn);
 
+			// Clean up
 			d.JointGroupDestroy(contactgroup);
 			d.SpaceDestroy(space);
 			d.WorldDestroy(world);

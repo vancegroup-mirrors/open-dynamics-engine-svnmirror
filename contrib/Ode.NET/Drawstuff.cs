@@ -4,10 +4,10 @@ using Ode.NET;
 
 namespace Drawstuff.NET
 {
-#if dSINGLE
-	using dReal = System.Single;
-#else
+#if dDOUBLE
 	using dReal = System.Double;
+#else
+	using dReal = System.Single;
 #endif
 
 	public static class ds
