@@ -1,9 +1,6 @@
 Ode.NET - .NET bindings for ODE
 Jason Perkins (starkos@gmail.com)
 
- THIS IS A WORK IN PROGRESS! I'm not done yet!
- 
-
 --------------------------------------------------------------------- 
  INSTALLATION
 --------------------------------------------------------------------- 
