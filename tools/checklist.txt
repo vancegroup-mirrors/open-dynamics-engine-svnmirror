@@ -11,13 +11,6 @@ RELEASE CHECKLIST
     (Must run in Linux or Cygwin w/autotools)
 
 
-Ode.NET
-
-( ) Update version in AssemblyInfo.cs
-
-( ) Run dotnet-release.bat in VS2005 command prompt
-
-
 
 SANITY CHECK of release package
 ---------------------------------------------

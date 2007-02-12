@@ -17,7 +17,7 @@ project.name = "ode"
 -- Project options
 
   addoption("with-doubles",  "Use double instead of float as base numeric type")
-  addoption("with-demos",    "Builds the demo applications and DrawStuff library")
+  addoption("with-tests",    "Builds the test applications and DrawStuff library")
   addoption("with-gimpact",  "Use GIMPACT for trimesh collisions (experimental)")
   addoption("no-dif",        "Exclude DIF (Dynamics Interchange Format) exports")
   addoption("no-trimesh",    "Exclude trimesh collision geometry")
@@ -56,9 +56,9 @@ project.name = "ode"
 
   dopackage("ode.lua")
 
-  if (options["with-demos"]) then
+  if (options["with-tests"]) then
     dopackage("drawstuff.lua")
-    dopackage("demos.lua")
+    dopackage("tests.lua")
   end
 
 
@@ -86,8 +86,8 @@ project.name = "ode"
 -- Generate all toolsets in one go
 
   function domakeall(cmd, arg)
-    os.execute("premake --usetargetpath --with-demos --clean --target vs2002")
-    os.execute("premake --usetargetpath --with-demos --clean --target vs2003")
-    os.execute("premake --usetargetpath --with-demos --clean --target vs2005")
-    os.execute("premake --usetargetpath --with-demos --clean --target gnu")
+    os.execute("premake --usetargetpath --with-tests --clean --target vs2002")
+    os.execute("premake --usetargetpath --with-tests --clean --target vs2003")
+    os.execute("premake --usetargetpath --with-tests --clean --target vs2005")
+    os.execute("premake --usetargetpath --with-tests --clean --target gnu")
   end

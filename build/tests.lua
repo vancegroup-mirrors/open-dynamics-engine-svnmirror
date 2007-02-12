@@ -1,7 +1,7 @@
--- Here are the lists of demos to build. Add/remove new
+-- Here are the lists of tests to build. Add/remove new
 -- tests here and everything else should just work
 
-  local demos =
+  local tests =
   {
     "boxstack",
     "buggy",
@@ -25,16 +25,16 @@
   }
 
   if (not options["no-trimesh"]) then
-    table.insert(demos, "basket")
+    table.insert(tests, "basket")
     if (not options["no-cylinder"]) then
-      table.insert(demos, "cyl")
+      table.insert(tests, "cyl")
     end
-    table.insert(demos, "moving_trimesh")
-    table.insert(demos, "trimesh")
+    table.insert(tests, "moving_trimesh")
+    table.insert(tests, "trimesh")
   end
 
   if (not options["no-cylinder"]) then
-    table.insert(demos, "cylvssphere")
+    table.insert(tests, "cylvssphere")
   end
 
 
@@ -47,9 +47,9 @@
   end
 
 
--- Factory function for demo packages
+-- Factory function for test packages
 
-  function makedemo(index, name)
+  function maketest(index, name)
     package = newpackage()
     package.name = "test_" .. name
     package.kind = "exe"
@@ -73,9 +73,9 @@
     end
 
     if (name == "chain1") then
-      package.files = { "../../ode/demo/test_" .. name .. ".c" }
+      package.files = { "../../ode/test/test_" .. name .. ".c" }
     else
-      package.files = { "../../ode/demo/test_" .. name .. ".cpp" }
+      package.files = { "../../ode/test/test_" .. name .. ".cpp" }
     end
 
     if (windows) then
@@ -84,7 +84,7 @@
     end
   end
 
-  table.foreach(demos, makedemo)
+  table.foreach(tests, maketest)
 
 
 -- Unit tests
