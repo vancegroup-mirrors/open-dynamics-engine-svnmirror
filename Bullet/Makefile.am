@@ -1,0 +1,1 @@
+SUBDIRS=src Demos/OpenGL Demos/BasicDemo Demos/VehicleDemo Demos/CcdPhysicsDemo
