@@ -10,12 +10,12 @@ ifeq ($(CONFIG),DebugDLL)
   LIBDIR := ../../lib/DebugDLL
   OBJDIR := obj/ode/DebugDLL
   OUTDIR := ../../lib/DebugDLL
-  CPPFLAGS := -MMD -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  CPPFLAGS := -MMD -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g
   CXXFLAGS := $(CFLAGS)
   LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -luser32
   LDDEPS :=
-  RESFLAGS := -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  RESFLAGS := -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   TARGET := ode.dll
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
@@ -25,12 +25,12 @@ ifeq ($(CONFIG),ReleaseDLL)
   LIBDIR := ../../lib/ReleaseDLL
   OBJDIR := obj/ode/ReleaseDLL
   OUTDIR := ../../lib/ReleaseDLL
-  CPPFLAGS := -MMD -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  CPPFLAGS := -MMD -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -O3 -fomit-frame-pointer
   CXXFLAGS := $(CFLAGS)
   LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -shared -s -luser32
   LDDEPS :=
-  RESFLAGS := -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  RESFLAGS := -D "WIN32" -D "ODE_DLL" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   TARGET := ode.dll
   BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 endif
@@ -40,12 +40,12 @@ ifeq ($(CONFIG),DebugLib)
   LIBDIR := ../../lib/DebugLib
   OBJDIR := obj/ode/DebugLib
   OUTDIR := ../../lib/DebugLib
-  CPPFLAGS := -MMD -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  CPPFLAGS := -MMD -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g
   CXXFLAGS := $(CFLAGS)
   LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -luser32
   LDDEPS :=
-  RESFLAGS := -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  RESFLAGS := -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   TARGET := libode.a
   BLDCMD = ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS) $(TARGET_ARCH)
 endif
@@ -55,12 +55,12 @@ ifeq ($(CONFIG),ReleaseLib)
   LIBDIR := ../../lib/ReleaseLib
   OBJDIR := obj/ode/ReleaseLib
   OUTDIR := ../../lib/ReleaseLib
-  CPPFLAGS := -MMD -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  CPPFLAGS := -MMD -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -O3 -fomit-frame-pointer
   CXXFLAGS := $(CFLAGS)
   LDFLAGS += -L$(BINDIR) -L$(LIBDIR) -s -luser32
   LDDEPS :=
-  RESFLAGS := -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include"
+  RESFLAGS := -D "WIN32" -D "ODE_LIB" -I "../../include" -I "../../OPCODE" -I "../../GIMPACT/include" -I "../../Bullet/src"
   TARGET := libode.a
   BLDCMD = ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS) $(TARGET_ARCH)
 endif
@@ -116,6 +116,66 @@ OBJECTS := \
 	$(OBJDIR)/testing.o \
 	$(OBJDIR)/timer.o \
 	$(OBJDIR)/util.o \
+	$(OBJDIR)/btAxisSweep3.o \
+	$(OBJDIR)/btBroadphaseProxy.o \
+	$(OBJDIR)/btCollisionAlgorithm.o \
+	$(OBJDIR)/btDispatcher.o \
+	$(OBJDIR)/btOverlappingPairCache.o \
+	$(OBJDIR)/btSimpleBroadphase.o \
+	$(OBJDIR)/btCollisionDispatcher.o \
+	$(OBJDIR)/btCollisionObject.o \
+	$(OBJDIR)/btCollisionWorld.o \
+	$(OBJDIR)/btCompoundCollisionAlgorithm.o \
+	$(OBJDIR)/btConvexConcaveCollisionAlgorithm.o \
+	$(OBJDIR)/btConvexConvexAlgorithm.o \
+	$(OBJDIR)/btEmptyCollisionAlgorithm.o \
+	$(OBJDIR)/btManifoldResult.o \
+	$(OBJDIR)/btSimulationIslandManager.o \
+	$(OBJDIR)/btSphereBoxCollisionAlgorithm.o \
+	$(OBJDIR)/btSphereSphereCollisionAlgorithm.o \
+	$(OBJDIR)/btSphereTriangleCollisionAlgorithm.o \
+	$(OBJDIR)/btUnionFind.o \
+	$(OBJDIR)/SphereTriangleDetector.o \
+	$(OBJDIR)/btBoxShape.o \
+	$(OBJDIR)/btBvhTriangleMeshShape.o \
+	$(OBJDIR)/btCapsuleShape.o \
+	$(OBJDIR)/btCollisionShape.o \
+	$(OBJDIR)/btCompoundShape.o \
+	$(OBJDIR)/btConcaveShape.o \
+	$(OBJDIR)/btConeShape.o \
+	$(OBJDIR)/btConvexHullShape.o \
+	$(OBJDIR)/btConvexShape.o \
+	$(OBJDIR)/btConvexTriangleMeshShape.o \
+	$(OBJDIR)/btCylinderShape.o \
+	$(OBJDIR)/btEmptyShape.o \
+	$(OBJDIR)/btHeightfieldTerrainShape.o \
+	$(OBJDIR)/btMinkowskiSumShape.o \
+	$(OBJDIR)/btMultiSphereShape.o \
+	$(OBJDIR)/btOptimizedBvh.o \
+	$(OBJDIR)/btPolyhedralConvexShape.o \
+	$(OBJDIR)/btSphereShape.o \
+	$(OBJDIR)/btStaticPlaneShape.o \
+	$(OBJDIR)/btStridingMeshInterface.o \
+	$(OBJDIR)/btTetrahedronShape.o \
+	$(OBJDIR)/btTriangleBuffer.o \
+	$(OBJDIR)/btTriangleCallback.o \
+	$(OBJDIR)/btTriangleIndexVertexArray.o \
+	$(OBJDIR)/btTriangleMesh.o \
+	$(OBJDIR)/btTriangleMeshShape.o \
+	$(OBJDIR)/btContinuousConvexCollision.o \
+	$(OBJDIR)/btConvexCast.o \
+	$(OBJDIR)/btGjkConvexCast.o \
+	$(OBJDIR)/btGjkEpa.o \
+	$(OBJDIR)/btGjkEpaPenetrationDepthSolver.o \
+	$(OBJDIR)/btGjkPairDetector.o \
+	$(OBJDIR)/btMinkowskiPenetrationDepthSolver.o \
+	$(OBJDIR)/btPersistentManifold.o \
+	$(OBJDIR)/btRaycastCallback.o \
+	$(OBJDIR)/btSubSimplexConvexCast.o \
+	$(OBJDIR)/btVoronoiSimplexSolver.o \
+	$(OBJDIR)/btAlignedAllocator.o \
+	$(OBJDIR)/btGeometryUtil.o \
+	$(OBJDIR)/btQuickprof.o \
 	$(OBJDIR)/gimpact.o \
 	$(OBJDIR)/gim_boxpruning.o \
 	$(OBJDIR)/gim_contact.o \
@@ -452,6 +512,306 @@ $(OBJDIR)/timer.o: ../../ode/src/timer.cpp
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 $(OBJDIR)/util.o: ../../ode/src/util.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btAxisSweep3.o: ../../Bullet/src/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btBroadphaseProxy.o: ../../Bullet/src/BulletCollision/BroadphaseCollision/btBroadphaseProxy.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCollisionAlgorithm.o: ../../Bullet/src/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btDispatcher.o: ../../Bullet/src/BulletCollision/BroadphaseCollision/btDispatcher.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btOverlappingPairCache.o: ../../Bullet/src/BulletCollision/BroadphaseCollision/btOverlappingPairCache.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btSimpleBroadphase.o: ../../Bullet/src/BulletCollision/BroadphaseCollision/btSimpleBroadphase.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCollisionDispatcher.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btCollisionDispatcher.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCollisionObject.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btCollisionObject.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCollisionWorld.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btCollisionWorld.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCompoundCollisionAlgorithm.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConvexConcaveCollisionAlgorithm.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConvexConvexAlgorithm.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btEmptyCollisionAlgorithm.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btManifoldResult.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btManifoldResult.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btSimulationIslandManager.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btSimulationIslandManager.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btSphereBoxCollisionAlgorithm.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btSphereSphereCollisionAlgorithm.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btSphereTriangleCollisionAlgorithm.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btUnionFind.o: ../../Bullet/src/BulletCollision/CollisionDispatch/btUnionFind.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/SphereTriangleDetector.o: ../../Bullet/src/BulletCollision/CollisionDispatch/SphereTriangleDetector.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btBoxShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btBoxShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btBvhTriangleMeshShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btBvhTriangleMeshShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCapsuleShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btCapsuleShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCollisionShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btCollisionShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCompoundShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btCompoundShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConcaveShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btConcaveShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConeShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btConeShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConvexHullShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btConvexHullShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConvexShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btConvexShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConvexTriangleMeshShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btConvexTriangleMeshShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btCylinderShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btCylinderShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btEmptyShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btEmptyShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btHeightfieldTerrainShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btMinkowskiSumShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btMinkowskiSumShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btMultiSphereShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btMultiSphereShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btOptimizedBvh.o: ../../Bullet/src/BulletCollision/CollisionShapes/btOptimizedBvh.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btPolyhedralConvexShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btPolyhedralConvexShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btSphereShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btSphereShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btStaticPlaneShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btStaticPlaneShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btStridingMeshInterface.o: ../../Bullet/src/BulletCollision/CollisionShapes/btStridingMeshInterface.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btTetrahedronShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btTetrahedronShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btTriangleBuffer.o: ../../Bullet/src/BulletCollision/CollisionShapes/btTriangleBuffer.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btTriangleCallback.o: ../../Bullet/src/BulletCollision/CollisionShapes/btTriangleCallback.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btTriangleIndexVertexArray.o: ../../Bullet/src/BulletCollision/CollisionShapes/btTriangleIndexVertexArray.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btTriangleMesh.o: ../../Bullet/src/BulletCollision/CollisionShapes/btTriangleMesh.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btTriangleMeshShape.o: ../../Bullet/src/BulletCollision/CollisionShapes/btTriangleMeshShape.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btContinuousConvexCollision.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btConvexCast.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btConvexCast.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btGjkConvexCast.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btGjkConvexCast.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btGjkEpa.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btGjkEpa.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btGjkEpaPenetrationDepthSolver.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btGjkPairDetector.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btGjkPairDetector.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btMinkowskiPenetrationDepthSolver.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btPersistentManifold.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btPersistentManifold.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btRaycastCallback.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btRaycastCallback.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btSubSimplexConvexCast.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btVoronoiSimplexSolver.o: ../../Bullet/src/BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btAlignedAllocator.o: ../../Bullet/src/LinearMath/btAlignedAllocator.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btGeometryUtil.o: ../../Bullet/src/LinearMath/btGeometryUtil.cpp
+	-@$(CMD_MKOBJDIR)
+	@echo $(notdir $<)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/btQuickprof.o: ../../Bullet/src/LinearMath/btQuickprof.cpp
 	-@$(CMD_MKOBJDIR)
 	@echo $(notdir $<)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<

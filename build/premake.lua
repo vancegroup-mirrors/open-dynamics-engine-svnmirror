@@ -20,6 +20,7 @@ project.name = "ode"
   addoption("with-demos",    "Builds the demo applications and DrawStuff library")
   addoption("with-tests",    "Builds the unit test application")
   addoption("with-gimpact",  "Use GIMPACT for trimesh collisions (experimental)")
+  addoption("with-bullet",   "Use Bullet continuous collision detection")
   addoption("no-dif",        "Exclude DIF (Dynamics Interchange Format) exports")
   addoption("no-trimesh",    "Exclude trimesh collision geometry")
   addoption("no-alloca",     "Use heap memory instead of the stack (experimental)")
@@ -91,8 +92,8 @@ project.name = "ode"
 -- Generate all toolsets in one go
 
   function domakeall(cmd, arg)
-    os.execute("premake --usetargetpath --with-demos --with-tests --clean --target vs2002")
-    os.execute("premake --usetargetpath --with-demos --with-tests --clean --target vs2003")
-    os.execute("premake --usetargetpath --with-demos --with-tests --clean --target vs2005")
-    os.execute("premake --usetargetpath --with-demos --with-tests --clean --target gnu")
+    os.execute("premake --usetargetpath --with-bullet --with-demos --with-tests --clean --target vs2002")
+    os.execute("premake --usetargetpath --with-bullet --with-demos --with-tests --clean --target vs2003")
+    os.execute("premake --usetargetpath --with-bullet --with-demos --with-tests --clean --target vs2005")
+    os.execute("premake --usetargetpath --with-bullet --with-demos --with-tests --clean --target gnu")
   end

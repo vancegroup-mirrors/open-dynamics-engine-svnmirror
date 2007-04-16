@@ -15,7 +15,7 @@ all: ode drawstuff demo_boxstack demo_buggy demo_chain1 demo_chain2 demo_collisi
 
 Makefile: ../premake.lua ../ode.lua ../drawstuff.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../demos.lua ../tests.lua
 	@echo ==== Regenerating Makefiles ====
-	@premake --file $^ --usetargetpath --with-demos --with-tests --clean --target gnu
+	@premake --file $^ --usetargetpath --with-demos --with-bullet --with-tests --clean --target gnu
 
 ode:
 	@echo ==== Building ode ====

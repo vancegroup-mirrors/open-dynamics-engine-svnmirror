@@ -72,7 +72,8 @@ package.objdir = "obj/ode"
   {
     "../../include",
     "../../OPCODE",
-    "../../GIMPACT/include"
+    "../../GIMPACT/include",
+    "../../Bullet/src"
   }
 
   if (windows) then
@@ -82,6 +83,11 @@ package.objdir = "obj/ode"
   -- disable VS2005 CRT security warnings
   if (options["target"] == "vs2005") then
     table.insert(package.defines, "_CRT_SECURE_NO_DEPRECATE")
+  end
+
+  -- bullet precision selection
+  if (options["with-bullet"] and options["with-doubles"]) then
+    table.insert(package.defines, "BT_USE_DOUBLE_PRECISION")
   end
 
 
@@ -136,6 +142,19 @@ package.objdir = "obj/ode"
     "../../ode/src/collision_trimesh_plane.cpp"
   }
 
+  bullet_collision_files =
+  {
+	matchrecursive("../../Bullet/src/BulletCollision/*.h", "../../Bullet/src/BulletCollision/*.cpp"),
+	matchrecursive("../../Bullet/src/LinearMath/*.h", "../../Bullet/src/LinearMath/*.cpp"),
+	"../../Bullet/src/btBulletCollisionCommon.h"
+  }
+  
+  bullet_dynamics_files =
+  {
+	matchrecursive("../../Bullet/src/BulletDynamics/*.h", "../../Bullet/src/BulletDynamics/*.cpp"), 
+	"../../Bullet/src/btBulletDynamicsCommon.h"
+  }
+  
   opcode_files =
   {
     matchrecursive("../../OPCODE/*.h", "../../OPCODE/*.cpp")
@@ -156,6 +175,14 @@ package.objdir = "obj/ode"
 
   if (options["no-dif"]) then
     table.insert(package.excludes, dif_files)
+  end
+  
+  if (options["with-bullet"]) then
+    table.insert(package.files, bullet_collision_files)
+    table.insert(package.excludes, bullet_dynamics_files)
+  else
+    table.insert(package.excludes, bullet_collision_files)
+    table.insert(package.excludes, bullet_dynamics_files)
   end
 
   if (options["no-trimesh"]) then
