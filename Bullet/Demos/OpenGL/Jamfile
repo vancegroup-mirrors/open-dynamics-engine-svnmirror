@@ -1,0 +1,18 @@
+SubDir TOP Demos OpenGL ;
+
+if $(GLUT.AVAILABLE) = "yes"
+{
+
+
+  Description bulletopenglsupport : "Bullet OpenGL support" ;
+  Library bulletopenglsupport : 
+  [ Wildcard *.h *.cpp ] : noinstall 
+;
+
+CFlags bulletopenglsupport :
+;
+
+LibDepends bulletopenglsupport : bulletdynamics   ;
+
+  ExternalLibs bulletopenglsupport : GLUT ;
+}

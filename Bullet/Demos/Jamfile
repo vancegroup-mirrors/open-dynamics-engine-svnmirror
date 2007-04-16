@@ -1,0 +1,54 @@
+SubDir TOP Demos ;
+
+SubInclude TOP Demos OpenGL ;
+
+if $(GLUT.AVAILABLE) = "yes"
+{
+  # All demo apps have a lot in common, so use this rule to simply things
+  rule BulletDemo
+  {
+    Application $(<) : $(>) : noinstall console nomanifest ;
+    LinkWith $(<) :  bulletopenglsupport bulletdynamics bulletcollision bulletmath ;
+    CFlags $(<) : 
+	  [ FIncludes $(TOP)/Demos/OpenGL ] 
+    ;
+    MsvcIncDirs $(<) : 
+	"../../Demos/OpenGL" 
+	"../../src" ;
+  }
+}
+
+ rule BulletBasicDemo
+  {
+    Application $(<) : $(>) : noinstall console nomanifest ;
+    LinkWith $(<) :  bulletcollision  bulletmath ;
+    CFlags $(<) :
+          [ FIncludes $(TOP)/src ]
+           ;
+    MsvcIncDirs $(<) :
+        "../../src" ;
+  }
+
+
+SubInclude TOP Demos CcdPhysicsDemo ;
+SubInclude TOP Demos UserCollisionAlgorithm ;
+#SubInclude TOP Demos ForkLiftDemo ;
+SubInclude TOP Demos BulletDinoDemo ;
+SubInclude TOP Demos EPAPenDepthDemo ;
+SubInclude TOP Demos BspDemo ;
+SubInclude TOP Demos BasicDemo ;
+SubInclude TOP Demos ConvexDecompositionDemo ;
+SubInclude TOP Demos ColladaDemo ;
+SubInclude TOP Demos BspDemo ;
+SubInclude TOP Demos VehicleDemo ;
+SubInclude TOP Demos CollisionDemo ;
+SubInclude TOP Demos CollisionInterfaceDemo ;
+SubInclude TOP Demos MovingConcaveDemo ;
+SubInclude TOP Demos ConcaveDemo ;
+SubInclude TOP Demos ConstraintDemo ;
+SubInclude TOP Demos ContinuousConvexCollision ;
+SubInclude TOP Demos GjkConvexCastDemo ;
+SubInclude TOP Demos Raytracer ;
+SubInclude TOP Demos SimplexDemo ;
+SubInclude TOP Demos DoublePrecisionDemo ;
+
