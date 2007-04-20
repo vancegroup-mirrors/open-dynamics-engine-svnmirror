@@ -21,7 +21,11 @@ package.objdir = "obj/ode"
     text = string.gsub(text, "#define dSINGLE", "/* #define dSINGLE */")
     text = string.gsub(text, "/%* #define dDOUBLE %*/", "#define dDOUBLE")
   end
-
+    
+  if (options["with-bullet"]) then
+    text = string.gsub(text, "/%* #define dBULLET_ENABLED %*/", "#define dBULLET_ENABLED")
+  end
+  
   if (options["no-trimesh"]) then
     
     text = string.gsub(text, "#define dTRIMESH_ENABLED 1", "/* #define dTRIMESH_ENABLED 1 */")

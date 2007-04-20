@@ -11,18 +11,25 @@
  *                       or double-precision (double) for numbers.
  *                       Only one should be defined.
  *
+ *   dBULLET_ENABLED   - Use the Bullet continuous collision
+ *                       detection library for collision detection.
+ *                       Instead of the native ODE functions.
+ *
  *   dTRIMESH_ENABLED  - enable/disable trimesh support
  *   dTRIMESH_OPCODE   - use the OPCODE trimesh engine
  *   dTRIMESH_GIMPACT  - use the GIMPACT trimesh engine
  *
- *   dUSE_MALLOC_FOR_ALLOCA (experimental)- 
- *                       Use malloc() instead of alloca(). Slower, 
- *                       but allows for larger systems and more 
+ *   dUSE_MALLOC_FOR_ALLOCA (experimental)-
+ *                       Use malloc() instead of alloca(). Slower,
+ *                       but allows for larger systems and more
  *                       graceful out-of-memory handling.
+ *
  ******************************************************************/
 
 #define dSINGLE
 /* #define dDOUBLE */
+
+/* #define dBULLET_ENABLED */
 
 #define dTRIMESH_ENABLED 1
 #define dTRIMESH_OPCODE 1
