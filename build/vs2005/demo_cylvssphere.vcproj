@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="demo_cylvssphere"
-	ProjectGUID="{37879912-FA3D-E048-AABE-C9160B9269CD}"
+	ProjectGUID="{FEF237A3-6A29-6446-AC3A-402078284117}"
 	RootNamespace="demo_cylvssphere"
 	Keyword="Win32Proj"
 	>
