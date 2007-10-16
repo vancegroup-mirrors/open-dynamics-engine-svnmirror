@@ -1,0 +1,35 @@
+To build ODE with collision support provided by Bullet, use the following steps:
+
+
+A) Get Bullet from SVN using:
+  $ svn co https://bullet.svn.sourceforge.net/svnroot/bullet/trunk bullet
+
+B) Configure bullet:
+  $ ./configure --prefix=$HOME
+
+C) Build bullet:
+  $ jam
+
+D) Install bullet
+  $ jam install
+
+
+1) Get the bullet branch from ODE SVN:
+  $ svn co https://opende.svn.sourceforge.net/svnroot/branches/bullet-port opende
+
+2) Configure OpenDE:
+  $ cd opende
+  $ sh autogen.sh
+  $ ./configure --prefix=$HOME --with-bullet=$HOME --with-trimesh=none
+  ...
+  checking for btBulletMathProbe in -lbulletmath... yes
+  checking for btBulletCollisionProbe in -lbulletcollision... yes
+  checking for btBulletDynamicsProbe in -lbulletdynamics... yes
+  ...
+
+3) Build OpenDE
+  $ make
+
+4) Install OpenDE
+  $ make install
+

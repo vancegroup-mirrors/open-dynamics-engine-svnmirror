@@ -32,6 +32,12 @@ libode_LDADD+=$(libGIMPACT_a_OBJECTS)
 endif
 
 
+if BULLET
+AM_CFLAGS += -DdBULLET_ENABLED @BULLET_INC@
+AM_CXXFLAGS += -DdBULLET_ENABLED @BULLET_INC@
+endif
+
+
 # convenience library to simulate per object cflags
 noinst_LIBRARIES= libfast.a
 libfast_a_CFLAGS= -O1

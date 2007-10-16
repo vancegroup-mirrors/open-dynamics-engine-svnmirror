@@ -7,7 +7,7 @@ AC_INIT(ODE,0.9.0,ode@ode.org)
 dnl When upgrading version nr, also change the AC_INIT line! - Bram
 ODE_CURRENT=0
 ODE_REVISION=9
-ODE_AGE=0
+ODE_AGE=1-bullet
 ODE_RELEASE=[$ODE_CURRENT].[$ODE_REVISION].[$ODE_AGE]
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
@@ -420,6 +420,34 @@ AC_CHECK_LIB(stdc++,main,[LIBS="$LIBS -lstdc++"])
 AC_CHECK_LIB(m,main,[LIBS="$LIBS -lm"])
 AC_CHECK_LIB(pthread,main,[LIBS="$LIBS -lpthread"])
 
+dnl Check for Bullet
+AC_ARG_WITH(bullet,
+  AC_HELP_STRING([--with-bullet=path-to-bullet], [Use the Bullet library for collision detection]),
+  bullet=$withval,bullet=/usr
+)
+BULLET_LIBS="-L$bullet/lib"
+BULLET_INC="-I$bullet/include/bullet"
+AC_CHECK_LIB(bulletmath,
+  btBulletMathProbe,
+  [BULLET_LIBS="-lbulletmath $BULLET_LIBS"],
+  ,
+  $BULLET_LIBS
+)
+AC_CHECK_LIB(bulletcollision,
+  btBulletCollisionProbe,
+  [BULLET_LIBS="-lbulletcollision $BULLET_LIBS"],
+  ,
+  $BULLET_LIBS
+)
+AC_CHECK_LIB(bulletdynamics,
+  btBulletDynamicsProbe,
+  [BULLET_LIBS="-lbulletdynamics $BULLET_LIBS" LIBS="$BULLET_LIBS $LIBS" bullet=yes],
+  [BULLET_LIBS="" BULLET_INC="" bullet=no],
+  $BULLET_LIBS
+)
+AC_SUBST(BULLET_LIBS)
+AC_SUBST(BULLET_INC)
+AM_CONDITIONAL(BULLET, test x$bullet = xyes)
 
 TOPDIR=`cd $srcdir;pwd`
 AC_SUBST(TOPDIR)
@@ -562,6 +590,7 @@ echo "  Target system type:      $target"
 echo "  Build  system type:      $build"
 echo "  Host   system type:      $host"
 echo "  Use double precision:    $precision"
+echo "  Use BULLET:              $bullet"
 echo "  Use OPCODE:              $opcode"
 echo "  Use GIMPACT:             $gimpact"
 echo "  Use gyroscopic term:     $gyroscopic"
@@ -569,7 +598,7 @@ echo "  Is this a Pentium:       $pentium"
 echo "  Is the CPU x86-64:       $cpu64"
 echo "  Is this a release build: $release"
 echo "  Adding debug symbols:    $debug"
-echo "  Using SONAME:		 $use_soname"
+echo "  Using SONAME:            $use_soname"
 echo "  Headers will be installed in $prefix/include/ode"
 echo "  Libraries will be installed in $prefix/lib"
 

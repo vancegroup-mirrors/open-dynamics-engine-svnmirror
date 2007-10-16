@@ -38,6 +38,10 @@ for geometry objects
 #include "collision_transform.h"
 #include "collision_trimesh_internal.h"
 
+#if dBULLET_ENABLED
+#include <btBulletDynamicsCommon.h>
+#endif
+
 #if dTRIMESH_GIMPACT
 #include <GIMPACT/gimpact.h>
 #endif
@@ -1083,6 +1087,13 @@ void dInitODE()
 {
 #if dTRIMESH_ENABLED && dTRIMESH_GIMPACT
 	gimpact_init();
+#endif
+#if dBULLET_ENABLED
+	btVector3 v(3,4,0);
+	btRigidBody *rb = new btRigidBody(1.0, 0, 0);
+	dIASSERT(rb);
+	delete rb;
+	fprintf(stderr,"BULLET being used. Vec len is %f\n", v.length());
 #endif
 }
 
