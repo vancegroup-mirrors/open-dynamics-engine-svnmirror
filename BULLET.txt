@@ -15,7 +15,7 @@ D) Install bullet
 
 
 1) Get the bullet branch from ODE SVN:
-  $ svn co https://opende.svn.sourceforge.net/svnroot/branches/bullet-port opende
+  $ svn co https://opende.svn.sourceforge.net/svnroot/opende/branches/bullet-port opende
 
 2) Configure OpenDE:
   $ cd opende
