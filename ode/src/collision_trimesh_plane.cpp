@@ -26,6 +26,7 @@
 #include <ode/matrix.h>
 #include <ode/rotation.h>
 #include <ode/odemath.h>
+#include "config.h"
 
 #if dTRIMESH_ENABLED
 
@@ -210,4 +211,6 @@ int dCollideTrimeshPlane( dxGeom *o1, dxGeom *o2, int flags, dContactGeom* conta
 
 
 #endif // dTRIMESH_ENABLED
+
+
 

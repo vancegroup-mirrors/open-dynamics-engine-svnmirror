@@ -1,17 +1,18 @@
-lib_LTLIBRARIES = libode.la
-libode_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
-libode_la_LDFLAGS=@EXTRA_LIBTOOL_LDFLAGS@ -release @LIBTOOL_RELEASE@
-libode_la_DEPENDENCIES = libfast.la
-libode_la_LIBADD= $(libfast_la_OBJECTS)
-
-
+lib_LTLIBRARIES = libode_single.la libode_double.la
 # convenience library to simulate per object cflags
-noinst_LTLIBRARIES= libfast.la
-libfast_la_CPPFLAGS= -I$(top_srcdir)/include -I$(top_builddir)/include
-libfast_la_CFLAGS= -O1
-libfast_la_SOURCES= fastldlt.c fastltsolve.c fastdot.c fastlsolve.c
+noinst_LTLIBRARIES= libfast_single.la libfast_double.la
 
-libode_la_SOURCES = 	objects.h \
+libode_single_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
+libode_single_la_LDFLAGS=@EXTRA_LIBTOOL_LDFLAGS@ -release @LIBTOOL_RELEASE@
+libode_single_la_DEPENDENCIES = libfast_single.la
+libode_single_la_LIBADD= $(libfast_single_la_OBJECTS)
+
+
+libfast_single_la_CPPFLAGS= -I$(top_srcdir)/include -I$(top_builddir)/include
+libfast_single_la_CFLAGS= -O1
+libfast_single_la_SOURCES= fastldlt.c fastltsolve.c fastdot.c fastlsolve.c
+
+libode_single_la_SOURCES = 	objects.h \
 			obstack.cpp \
 			collision_util.cpp \
 			obstack.h \
@@ -67,6 +68,14 @@ libode_la_SOURCES = 	objects.h \
 			heightfield.h
 
 
+libode_double_la_CPPFLAGS = -DdDOUBLE $(libode_single_la_CPPFLAGS)
+libode_double_la_LDFLAGS=$(libode_single_la_LDFLAGS)
+libode_double_la_DEPENDENCIES = libfast_double.la
+libode_double_la_LIBADD= $(libfast_single_la_OBJECTS)
+libfast_double_la_CPPFLAGS= -DdDOUBLE $(libfast_single_la_CPPFLAGS)
+libfast_double_la_CFLAGS= $(libfast_single_la_CFLAGS)
+libfast_double_la_SOURCES= $(libfast_single_la_SOURCES)
+libode_double_la_SOURCES = $(libode_single_la_SOURCES)
 
 ###################################
 #   G I M P A C T    S T U F F
@@ -77,7 +86,7 @@ if GIMPACT
 noinst_LTLIBRARIES+= libGIMPACT.la
 libGIMPACT_la_CPPFLAGS= -O2 -fno-strict-aliasing -I$(top_builddir)/include -I$(top_srcdir)/GIMPACT/include
 
-libode_la_SOURCES+= collision_trimesh_gimpact.cpp
+libode_single_la_SOURCES+= collision_trimesh_gimpact.cpp
 
 libGIMPACT_la_SOURCES = \
   $(top_srcdir)/GIMPACT/src/gim_boxpruning.cpp \
@@ -92,10 +101,12 @@ libGIMPACT_la_SOURCES = \
   $(top_srcdir)/GIMPACT/src/gim_trimesh_trimesh_collision.cpp \
   $(top_srcdir)/GIMPACT/src/gimpact.cpp
 
-libode_la_DEPENDENCIES+=libGIMPACT.la
-libode_la_LIBADD+= $(libGIMPACT_la_OBJECTS)
-libode_la_CPPFLAGS+= -DdTRIMESH_ENABLED -DdTRIMESH_GIMPACT -I$(top_srcdir)/GIMPACT/include
-libode_la_SOURCES+=	collision_trimesh_trimesh.cpp \
+libode_single_la_DEPENDENCIES+=libGIMPACT.la
+libode_double_la_DEPENDENCIES+=libGIMPACT.la
+libode_single_la_LIBADD+= $(libGIMPACT_la_OBJECTS)
+libode_double_la_LIBADD+= $(libGIMPACT_la_OBJECTS)
+libode_single_la_CPPFLAGS+= -DdTRIMESH_ENABLED -DdTRIMESH_GIMPACT -I$(top_srcdir)/GIMPACT/include
+libode_single_la_SOURCES+=	collision_trimesh_trimesh.cpp \
 			collision_trimesh_sphere.cpp \
 			collision_trimesh_ray.cpp \
 			collision_trimesh_opcode.cpp \
@@ -211,11 +222,13 @@ libOPCODE_la_SOURCES=	$(top_srcdir)/OPCODE/OPC_AABBCollider.cpp \
 			$(top_srcdir)/OPCODE/Ice/IcePoint.h \
 			$(top_srcdir)/OPCODE/Ice/IceTypes.h
 
-libode_la_DEPENDENCIES+=libOPCODE.la
+libode_single_la_DEPENDENCIES+=libOPCODE.la
+libode_single_la_LIBADD+= $(libOPCODE_la_OBJECTS)
+libode_double_la_DEPENDENCIES+=libOPCODE.la
+libode_double_la_LIBADD+= $(libOPCODE_la_OBJECTS)
 
-libode_la_LIBADD+= $(libOPCODE_la_OBJECTS)
-libode_la_CPPFLAGS += -I$(top_srcdir)/OPCODE -I$(top_srcdir)/OPCODE/Ice -DdTRIMESH_ENABLED -DdTRIMESH_OPCODE
-libode_la_SOURCES+=	collision_trimesh_trimesh.cpp \
+libode_single_la_CPPFLAGS += -I$(top_srcdir)/OPCODE -I$(top_srcdir)/OPCODE/Ice -DdTRIMESH_ENABLED -DdTRIMESH_OPCODE
+libode_single_la_SOURCES+=	collision_trimesh_trimesh.cpp \
 			collision_trimesh_sphere.cpp \
 			collision_trimesh_ray.cpp \
 			collision_trimesh_opcode.cpp \
@@ -226,5 +239,6 @@ libode_la_SOURCES+=	collision_trimesh_trimesh.cpp \
                         collision_cylinder_trimesh.cpp \
                         collision_trimesh_plane.cpp
 endif
+
 
 

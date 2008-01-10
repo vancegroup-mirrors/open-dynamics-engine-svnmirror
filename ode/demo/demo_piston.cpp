@@ -45,6 +45,11 @@
 #include <iostream>
 #include <math.h>
 #include "texturepath.h"
+/* 
+this config.h include does not belong here,
+its here just to take care of the dInfinity reference
+*/
+#include "config.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244 4305)  // for VC++, no precision loss complaints
@@ -725,5 +730,7 @@ world = dWorldCreate();
   dWorldDestroy (world);
   return 0;
 }
+
+
 
 

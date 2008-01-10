@@ -34,11 +34,15 @@ change the random test conditions.
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
 #include "texturepath.h"
+/* 
+this config.h include does not belong here,
+its here just to take care of the alloca call
+*/
+#include "config.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244 4305)  // for VC++, no precision loss complaints
 #endif
-
 // select correct drawing functions
 #ifdef dDOUBLE
 #define dsDrawSphere dsDrawSphereD

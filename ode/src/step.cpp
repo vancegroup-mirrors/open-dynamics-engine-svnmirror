@@ -22,7 +22,8 @@
 
 #include "objects.h"
 #include "joint.h"
-#include <ode/config.h>
+#include <ode/odeconfig.h>
+#include "config.h"
 #include <ode/odemath.h>
 #include <ode/rotation.h>
 #include <ode/timer.h>
@@ -1791,5 +1792,7 @@ void dInternalStepIsland (dxWorld *world, dxBody * const *body, int nb,
   UNALLOCA(state);
 #endif
 }
+
+
 
 

@@ -26,6 +26,7 @@
 #include <ode/matrix.h>
 #include <ode/rotation.h>
 #include <ode/odemath.h>
+#include "config.h"
 
 #if dTRIMESH_ENABLED
 
@@ -194,5 +195,7 @@ int dCollideRTL(dxGeom* g1, dxGeom* RayGeom, int Flags, dContactGeom* Contacts, 
 #endif  // dTRIMESH_GIMPACT
 
 #endif // dTRIMESH_ENABLED
+
+
 
 
