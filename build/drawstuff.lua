@@ -94,8 +94,11 @@ package.objdir = "obj/drawstuff"
 	package.config["ReleaseDoubleLib"].buildflags = { "optimize-speed", "no-symbols", "no-frame-pointer" }
 
 	if (options.target == "vs6" or options.target == "vs2002" or options.target == "vs2003") then
-		table.insert(package.config.DebugLib.buildflags, "static-runtime")
-		table.insert(package.config.ReleaseLib.buildflags, "static-runtime")
+      for k,v in ipairs(project.configs) do
+        if (string.find(v, "Lib") ~= nil) then
+          table.insert(package.config[v].buildflags, "static-runtime")
+        end
+      end
 	end
 
 
