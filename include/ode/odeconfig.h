@@ -16,7 +16,7 @@
 #include <float.h>
 
 /* Define a DLL export symbol for those platforms that need it */
-#if defined(ODE_PLATFORM_WINDOWS)
+#if defined(_MSC_VER)
   #if defined(ODE_DLL)
     #define ODE_API __declspec(dllexport)
   #elif !defined(ODE_LIB)
