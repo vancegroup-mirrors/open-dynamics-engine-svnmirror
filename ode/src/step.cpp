@@ -1794,5 +1794,3 @@ void dInternalStepIsland (dxWorld *world, dxBody * const *body, int nb,
 }
 
 
-
-
