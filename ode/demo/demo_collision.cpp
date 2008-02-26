@@ -34,11 +34,6 @@ change the random test conditions.
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
 #include "texturepath.h"
-/* 
-this config.h include does not belong here,
-its here just to take care of the alloca call
-*/
-#include "config.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244 4305)  // for VC++, no precision loss complaints
@@ -1303,7 +1298,7 @@ void do_tests (int argc, char **argv)
     // first put the active tests into a separate array
     int n=0;
     for (i=0; i<MAX_TESTS; i++) if (testslot[i].name) n++;
-    TestSlot **ts = (TestSlot**) alloca (n * sizeof(TestSlot*));
+    TestSlot **ts = (TestSlot**) malloc (n * sizeof(TestSlot*));
     j = 0;
     for (i=0; i<MAX_TESTS; i++) if (testslot[i].name) ts[j++] = testslot+i;
     if (j != n) dDebug (0,"internal");

@@ -1,10 +1,10 @@
-AM_CPPFLAGS = -I$(abs_top_srcdir)/include -I$(abs_top_builddir)/ode/src \
+AM_CPPFLAGS = -I$(abs_top_srcdir)/include \
         -DDRAWSTUFF_TEXTURE_PATH="\"$(abs_top_srcdir)/drawstuff/textures\""
 
-AM_LDFLAGS = @XLIBRARIES@ \
+AM_LDFLAGS = \
         $(top_builddir)/drawstuff/src/libdrawstuff.la \
         $(top_builddir)/ode/src/libode.la \
-        @GL_LIBS@
+        @GL_LIBS@ $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS)
 
 noinst_HEADERS = basket_geom.h texturepath.h world_geom3.h
 

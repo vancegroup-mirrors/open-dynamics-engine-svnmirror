@@ -53,4 +53,19 @@
 #endif
 
 
+
+/* Define the dInfinity macro */
+#ifdef INFINITY
+  #define dInfinity INFINITY
+#elif defined(HUGE_VAL)
+  #ifdef dSINGLE
+    #define dInfinity HUGE_VALF
+  #else
+    #define dInfinity HUGE_VAL
+  #endif
+#else
+  #define dInfinity ((1.0)/(0.0))
+#endif
+
+
 #endif

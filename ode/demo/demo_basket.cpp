@@ -25,7 +25,6 @@
 // By Bram Stolk.
 // Press the spacebar to reset the position of the ball.
 
-#include <ode/odeconfig.h>
 #include <assert.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
