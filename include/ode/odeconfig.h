@@ -59,7 +59,11 @@
   #define dInfinity INFINITY
 #elif defined(HUGE_VAL)
   #ifdef dSINGLE
-    #define dInfinity HUGE_VALF
+    #ifdef HUGE_VALF
+      #define dInfinity HUGE_VALF
+    #else
+      #define dInfinity HUGE_VAL
+    #endif
   #else
     #define dInfinity HUGE_VAL
   #endif
