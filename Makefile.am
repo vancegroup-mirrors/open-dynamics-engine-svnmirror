@@ -3,9 +3,9 @@ libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
 if ENABLE_DEMOS
-SUBDIRS = include drawstuff ode tests
+SUBDIRS = include drawstuff GIMPACT OPCODE bullet ode
 else
-SUBDIRS = include ode tests
+SUBDIRS = include GIMPACT OPCODE bullet ode
 endif
 
 bin_SCRIPTS = ode-config
