@@ -223,6 +223,24 @@ AC_CHECK_LIB(pthread,main,[LIBS="$LIBS -lpthread"])
 dnl test if we will build demos
 AM_CONDITIONAL(ENABLE_DEMOS, test x$enable_demos = xyes)
 
+dnl Check For Bullet support
+AC_ARG_WITH([bullet],[AC_HELP_STRING([--with-bullet=<bullet root source directory>],[Add Bullet Support])],
+[
+bullet_src_dir=$withval
+bullet=yes
+],
+[
+bullet_src_dir=""
+bullet=no
+])
+if test "$bullet" != no
+then
+	BULLET_SRC_PATH="$bullet_src_dir"
+else
+	BULLET_SRC_PATH=""
+fi
+AM_CONDITIONAL(BULLET, test "$bullet" != no)
+AC_SUBST(BULLET_SRC_PATH)
 
 dnl Check if the user wants to profile ODE using gprof
 AC_MSG_CHECKING(for gprof)
@@ -326,6 +344,7 @@ AC_OUTPUT([
  GIMPACT/include/Makefile
  GIMPACT/include/GIMPACT/Makefile
  GIMPACT/src/Makefile
+ Bullet/Makefile
  ode-config
  ])
 
@@ -340,10 +359,10 @@ echo "  Host   system type:      $host"
 echo "  Use double precision:    $precision"
 echo "  Use OPCODE:              $opcode"
 echo "  Use GIMPACT:             $gimpact"
+echo "  Use Bullet:              $bullet"
 echo "  Use gyroscopic term:     $gyroscopic"
 echo "  Is this a Pentium:       $pentium"
 echo "  Is the CPU x86-64:       $cpu64"
 echo "  Headers will be installed in $prefix/include/ode"
 echo "  Libraries will be installed in $prefix/lib"
 echo "  Building in directory    $BUILDDIR"
-

@@ -3,7 +3,7 @@ libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
 if ENABLE_DEMOS
-SUBDIRS = include drawstuff GIMPACT OPCODE ode
+SUBDIRS = include drawstuff GIMPACT OPCODE Bullet ode
 else
 SUBDIRS = include GIMPACT OPCODE ode
 endif

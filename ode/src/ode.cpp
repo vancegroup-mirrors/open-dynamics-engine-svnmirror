@@ -1967,9 +1967,15 @@ extern "C" void dTestDataStructures()
 
 //****************************************************************************
 // configuration
+#if 0
+  // this wont work on GCC
 #define REGISTER_EXTENSION( __a )  #__a ## " "
-static const char ode_configuration[] = "ODE "
+#else
+#define REGISTER_EXTENSION( __a )  "__a "
+#endif
 
+static const char ode_configuration[] = "ODE "
+"HELLO!" " "
 // EXTENSION LIST BEGIN
 //**********************************
 
