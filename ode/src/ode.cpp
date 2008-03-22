@@ -1482,7 +1482,7 @@ int dAreConnectedExcluding (dBodyID b1, dBodyID b2, int joint_type)
 
 dxWorld * dWorldCreate()
 {
-  dxWorld *w = new dxWorld;
+    dxWorld *w = new dxWorld; // TODO: check for allocation error
   w->firstbody = 0;
   w->firstjoint = 0;
   w->nb = 0;
@@ -1523,8 +1523,8 @@ dxWorld * dWorldCreate()
 
 void dWorldDestroy (dxWorld *w)
 {
-  // delete all bodies and joints
-  dAASSERT (w);
+    // delete all bodies and joints
+    dCheckArg (w);
   dxBody *nextb, *b = w->firstbody;
   while (b) {
     nextb = (dxBody*) b->next;
@@ -1565,7 +1565,7 @@ void dWorldDestroy (dxWorld *w)
 
 void dWorldSetGravity (dWorldID w, dReal x, dReal y, dReal z)
 {
-  dAASSERT (w);
+    dCheckArg (w);
   w->gravity[0] = x;
   w->gravity[1] = y;
   w->gravity[2] = z;
@@ -1574,7 +1574,7 @@ void dWorldSetGravity (dWorldID w, dReal x, dReal y, dReal z)
 
 void dWorldGetGravity (const dWorldID w, dVector3 g)
 {
-  dAASSERT (w);
+    dCheckArg (w);
   g[0] = w->gravity[0];
   g[1] = w->gravity[1];
   g[2] = w->gravity[2];
@@ -1583,45 +1583,45 @@ void dWorldGetGravity (const dWorldID w, dVector3 g)
 
 void dWorldSetERP (dWorldID w, dReal erp)
 {
-  dAASSERT (w);
+    dCheckArg (w);
   w->global_erp = erp;
 }
 
 
 dReal dWorldGetERP (const dWorldID w)
 {
-  dAASSERT (w);
+    dCheckArgRet (w, 0);
   return w->global_erp;
 }
 
 
 void dWorldSetCFM (dWorldID w, dReal cfm)
 {
-  dAASSERT (w);
+  dCheckArg (w);
   w->global_cfm = cfm;
 }
 
 
 dReal dWorldGetCFM (const dWorldID w)
 {
-  dAASSERT (w);
+    dCheckArgRet (w, 0);
   return w->global_cfm;
 }
 
 
 void dWorldStep (dWorldID w, dReal stepsize)
 {
-  dUASSERT (w,"bad world argument");
-  dUASSERT (stepsize > 0,"stepsize must be > 0");
-  dxProcessIslands (w,stepsize,&dInternalStepIsland);
+    dCheckArg (w); // bad world argument
+    dCheckArg (stepsize > 0); // stepsize must be > 0
+    dxProcessIslands (w,stepsize,&dInternalStepIsland);
 }
 
 
 void dWorldQuickStep (dWorldID w, dReal stepsize)
 {
-  dUASSERT (w,"bad world argument");
-  dUASSERT (stepsize > 0,"stepsize must be > 0");
-  dxProcessIslands (w,stepsize,&dxQuickStepper);
+    dCheckArg (w); // bad world argument
+    dCheckArg (stepsize > 0); // stepsize must be > 0
+    dxProcessIslands (w,stepsize,&dxQuickStepper);
 }
 
 
@@ -1629,12 +1629,12 @@ void dWorldImpulseToForce (dWorldID w, dReal stepsize,
 			   dReal ix, dReal iy, dReal iz,
 			   dVector3 force)
 {
-  dAASSERT (w);
-  stepsize = dRecip(stepsize);
-  force[0] = stepsize * ix;
-  force[1] = stepsize * iy;
-  force[2] = stepsize * iz;
-  // @@@ force[3] = 0;
+    dCheckArg (w);
+    stepsize = dRecip(stepsize);
+    force[0] = stepsize * ix;
+    force[1] = stepsize * iy;
+    force[2] = stepsize * iz;
+    // @@@ force[3] = 0;
 }
 
 
@@ -1642,36 +1642,36 @@ void dWorldImpulseToForce (dWorldID w, dReal stepsize,
 
 dReal dWorldGetAutoDisableLinearThreshold (const dWorldID w)
 {
-	dAASSERT(w);
-	return dSqrt (w->adis.linear_average_threshold);
+    dCheckArgRet(w, -1);
+    return dSqrt (w->adis.linear_average_threshold);
 }
 
 
 void dWorldSetAutoDisableLinearThreshold (dWorldID w, dReal linear_average_threshold)
 {
-	dAASSERT(w);
-	w->adis.linear_average_threshold = linear_average_threshold * linear_average_threshold;
+    dCheckArg(w);
+    w->adis.linear_average_threshold = linear_average_threshold * linear_average_threshold;
 }
 
 
 dReal dWorldGetAutoDisableAngularThreshold (const dWorldID w)
 {
-	dAASSERT(w);
-	return dSqrt (w->adis.angular_average_threshold);
+    dCheckArgRet(w, -1);
+    return dSqrt (w->adis.angular_average_threshold);
 }
 
 
 void dWorldSetAutoDisableAngularThreshold (dWorldID w, dReal angular_average_threshold)
 {
-	dAASSERT(w);
-	w->adis.angular_average_threshold = angular_average_threshold * angular_average_threshold;
+    dCheckArg(w);
+    w->adis.angular_average_threshold = angular_average_threshold * angular_average_threshold;
 }
 
 
 int dWorldGetAutoDisableAverageSamplesCount (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->adis.average_samples;
+    dCheckArgRet(w, -1);
+    return w->adis.average_samples;
 }
 
 
@@ -1684,46 +1684,46 @@ void dWorldSetAutoDisableAverageSamplesCount (dWorldID w, unsigned int average_s
 
 int dWorldGetAutoDisableSteps (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->adis.idle_steps;
+    dCheckArgRet(w, -1);
+    return w->adis.idle_steps;
 }
 
 
 void dWorldSetAutoDisableSteps (dWorldID w, int steps)
 {
-	dAASSERT(w);
-	w->adis.idle_steps = steps;
+    dCheckArg(w);
+    w->adis.idle_steps = steps;
 }
 
 
 dReal dWorldGetAutoDisableTime (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->adis.idle_time;
+    dCheckArgRet(w, -1);
+    return w->adis.idle_time;
 }
 
 
 void dWorldSetAutoDisableTime (dWorldID w, dReal time)
 {
-	dAASSERT(w);
-	w->adis.idle_time = time;
+    dCheckArg(w);
+    w->adis.idle_time = time;
 }
 
 
 int dWorldGetAutoDisableFlag (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->body_flags & dxBodyAutoDisable;
+    dCheckArgRet(w, 0);
+    return w->body_flags & dxBodyAutoDisable;
 }
 
 
 void dWorldSetAutoDisableFlag (dWorldID w, int do_auto_disable)
 {
-	dAASSERT(w);
-	if (do_auto_disable)
-        	w->body_flags |= dxBodyAutoDisable;
-	else
-	        w->body_flags &= ~dxBodyAutoDisable;
+    dCheckArg(w);
+    if (do_auto_disable)
+        w->body_flags |= dxBodyAutoDisable;
+    else
+        w->body_flags &= ~dxBodyAutoDisable;
 }
 
 
@@ -1731,137 +1731,137 @@ void dWorldSetAutoDisableFlag (dWorldID w, int do_auto_disable)
 
 dReal dWorldGetLinearDampingThreshold(const dWorldID w)
 {
-        dAASSERT(w);
-        return dSqrt(w->dampingp.linear_threshold);
+    dCheckArgRet(w, -1);
+    return dSqrt(w->dampingp.linear_threshold);
 }
 
 void dWorldSetLinearDampingThreshold(dWorldID w, dReal threshold)
 {
-        dAASSERT(w);
-        w->dampingp.linear_threshold = threshold*threshold;
+    dCheckArg(w);
+    w->dampingp.linear_threshold = threshold*threshold;
 }
 
 dReal dWorldGetAngularDampingThreshold(const dWorldID w)
 {
-        dAASSERT(w);
-        return dSqrt(w->dampingp.angular_threshold);
+    dCheckArgRet(w, -1);
+    return dSqrt(w->dampingp.angular_threshold);
 }
 
 void dWorldSetAngularDampingThreshold(dWorldID w, dReal threshold)
 {
-        dAASSERT(w);
-        w->dampingp.angular_threshold = threshold*threshold;
+    dCheckArg(w);
+    w->dampingp.angular_threshold = threshold*threshold;
 }
 
 dReal dWorldGetLinearDamping(const dWorldID w)
 {
-        dAASSERT(w);
-        return w->dampingp.linear_scale;
+    dCheckArgRet(w, 0);
+    return w->dampingp.linear_scale;
 }
 
 void dWorldSetLinearDamping(dWorldID w, dReal scale)
 {
-        dAASSERT(w);
-        if (scale)
-                w->body_flags |= dxBodyLinearDamping;
-        else
-                w->body_flags &= ~dxBodyLinearDamping;
-        w->dampingp.linear_scale = scale;
+    dCheckArg(w);
+    if (scale)
+        w->body_flags |= dxBodyLinearDamping;
+    else
+        w->body_flags &= ~dxBodyLinearDamping;
+    w->dampingp.linear_scale = scale;
 }
 
 dReal dWorldGetAngularDamping(const dWorldID w)
 {
-        dAASSERT(w);
-        return w->dampingp.angular_scale;
+    dCheckArgRet(w, 0);
+    return w->dampingp.angular_scale;
 }
 
 void dWorldSetAngularDamping(dWorldID w, dReal scale)
 {
-        dAASSERT(w);
-        if (scale)
-                w->body_flags |= dxBodyAngularDamping;
-        else
-                w->body_flags &= ~dxBodyAngularDamping;
-        w->dampingp.angular_scale = scale;
+    dCheckArg(w);
+    if (scale)
+        w->body_flags |= dxBodyAngularDamping;
+    else
+        w->body_flags &= ~dxBodyAngularDamping;
+    w->dampingp.angular_scale = scale;
 }
 
 void dWorldSetDamping(dWorldID w, dReal linear_scale, dReal angular_scale)
 {
-        dAASSERT(w);
+        dCheckArg(w);
         dWorldSetLinearDamping(w, linear_scale);
         dWorldSetAngularDamping(w, angular_scale);
 }
 
 dReal dWorldGetMaxAngularSpeed(const dWorldID w)
 {
-        dAASSERT(w);
-        return w->max_angular_speed;
+    dCheckArgRet(w, -1);
+    return w->max_angular_speed;
 }
 
 void dWorldSetMaxAngularSpeed(dWorldID w, dReal max_speed)
 {
-        dAASSERT(w);
-        if (max_speed < dInfinity)
-                w->body_flags |= dxBodyMaxAngularSpeed;
-        else
-                w->body_flags &= ~dxBodyMaxAngularSpeed;
-        w->max_angular_speed = max_speed;
+    dCheckArg(w);
+    if (max_speed < dInfinity)
+        w->body_flags |= dxBodyMaxAngularSpeed;
+    else
+        w->body_flags &= ~dxBodyMaxAngularSpeed;
+    w->max_angular_speed = max_speed;
 }
 
 
 void dWorldSetQuickStepNumIterations (dWorldID w, int num)
 {
-	dAASSERT(w);
-	w->qs.num_iterations = num;
+    dCheckArg(w);
+    w->qs.num_iterations = num;
 }
 
 
 int dWorldGetQuickStepNumIterations (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->qs.num_iterations;
+    dCheckArgRet(w, 0);
+    return w->qs.num_iterations;
 }
 
 
 void dWorldSetQuickStepW (dWorldID w, dReal param)
 {
-	dAASSERT(w);
-	w->qs.w = param;
+    dCheckArg(w);
+    w->qs.w = param;
 }
 
 
 dReal dWorldGetQuickStepW (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->qs.w;
+    dCheckArgRet(w, 0);
+    return w->qs.w;
 }
 
 
 void dWorldSetContactMaxCorrectingVel (dWorldID w, dReal vel)
 {
-	dAASSERT(w);
-	w->contactp.max_vel = vel;
+    dCheckArg(w);
+    w->contactp.max_vel = vel;
 }
 
 
 dReal dWorldGetContactMaxCorrectingVel (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->contactp.max_vel;
+    dCheckArgRet(w, 0);
+    return w->contactp.max_vel;
 }
 
 
 void dWorldSetContactSurfaceLayer (dWorldID w, dReal depth)
 {
-	dAASSERT(w);
-	w->contactp.min_depth = depth;
+    dCheckArg(w);
+    w->contactp.min_depth = depth;
 }
 
 
 dReal dWorldGetContactSurfaceLayer (const dWorldID w)
 {
-	dAASSERT(w);
-	return w->contactp.min_depth;
+    dCheckArgRet(w, 0);
+    return w->contactp.min_depth;
 }
 
 //****************************************************************************
