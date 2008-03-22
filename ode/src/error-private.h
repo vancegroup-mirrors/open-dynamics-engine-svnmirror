@@ -12,7 +12,7 @@ void dErrorInit(void);
 #define dCheckRet(x, e, r)      assert(x)
 #elif defined(dEXCEPTIONS)
 #define dCheck(x, e)                                   \
-        if (!(x)) {
+        if (!(x)) {                                    \
                 throw (e);                             \
         } else {                                       \
                 dSetLastError(dErrNoError);            \
