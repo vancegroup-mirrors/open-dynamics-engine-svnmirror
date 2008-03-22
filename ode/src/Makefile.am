@@ -32,7 +32,7 @@ libode_la_SOURCES =     array.cpp array.h \
                         collision_util.cpp collision_util.h \
                         convex.cpp \
                         cylinder.cpp \
-                        error.cpp \
+                        error.cpp error-private.h \
                         export-dif.cpp \
                         heightfield.cpp heightfield.h \
                         joint.cpp joint.h \

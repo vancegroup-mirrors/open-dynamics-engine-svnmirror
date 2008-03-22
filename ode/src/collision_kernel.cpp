@@ -38,6 +38,7 @@ for geometry objects
 #include "collision_std.h"
 #include "collision_transform.h"
 #include "collision_trimesh_internal.h"
+#include "error-private.h"
 
 #if dTRIMESH_GIMPACT
 #include <GIMPACT/gimpact.h>
@@ -1109,6 +1110,8 @@ void dInitODE()
 #if dTRIMESH_ENABLED && dTRIMESH_GIMPACT
 	gimpact_init();
 #endif
+
+        dErrorInit();
 }
 
 void dCloseODE()

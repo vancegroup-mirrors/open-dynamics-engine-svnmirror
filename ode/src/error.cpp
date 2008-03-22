@@ -23,6 +23,7 @@
 #include <ode/odeconfig.h>
 #include "config.h"
 #include <ode/error.h>
+#include "error-private.h"
 
 
 static dMessageFunction *error_function = 0;
@@ -170,4 +171,48 @@ extern "C" void dMessage (int num, const char *msg, ...)
 }
 
 
+
+
 #endif
+
+
+
+
+
+
+
+
+
+//----------------------------------
+static int dLastError;
+
+static const char* errorMsgs[dNumErrors] = {
+    "No error", // dErrNoError
+        
+    "Out of memory", // dErrMemory
+
+
+    "Invalid argument", // dInvalidArg
+};
+
+void dErrorInit(void)
+{
+    dSetLastError(dErrNoError);
+        
+}
+
+void dSetLastError(int e)
+{
+    dLastError = e;
+}
+
+int dGetLastError(void)
+{
+    return dLastError;
+}
+
+
+
+// Local Variables:
+// c-basic-offset:4
+// End:

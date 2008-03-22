@@ -37,6 +37,7 @@
 #include "util.h"
 #include <ode/memory.h>
 #include <ode/error.h>
+#include "error-private.h"
 
 // misc defines
 #define ALLOCA dALLOCA16
@@ -58,10 +59,10 @@ static inline void initObject (dObject *obj, dxWorld *w)
 
 static inline void addObjectToList (dObject *obj, dObject **first)
 {
-  obj->next = *first;
-  obj->tome = first;
-  if (*first) (*first)->tome = &obj->next;
-  (*first) = obj;
+    obj->next = *first;
+    obj->tome = first;
+    if (*first) (*first)->tome = &obj->next;
+    (*first) = obj;
 }
 
 
@@ -223,14 +224,14 @@ void dWorldCheck (dxWorld *w)
 // body
 dxWorld* dBodyGetWorld (const dxBody* b)
 {
-  dAASSERT (b);
-  return b->world;
+    dCheckArgRet(b, 0);
+    return b->world;
 }
 
 dxBody *dBodyCreate (dxWorld *w)
 {
-  dAASSERT (w);
-  dxBody *b = new dxBody;
+  dCheckArgRet(w, 0);
+  dxBody *b = new dxBody; // TODO: check memory allocation
   initObject (b,w);
   b->firstjoint = 0;
   b->flags = 0;
@@ -277,7 +278,7 @@ dxBody *dBodyCreate (dxWorld *w)
 
 void dBodyDestroy (dxBody *b)
 {
-  dAASSERT (b);
+    dCheckArg (b);
 
   // all geoms that link to this body must be notified that the body is about
   // to disappear. note that the call to dGeomSetBody(geom,0) will result in
@@ -321,52 +322,54 @@ void dBodyDestroy (dxBody *b)
 
 void dBodySetData (dBodyID b, void *data)
 {
-  dAASSERT (b);
-  b->userdata = data;
+    dCheckArg (b);
+    b->userdata = data;
 }
 
 
 void *dBodyGetData (const dBodyID b)
 {
-  dAASSERT (b);
+  dCheckArgRet (b, 0);
   return b->userdata;
 }
 
 
 void dBodySetPosition (dBodyID b, dReal x, dReal y, dReal z)
 {
-  dAASSERT (b);
-  b->posr.pos[0] = x;
-  b->posr.pos[1] = y;
-  b->posr.pos[2] = z;
-
-  // notify all attached geoms that this body has moved
-  for (dxGeom *geom = b->geom; geom; geom = dGeomGetBodyNext (geom))
-    dGeomMoved (geom);
+    dCheckArg (b);
+    b->posr.pos[0] = x;
+    b->posr.pos[1] = y;
+    b->posr.pos[2] = z;
+    
+    // notify all attached geoms that this body has moved
+    for (dxGeom *geom = b->geom; geom; geom = dGeomGetBodyNext (geom))
+        dGeomMoved (geom);
 }
 
 
 void dBodySetRotation (dBodyID b, const dMatrix3 R)
 {
-  dAASSERT (b && R);
-  dQuaternion q;
-  dRtoQ (R,q);
-  dNormalize4 (q);
-  b->q[0] = q[0];
-  b->q[1] = q[1];
-  b->q[2] = q[2];
-  b->q[3] = q[3];
-  dQtoR (b->q,b->posr.R);
+    dCheckArg (b && R);
+    dQuaternion q;
+    dRtoQ (R,q);
+    // TODO: check dRtoQ result
+    dNormalize4 (q);
+    // TODO: check normalize4 result
+    b->q[0] = q[0];
+    b->q[1] = q[1];
+    b->q[2] = q[2];
+    b->q[3] = q[3];
+    dQtoR (b->q,b->posr.R);
 
-  // notify all attached geoms that this body has moved
-  for (dxGeom *geom = b->geom; geom; geom = dGeomGetBodyNext (geom))
-    dGeomMoved (geom);
+    // notify all attached geoms that this body has moved
+    for (dxGeom *geom = b->geom; geom; geom = dGeomGetBodyNext (geom))
+        dGeomMoved (geom);
 }
 
 
 void dBodySetQuaternion (dBodyID b, const dQuaternion q)
 {
-  dAASSERT (b && q);
+  dCheckArg (b && q);
   b->q[0] = q[0];
   b->q[1] = q[1];
   b->q[2] = q[2];
@@ -382,7 +385,7 @@ void dBodySetQuaternion (dBodyID b, const dQuaternion q)
 
 void dBodySetLinearVel  (dBodyID b, dReal x, dReal y, dReal z)
 {
-  dAASSERT (b);
+  dCheckArg (b);
   b->lvel[0] = x;
   b->lvel[1] = y;
   b->lvel[2] = z;
@@ -391,7 +394,7 @@ void dBodySetLinearVel  (dBodyID b, dReal x, dReal y, dReal z)
 
 void dBodySetAngularVel (dBodyID b, dReal x, dReal y, dReal z)
 {
-  dAASSERT (b);
+  dCheckArg (b);
   b->avel[0] = x;
   b->avel[1] = y;
   b->avel[2] = z;
@@ -400,31 +403,31 @@ void dBodySetAngularVel (dBodyID b, dReal x, dReal y, dReal z)
 
 const dReal * dBodyGetPosition (const dBodyID b)
 {
-  dAASSERT (b);
+  dCheckArgRet (b, 0);
   return b->posr.pos;
 }
 
 
 void dBodyCopyPosition (dBodyID b, dVector3 pos)
 {
-	dAASSERT (b);
-	dReal* src = b->posr.pos;
-	pos[0] = src[0];
-	pos[1] = src[1];
-	pos[2] = src[2];
+        dCheckArg (b && pos);
+        dReal* src = b->posr.pos;
+        pos[0] = src[0];
+        pos[1] = src[1];
+        pos[2] = src[2];
 }
 
 
 const dReal * dBodyGetRotation (const dBodyID b)
 {
-  dAASSERT (b);
-  return b->posr.R;
+        dCheckArgRet (b, 0);
+        return b->posr.R;
 }
 
 
 void dBodyCopyRotation (dBodyID b, dMatrix3 R)
 {
-	dAASSERT (b);
+	dCheckArg (b);
 	const dReal* src = b->posr.R;
 	R[0] = src[0];
 	R[1] = src[1];
@@ -443,40 +446,40 @@ void dBodyCopyRotation (dBodyID b, dMatrix3 R)
 
 const dReal * dBodyGetQuaternion (const dBodyID b)
 {
-  dAASSERT (b);
-  return b->q;
+    dCheckArgRet (b, 0);
+    return b->q;
 }
 
 
 void dBodyCopyQuaternion (dBodyID b, dQuaternion quat)
 {
-	dAASSERT (b);
-	dReal* src = b->q;
-	quat[0] = src[0];
-	quat[1] = src[1];
-	quat[2] = src[2];
-	quat[3] = src[3];
+    dCheckArg (b && quat);
+    dReal* src = b->q;
+    quat[0] = src[0];
+    quat[1] = src[1];
+    quat[2] = src[2];
+    quat[3] = src[3];
 }
 
 
 const dReal * dBodyGetLinearVel (const dBodyID b)
 {
-  dAASSERT (b);
-  return b->lvel;
+    dCheckArgRet (b, 0);
+    return b->lvel;
 }
 
 
 const dReal * dBodyGetAngularVel (const dBodyID b)
 {
-  dAASSERT (b);
-  return b->avel;
+    dCheckArgRet (b, 0);
+    return b->avel;
 }
 
 
 void dBodySetMass (dBodyID b, const dMass *mass)
 {
-  dAASSERT (b && mass );
-  dIASSERT(dMassCheck(mass));
+  dCheckArg (b && mass );
+  dIASSERT(dMassCheck(mass)); // TODO: this is not an internal check
 
   // The centre of mass must be at the origin.
   // Use dMassTranslate( mass, -mass->c[0], -mass->c[1], -mass->c[2] ) to correct it.
@@ -495,102 +498,102 @@ void dBodySetMass (dBodyID b, const dMass *mass)
 
 void dBodyGetMass (const dBodyID b, dMass *mass)
 {
-  dAASSERT (b && mass);
-  memcpy (mass,&b->mass,sizeof(dMass));
+    dCheckArg (b && mass);
+    memcpy (mass,&b->mass,sizeof(dMass));
 }
 
 
 void dBodyAddForce (dBodyID b, dReal fx, dReal fy, dReal fz)
 {
-  dAASSERT (b);
-  b->facc[0] += fx;
-  b->facc[1] += fy;
-  b->facc[2] += fz;
+    dCheckArg (b);
+    b->facc[0] += fx;
+    b->facc[1] += fy;
+    b->facc[2] += fz;
 }
 
 
 void dBodyAddTorque (dBodyID b, dReal fx, dReal fy, dReal fz)
 {
-  dAASSERT (b);
-  b->tacc[0] += fx;
-  b->tacc[1] += fy;
-  b->tacc[2] += fz;
+    dCheckArg (b);
+    b->tacc[0] += fx;
+    b->tacc[1] += fy;
+    b->tacc[2] += fz;
 }
 
 
 void dBodyAddRelForce (dBodyID b, dReal fx, dReal fy, dReal fz)
 {
-  dAASSERT (b);
-  dVector3 t1,t2;
-  t1[0] = fx;
-  t1[1] = fy;
-  t1[2] = fz;
-  t1[3] = 0;
-  dMULTIPLY0_331 (t2,b->posr.R,t1);
-  b->facc[0] += t2[0];
-  b->facc[1] += t2[1];
-  b->facc[2] += t2[2];
+    dCheckArg (b);
+    dVector3 t1,t2;
+    t1[0] = fx;
+    t1[1] = fy;
+    t1[2] = fz;
+    t1[3] = 0;
+    dMULTIPLY0_331 (t2,b->posr.R,t1);
+    b->facc[0] += t2[0];
+    b->facc[1] += t2[1];
+    b->facc[2] += t2[2];
 }
 
 
 void dBodyAddRelTorque (dBodyID b, dReal fx, dReal fy, dReal fz)
 {
-  dAASSERT (b);
-  dVector3 t1,t2;
-  t1[0] = fx;
-  t1[1] = fy;
-  t1[2] = fz;
-  t1[3] = 0;
-  dMULTIPLY0_331 (t2,b->posr.R,t1);
-  b->tacc[0] += t2[0];
-  b->tacc[1] += t2[1];
-  b->tacc[2] += t2[2];
+    dCheckArg (b);
+    dVector3 t1,t2;
+    t1[0] = fx;
+    t1[1] = fy;
+    t1[2] = fz;
+    t1[3] = 0;
+    dMULTIPLY0_331 (t2,b->posr.R,t1);
+    b->tacc[0] += t2[0];
+    b->tacc[1] += t2[1];
+    b->tacc[2] += t2[2];
 }
 
 
 void dBodyAddForceAtPos (dBodyID b, dReal fx, dReal fy, dReal fz,
 			 dReal px, dReal py, dReal pz)
 {
-  dAASSERT (b);
-  b->facc[0] += fx;
-  b->facc[1] += fy;
-  b->facc[2] += fz;
-  dVector3 f,q;
-  f[0] = fx;
-  f[1] = fy;
-  f[2] = fz;
-  q[0] = px - b->posr.pos[0];
-  q[1] = py - b->posr.pos[1];
-  q[2] = pz - b->posr.pos[2];
-  dCROSS (b->tacc,+=,q,f);
+    dCheckArg (b);
+    b->facc[0] += fx;
+    b->facc[1] += fy;
+    b->facc[2] += fz;
+    dVector3 f,q;
+    f[0] = fx;
+    f[1] = fy;
+    f[2] = fz;
+    q[0] = px - b->posr.pos[0];
+    q[1] = py - b->posr.pos[1];
+    q[2] = pz - b->posr.pos[2];
+    dCROSS (b->tacc,+=,q,f);
 }
 
 
 void dBodyAddForceAtRelPos (dBodyID b, dReal fx, dReal fy, dReal fz,
 			    dReal px, dReal py, dReal pz)
 {
-  dAASSERT (b);
-  dVector3 prel,f,p;
-  f[0] = fx;
-  f[1] = fy;
-  f[2] = fz;
-  f[3] = 0;
-  prel[0] = px;
-  prel[1] = py;
-  prel[2] = pz;
-  prel[3] = 0;
-  dMULTIPLY0_331 (p,b->posr.R,prel);
-  b->facc[0] += f[0];
-  b->facc[1] += f[1];
-  b->facc[2] += f[2];
-  dCROSS (b->tacc,+=,p,f);
+    dCheckArg (b);
+    dVector3 prel,f,p;
+    f[0] = fx;
+    f[1] = fy;
+    f[2] = fz;
+    f[3] = 0;
+    prel[0] = px;
+    prel[1] = py;
+    prel[2] = pz;
+    prel[3] = 0;
+    dMULTIPLY0_331 (p,b->posr.R,prel);
+    b->facc[0] += f[0];
+    b->facc[1] += f[1];
+    b->facc[2] += f[2];
+    dCROSS (b->tacc,+=,p,f);
 }
 
 
 void dBodyAddRelForceAtPos (dBodyID b, dReal fx, dReal fy, dReal fz,
 			    dReal px, dReal py, dReal pz)
 {
-  dAASSERT (b);
+  dCheckArg (b);
   dVector3 frel,f;
   frel[0] = fx;
   frel[1] = fy;
@@ -611,7 +614,7 @@ void dBodyAddRelForceAtPos (dBodyID b, dReal fx, dReal fy, dReal fz,
 void dBodyAddRelForceAtRelPos (dBodyID b, dReal fx, dReal fy, dReal fz,
 			       dReal px, dReal py, dReal pz)
 {
-  dAASSERT (b);
+  dCheckArg (b);
   dVector3 frel,prel,f,p;
   frel[0] = fx;
   frel[1] = fy;
@@ -632,115 +635,115 @@ void dBodyAddRelForceAtRelPos (dBodyID b, dReal fx, dReal fy, dReal fz,
 
 const dReal * dBodyGetForce (const dBodyID b)
 {
-  dAASSERT (b);
-  return b->facc;
+    dCheckArgRet (b, 0);
+    return b->facc;
 }
 
 
 const dReal * dBodyGetTorque (const dBodyID b)
 {
-  dAASSERT (b);
-  return b->tacc;
+    dCheckArgRet (b, 0);
+    return b->tacc;
 }
 
 
 void dBodySetForce (dBodyID b, dReal x, dReal y, dReal z)
 {
-  dAASSERT (b);
-  b->facc[0] = x;
-  b->facc[1] = y;
-  b->facc[2] = z;
+    dCheckArg (b);
+    b->facc[0] = x;
+    b->facc[1] = y;
+    b->facc[2] = z;
 }
 
 
 void dBodySetTorque (dBodyID b, dReal x, dReal y, dReal z)
 {
-  dAASSERT (b);
-  b->tacc[0] = x;
-  b->tacc[1] = y;
-  b->tacc[2] = z;
+    dCheckArg (b);
+    b->tacc[0] = x;
+    b->tacc[1] = y;
+    b->tacc[2] = z;
 }
 
 
 void dBodyGetRelPointPos (const dBodyID b, dReal px, dReal py, dReal pz,
 			  dVector3 result)
 {
-  dAASSERT (b);
-  dVector3 prel,p;
-  prel[0] = px;
-  prel[1] = py;
-  prel[2] = pz;
-  prel[3] = 0;
-  dMULTIPLY0_331 (p,b->posr.R,prel);
-  result[0] = p[0] + b->posr.pos[0];
-  result[1] = p[1] + b->posr.pos[1];
-  result[2] = p[2] + b->posr.pos[2];
+    dCheckArg (b);
+    dVector3 prel,p;
+    prel[0] = px;
+    prel[1] = py;
+    prel[2] = pz;
+    prel[3] = 0;
+    dMULTIPLY0_331 (p,b->posr.R,prel);
+    result[0] = p[0] + b->posr.pos[0];
+    result[1] = p[1] + b->posr.pos[1];
+    result[2] = p[2] + b->posr.pos[2];
 }
 
 
 void dBodyGetRelPointVel (const dBodyID b, dReal px, dReal py, dReal pz,
 			  dVector3 result)
 {
-  dAASSERT (b);
-  dVector3 prel,p;
-  prel[0] = px;
-  prel[1] = py;
-  prel[2] = pz;
-  prel[3] = 0;
-  dMULTIPLY0_331 (p,b->posr.R,prel);
-  result[0] = b->lvel[0];
-  result[1] = b->lvel[1];
-  result[2] = b->lvel[2];
-  dCROSS (result,+=,b->avel,p);
+    dCheckArg (b);
+    dVector3 prel,p;
+    prel[0] = px;
+    prel[1] = py;
+    prel[2] = pz;
+    prel[3] = 0;
+    dMULTIPLY0_331 (p,b->posr.R,prel);
+    result[0] = b->lvel[0];
+    result[1] = b->lvel[1];
+    result[2] = b->lvel[2];
+    dCROSS (result,+=,b->avel,p);
 }
 
 
 void dBodyGetPointVel (const dBodyID b, dReal px, dReal py, dReal pz,
 		       dVector3 result)
 {
-  dAASSERT (b);
-  dVector3 p;
-  p[0] = px - b->posr.pos[0];
-  p[1] = py - b->posr.pos[1];
-  p[2] = pz - b->posr.pos[2];
-  p[3] = 0;
-  result[0] = b->lvel[0];
-  result[1] = b->lvel[1];
-  result[2] = b->lvel[2];
-  dCROSS (result,+=,b->avel,p);
+    dCheckArg (b);
+    dVector3 p;
+    p[0] = px - b->posr.pos[0];
+    p[1] = py - b->posr.pos[1];
+    p[2] = pz - b->posr.pos[2];
+    p[3] = 0;
+    result[0] = b->lvel[0];
+    result[1] = b->lvel[1];
+    result[2] = b->lvel[2];
+    dCROSS (result,+=,b->avel,p);
 }
 
 
 void dBodyGetPosRelPoint (const dBodyID b, dReal px, dReal py, dReal pz,
 			  dVector3 result)
 {
-  dAASSERT (b);
-  dVector3 prel;
-  prel[0] = px - b->posr.pos[0];
-  prel[1] = py - b->posr.pos[1];
-  prel[2] = pz - b->posr.pos[2];
-  prel[3] = 0;
-  dMULTIPLY1_331 (result,b->posr.R,prel);
+    dCheckArg (b);
+    dVector3 prel;
+    prel[0] = px - b->posr.pos[0];
+    prel[1] = py - b->posr.pos[1];
+    prel[2] = pz - b->posr.pos[2];
+    prel[3] = 0;
+    dMULTIPLY1_331 (result,b->posr.R,prel);
 }
 
 
 void dBodyVectorToWorld (dBodyID b, dReal px, dReal py, dReal pz,
 			 dVector3 result)
 {
-  dAASSERT (b);
-  dVector3 p;
-  p[0] = px;
-  p[1] = py;
-  p[2] = pz;
-  p[3] = 0;
-  dMULTIPLY0_331 (result,b->posr.R,p);
+    dCheckArg (b);
+    dVector3 p;
+    p[0] = px;
+    p[1] = py;
+    p[2] = pz;
+    p[3] = 0;
+    dMULTIPLY0_331 (result,b->posr.R,p);
 }
 
 
 void dBodyVectorFromWorld (dBodyID b, dReal px, dReal py, dReal pz,
 			   dVector3 result)
 {
-  dAASSERT (b);
+    dCheckArg (b);
   dVector3 p;
   p[0] = px;
   p[1] = py;
@@ -752,7 +755,7 @@ void dBodyVectorFromWorld (dBodyID b, dReal px, dReal py, dReal pz,
 
 void dBodySetFiniteRotationMode (dBodyID b, int mode)
 {
-  dAASSERT (b);
+  dCheckArg (b);
   b->flags &= ~(dxBodyFlagFiniteRotation | dxBodyFlagFiniteRotationAxis);
   if (mode) {
     b->flags |= dxBodyFlagFiniteRotation;
@@ -766,7 +769,7 @@ void dBodySetFiniteRotationMode (dBodyID b, int mode)
 
 void dBodySetFiniteRotationAxis (dBodyID b, dReal x, dReal y, dReal z)
 {
-  dAASSERT (b);
+  dCheckArg (b);
   b->finite_rot_axis[0] = x;
   b->finite_rot_axis[1] = y;
   b->finite_rot_axis[2] = z;
@@ -782,14 +785,14 @@ void dBodySetFiniteRotationAxis (dBodyID b, dReal x, dReal y, dReal z)
 
 int dBodyGetFiniteRotationMode (const dBodyID b)
 {
-  dAASSERT (b);
+    dCheckArgRet (b, 0);
   return ((b->flags & dxBodyFlagFiniteRotation) != 0);
 }
 
 
 void dBodyGetFiniteRotationAxis (const dBodyID b, dVector3 result)
 {
-  dAASSERT (b);
+    dCheckArg (b && b);
   result[0] = b->finite_rot_axis[0];
   result[1] = b->finite_rot_axis[1];
   result[2] = b->finite_rot_axis[2];
@@ -798,7 +801,7 @@ void dBodyGetFiniteRotationAxis (const dBodyID b, dVector3 result)
 
 int dBodyGetNumJoints (const dBodyID b)
 {
-  dAASSERT (b);
+    dCheckArgRet (b, 0);
   int count=0;
   for (dxJointNode *n=b->firstjoint; n; n=n->next, count++);
   return count;
@@ -807,7 +810,7 @@ int dBodyGetNumJoints (const dBodyID b)
 
 dJointID dBodyGetJoint (const dBodyID b, int index)
 {
-  dAASSERT (b);
+    dCheckArgRet (b, 0);
   int i=0;
   for (dxJointNode *n=b->firstjoint; n; n=n->next, i++) {
     if (i == index) return n->joint;
@@ -818,7 +821,7 @@ dJointID dBodyGetJoint (const dBodyID b, int index)
 
 void dBodyEnable (dBodyID b)
 {
-  dAASSERT (b);
+    dCheckArg (b);
   b->flags &= ~dxBodyDisabled;
   b->adis_stepsleft = b->adis.idle_steps;
   b->adis_timeleft = b->adis.idle_time;
@@ -828,29 +831,29 @@ void dBodyEnable (dBodyID b)
 
 void dBodyDisable (dBodyID b)
 {
-  dAASSERT (b);
+    dCheckArg (b);
   b->flags |= dxBodyDisabled;
 }
 
 
 int dBodyIsEnabled (dBodyID b)
 {
-  dAASSERT (b);
+    dCheckArgRet (b, 0);
   return ((b->flags & dxBodyDisabled) == 0);
 }
 
 
 void dBodySetGravityMode (dBodyID b, int mode)
 {
-  dAASSERT (b);
-  if (mode) b->flags &= ~dxBodyNoGravity;
-  else b->flags |= dxBodyNoGravity;
+    dCheckArg (b);
+    if (mode) b->flags &= ~dxBodyNoGravity;
+    else b->flags |= dxBodyNoGravity;
 }
 
 
 int dBodyGetGravityMode (const dBodyID b)
 {
-  dAASSERT (b);
+    dCheckArgRet (b, 0);
   return ((b->flags & dxBodyNoGravity) == 0);
 }
 
@@ -859,42 +862,42 @@ int dBodyGetGravityMode (const dBodyID b)
 
 dReal dBodyGetAutoDisableLinearThreshold (const dBodyID b)
 {
-	dAASSERT(b);
-	return dSqrt (b->adis.linear_average_threshold);
+    dCheckArgRet(b, 0);
+    return dSqrt (b->adis.linear_average_threshold);
 }
 
 
 void dBodySetAutoDisableLinearThreshold (dBodyID b, dReal linear_average_threshold)
 {
-	dAASSERT(b);
+	dCheckArg(b);
 	b->adis.linear_average_threshold = linear_average_threshold * linear_average_threshold;
 }
 
 
 dReal dBodyGetAutoDisableAngularThreshold (const dBodyID b)
 {
-	dAASSERT(b);
+    dCheckArgRet(b, 0);
 	return dSqrt (b->adis.angular_average_threshold);
 }
 
 
 void dBodySetAutoDisableAngularThreshold (dBodyID b, dReal angular_average_threshold)
 {
-	dAASSERT(b);
+	dCheckArg(b);
 	b->adis.angular_average_threshold = angular_average_threshold * angular_average_threshold;
 }
 
 
 int dBodyGetAutoDisableAverageSamplesCount (const dBodyID b)
 {
-	dAASSERT(b);
+    dCheckArgRet(b, 0);
 	return b->adis.average_samples;
 }
 
 
 void dBodySetAutoDisableAverageSamplesCount (dBodyID b, unsigned int average_samples_count)
 {
-	dAASSERT(b);
+	dCheckArg(b);
 	b->adis.average_samples = average_samples_count;
 	// update the average buffers
 	if(b->average_lvel_buffer)
@@ -925,42 +928,42 @@ void dBodySetAutoDisableAverageSamplesCount (dBodyID b, unsigned int average_sam
 
 int dBodyGetAutoDisableSteps (const dBodyID b)
 {
-	dAASSERT(b);
+    dCheckArgRet(b, 0);
 	return b->adis.idle_steps;
 }
 
 
 void dBodySetAutoDisableSteps (dBodyID b, int steps)
 {
-	dAASSERT(b);
+	dCheckArg(b);
 	b->adis.idle_steps = steps;
 }
 
 
 dReal dBodyGetAutoDisableTime (const dBodyID b)
 {
-	dAASSERT(b);
+    dCheckArgRet(b, 0);
 	return b->adis.idle_time;
 }
 
 
 void dBodySetAutoDisableTime (dBodyID b, dReal time)
 {
-	dAASSERT(b);
-	b->adis.idle_time = time;
+    dCheckArg(b);
+    b->adis.idle_time = time;
 }
 
 
 int dBodyGetAutoDisableFlag (const dBodyID b)
 {
-	dAASSERT(b);
-	return ((b->flags & dxBodyAutoDisable) != 0);
+    dCheckArgRet(b,0);
+    return ((b->flags & dxBodyAutoDisable) != 0);
 }
 
 
 void dBodySetAutoDisableFlag (dBodyID b, int do_auto_disable)
 {
-	dAASSERT(b);
+    dCheckArg(b);
 	if (!do_auto_disable)
 	{
 		b->flags &= ~dxBodyAutoDisable;
@@ -980,11 +983,11 @@ void dBodySetAutoDisableFlag (dBodyID b, int do_auto_disable)
 
 void dBodySetAutoDisableDefaults (dBodyID b)
 {
-	dAASSERT(b);
-	dWorldID w = b->world;
-	dAASSERT(w);
-	b->adis = w->adis;
-	dBodySetAutoDisableFlag (b, w->body_flags & dxBodyAutoDisable);
+    dCheckArg(b);
+    dWorldID w = b->world;
+    dCheckArg(w); // TODO: not really an argument test
+    b->adis = w->adis;
+    dBodySetAutoDisableFlag (b, w->body_flags & dxBodyAutoDisable);
 }
 
 
@@ -992,29 +995,29 @@ void dBodySetAutoDisableDefaults (dBodyID b)
 
 dReal dBodyGetLinearDamping(const dBodyID b)
 {
-        dAASSERT(b);
-        return b->dampingp.linear_scale;
+    dCheckArgRet(b, 0);
+    return b->dampingp.linear_scale;
 }
 
 void dBodySetLinearDamping(dBodyID b, dReal scale)
 {
-        dAASSERT(b);
-        if (scale)
-                b->flags |= dxBodyLinearDamping;
-        else
-                b->flags &= ~dxBodyLinearDamping;
-        b->dampingp.linear_scale = scale;
+    dCheckArg(b);
+    if (scale)
+        b->flags |= dxBodyLinearDamping;
+    else
+        b->flags &= ~dxBodyLinearDamping;
+    b->dampingp.linear_scale = scale;
 }
 
 dReal dBodyGetAngularDamping(const dBodyID b)
 {
-        dAASSERT(b);
+    dCheckArgRet(b, 0);
         return b->dampingp.angular_scale;
 }
 
 void dBodySetAngularDamping(dBodyID b, dReal scale)
 {
-        dAASSERT(b);
+    dCheckArg(b);
         if (scale)
                 b->flags |= dxBodyAngularDamping;
         else
@@ -1024,41 +1027,41 @@ void dBodySetAngularDamping(dBodyID b, dReal scale)
 
 void dBodySetDamping(dBodyID b, dReal linear_scale, dReal angular_scale)
 {
-        dAASSERT(b);
+    dCheckArg(b);
         dBodySetLinearDamping(b, linear_scale);
         dBodySetAngularDamping(b, angular_scale);
 }
 
 dReal dBodyGetLinearDampingThreshold(const dBodyID b)
 {
-        dAASSERT(b);
+    dCheckArgRet(b, 0);
         return dSqrt(b->dampingp.linear_threshold);
 }
 
 void dBodySetLinearDampingThreshold(dBodyID b, dReal threshold)
 {
-        dAASSERT(b);
+    dCheckArg(b);
         b->dampingp.linear_threshold = threshold*threshold;
 }
 
 
 dReal dBodyGetAngularDampingThreshold(const dBodyID b)
 {
-        dAASSERT(b);
-        return dSqrt(b->dampingp.angular_threshold);
+    dCheckArgRet(b, 0);
+    return dSqrt(b->dampingp.angular_threshold);
 }
 
 void dBodySetAngularDampingThreshold(dBodyID b, dReal threshold)
 {
-        dAASSERT(b);
-        b->dampingp.angular_threshold = threshold*threshold;
+    dCheckArg(b);
+    b->dampingp.angular_threshold = threshold*threshold;
 }
 
 void dBodySetDampingDefaults(dBodyID b)
 {
-        dAASSERT(b);
+        dCheckArg(b);
         dWorldID w = b->world;
-        dAASSERT(w);
+        dCheckArg(w); // TODO: not really an argument check
         b->dampingp = w->dampingp;
         int mask = dxBodyLinearDamping | dxBodyAngularDamping;
         b->flags &= ~mask; // zero them
@@ -1067,13 +1070,13 @@ void dBodySetDampingDefaults(dBodyID b)
 
 dReal dBodyGetMaxAngularSpeed(const dBodyID b)
 {
-        dAASSERT(b);
+    dCheckArgRet(b, 0);
         return b->max_angular_speed;
 }
 
 void dBodySetMaxAngularSpeed(dBodyID b, dReal max_speed)
 {
-        dAASSERT(b);
+    dCheckArg(b);
         if (max_speed < dInfinity)
                 b->flags |= dxBodyMaxAngularSpeed;
         else
@@ -1083,22 +1086,22 @@ void dBodySetMaxAngularSpeed(dBodyID b, dReal max_speed)
 
 void dBodySetMovedCallback(dBodyID b, void (*callback)(dBodyID))
 {
-        dAASSERT(b);
+    dCheckArg(b);
         b->moved_callback = callback;
 }
 
 
 dGeomID dBodyGetFirstGeom(const dBodyID b)
 {
-        dAASSERT(b);
-        return b->geom;
+    dCheckArgRet(b, 0);
+    return b->geom;
 }
 
 
 dGeomID dBodyGetNextGeom(const dGeomID geom)
 {
-        dAASSERT(geom);
-        return dGeomGetBodyNext(geom);
+    dCheckArgRet(geom, 0);
+    return dGeomGetBodyNext(geom);
 }
 
 
@@ -2075,3 +2078,12 @@ int dCheckConfiguration( const char* extension )
 
 	return 0;
 }
+
+
+
+
+
+
+// Local Variables:
+// c-basic-offset:4
+// End:
