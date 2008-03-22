@@ -56,6 +56,27 @@ ODE_API void dDebug (int num, const char *msg, ...);
 ODE_API void dMessage (int num, const char *msg, ...);
 
 
+
+
+/** Returns the last error code. */
+ODE_API int dGetLastError(void);
+ODE_API void dSetLastError(int);
+ODE_API const char* dGetErrorMsg(int);
+
+
+enum dErrorCode {
+        dErrNoError,
+        dErrMemory,
+
+        dErrInvalidArg,
+        dErrInvalidWorld,
+        dErrInvalidBody,
+
+        dNumErrors
+};
+
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -192,7 +192,10 @@ static const char* errorMsgs[dNumErrors] = {
     "Out of memory", // dErrMemory
 
 
-    "Invalid argument", // dInvalidArg
+    "Invalid argument", // dErrInvalidArg
+    "Invalid world", // dErrInvalidWorld
+    "Invalid body", // dErrInvalidBody
+
 };
 
 void dErrorInit(void)

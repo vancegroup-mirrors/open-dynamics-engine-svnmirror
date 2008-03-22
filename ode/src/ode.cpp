@@ -1147,22 +1147,22 @@ static dxJoint *createJoint (dWorldID w, dJointGroupID group,
 
 dxJoint * dJointCreateBall (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__dball_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__dball_vtable);
 }
 
 
 dxJoint * dJointCreateHinge (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__dhinge_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__dhinge_vtable);
 }
 
 
 dxJoint * dJointCreateSlider (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__dslider_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__dslider_vtable);
 }
 
 
@@ -1179,27 +1179,27 @@ dxJoint * dJointCreateContact (dWorldID w, dJointGroupID group,
 
 dxJoint * dJointCreateHinge2 (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
+    dCheckArgRet (w, 0);
   return createJoint (w,group,&__dhinge2_vtable);
 }
 
 
 dxJoint * dJointCreateUniversal (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__duniversal_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__duniversal_vtable);
 }
 
 dxJoint * dJointCreatePR (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
+    dCheckArgRet (w, 0);
   return createJoint (w,group,&__dPR_vtable);
 }
 
 dxJoint * dJointCreatePU (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__dPU_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__dPU_vtable);
 }
 
 dxJoint * dJointCreatePiston (dWorldID w, dJointGroupID group)
@@ -1210,39 +1210,39 @@ dxJoint * dJointCreatePiston (dWorldID w, dJointGroupID group)
 
 dxJoint * dJointCreateFixed (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__dfixed_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__dfixed_vtable);
 }
 
 
 dxJoint * dJointCreateNull (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
+    dCheckArgRet (w, 0);
   return createJoint (w,group,&__dnull_vtable);
 }
 
 
 dxJoint * dJointCreateAMotor (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
+    dCheckArgRet (w, 0);
   return createJoint (w,group,&__damotor_vtable);
 }
 
 dxJoint * dJointCreateLMotor (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__dlmotor_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__dlmotor_vtable);
 }
 
 dxJoint * dJointCreatePlane2D (dWorldID w, dJointGroupID group)
 {
-  dAASSERT (w);
-  return createJoint (w,group,&__dplane2d_vtable);
+    dCheckArgRet (w, 0);
+    return createJoint (w,group,&__dplane2d_vtable);
 }
 
 void dJointDestroy (dxJoint *j)
 {
-  dAASSERT (j);
+    dCheckArg (j);
   if (j->flags & dJOINT_INGROUP) return;
   removeJointReferencesFromAttachedBodies (j);
   removeObjectFromList (j);
@@ -1254,7 +1254,7 @@ void dJointDestroy (dxJoint *j)
 dJointGroupID dJointGroupCreate (int max_size)
 {
   // not any more ... dUASSERT (max_size > 0,"max size must be > 0");
-  dxJointGroup *group = new dxJointGroup;
+    dxJointGroup *group = new dxJointGroup; // TODO: check memory allocation
   group->num = 0;
   return group;
 }
@@ -1262,9 +1262,9 @@ dJointGroupID dJointGroupCreate (int max_size)
 
 void dJointGroupDestroy (dJointGroupID group)
 {
-  dAASSERT (group);
-  dJointGroupEmpty (group);
-  delete group;
+    dCheckArg (group);
+    dJointGroupEmpty (group);
+    delete group;
 }
 
 
@@ -1277,7 +1277,7 @@ void dJointGroupEmpty (dJointGroupID group)
   // if any group joints have their world pointer set to 0, their world was
   // previously destroyed. no special handling is required for these joints.
 
-  dAASSERT (group);
+    dCheckArg (group);
   int i;
   dxJoint **jlist = (dxJoint**) ALLOCA (group->num * sizeof(dxJoint*));
   dxJoint *j = (dxJoint*) group->stack.rewind();
@@ -1298,8 +1298,8 @@ void dJointGroupEmpty (dJointGroupID group)
 
 int dJointGetNumBodies(dxJoint *joint)
 {
-  // check arguments
-  dUASSERT (joint,"bad joint argument");
+    // check arguments
+    dCheckArgRet (joint, -1);
 
   if ( !joint->node[0].body )
     return 0;
@@ -1313,22 +1313,20 @@ int dJointGetNumBodies(dxJoint *joint)
 void dJointAttach (dxJoint *joint, dxBody *body1, dxBody *body2)
 {
   // check arguments
-  dUASSERT (joint,"bad joint argument");
-  dUASSERT (body1 == 0 || body1 != body2,"can't have body1==body2");
-  dxWorld *world = joint->world;
-  dUASSERT ( (!body1 || body1->world == world) &&
-	     (!body2 || body2->world == world),
-	     "joint and bodies must be in same world");
+    dCheckArg (joint);
+    dCheckArg (body1 == 0 || body1 != body2); // can't have body1==body2
+    dxWorld *world = joint->world;
+    dCheckWorld ( (!body1 || body1->world == world) &&
+                  (!body2 || body2->world == world) ); // joint and bodies must be in same world
 
-  // check if the joint can not be attached to just one body
-  dUASSERT (!((joint->flags & dJOINT_TWOBODIES) &&
-	      ((body1 != 0) ^ (body2 != 0))),
-	    "joint can not be attached to just one body");
+    // check if the joint can not be attached to just one body
+    dCheckBody (!((joint->flags & dJOINT_TWOBODIES) &&
+                  ((body1 != 0) ^ (body2 != 0)))); // joint can not be attached to just one body
 
-  // remove any existing body attachments
-  if (joint->node[0].body || joint->node[1].body) {
-    removeJointReferencesFromAttachedBodies (joint);
-  }
+    // remove any existing body attachments
+    if (joint->node[0].body || joint->node[1].body) {
+        removeJointReferencesFromAttachedBodies (joint);
+    }
 
   // if a body is zero, make sure that it is body2, so 0 --> node[1].body
   if (body1==0) {
@@ -1360,65 +1358,65 @@ void dJointAttach (dxJoint *joint, dxBody *body1, dxBody *body2)
 
 void dJointSetData (dxJoint *joint, void *data)
 {
-  dAASSERT (joint);
-  joint->userdata = data;
+    dCheckArg (joint);
+    joint->userdata = data;
 }
 
 
 void *dJointGetData (dxJoint *joint)
 {
-  dAASSERT (joint);
+    dCheckArgRet (joint, 0);
   return joint->userdata;
 }
 
 
 int dJointGetType (dxJoint *joint)
 {
-  dAASSERT (joint);
-  return joint->vtable->typenum;
+    dCheckArgRet (joint, dJointTypeNone);
+    return joint->vtable->typenum;
 }
 
 
 dBodyID dJointGetBody (dxJoint *joint, int index)
 {
-  dAASSERT (joint);
-  if (index == 0 || index == 1) {
-    if (joint->flags & dJOINT_REVERSE) return joint->node[1-index].body;
-    else return joint->node[index].body;
-  }
-  else return 0;
+    dCheckArgRet (joint && (index < 2) && (index>=0), 0);
+    if (index == 0 || index == 1) {
+        if (joint->flags & dJOINT_REVERSE) return joint->node[1-index].body;
+        else return joint->node[index].body;
+    }
+    else return 0;
 }
 
 
 void dJointSetFeedback (dxJoint *joint, dJointFeedback *f)
 {
-  dAASSERT (joint);
-  joint->feedback = f;
+    dCheckArg (joint);
+    joint->feedback = f;
 }
 
 
 dJointFeedback *dJointGetFeedback (dxJoint *joint)
 {
-  dAASSERT (joint);
-  return joint->feedback;
+    dCheckArgRet (joint, 0);
+    return joint->feedback;
 }
 
 
 
 dJointID dConnectingJoint (dBodyID in_b1, dBodyID in_b2)
 {
-    dAASSERT (in_b1 || in_b2);
+    dCheckArgRet (in_b1 || in_b2, 0);
 
-	dBodyID b1, b2;
+    dBodyID b1, b2;
 
-	if (in_b1 == 0) {
-		b1 = in_b2;
-		b2 = in_b1;
-	}
-	else {
-		b1 = in_b1;
-		b2 = in_b2;
-	}
+    if (in_b1 == 0) {
+        b1 = in_b2;
+        b2 = in_b1;
+    }
+    else {
+        b1 = in_b1;
+        b2 = in_b2;
+    }
 
     // look through b1's neighbour list for b2
     for (dxJointNode *n=b1->firstjoint; n; n=n->next) {
@@ -1432,19 +1430,18 @@ dJointID dConnectingJoint (dBodyID in_b1, dBodyID in_b2)
 
 int dConnectingJointList (dBodyID in_b1, dBodyID in_b2, dJointID* out_list)
 {
-    dAASSERT (in_b1 || in_b2);
+    dCheckArgRet ((in_b1 || in_b2) && out_list, 0);
+    
+    dBodyID b1, b2;
 
-
-	dBodyID b1, b2;
-
-	if (in_b1 == 0) {
-		b1 = in_b2;
-		b2 = in_b1;
-	}
-	else {
-		b1 = in_b1;
-		b2 = in_b2;
-	}
+    if (in_b1 == 0) {
+        b1 = in_b2;
+        b2 = in_b1;
+    }
+    else {
+        b1 = in_b1;
+        b2 = in_b2;
+    }
 
     // look through b1's neighbour list for b2
     int numConnectingJoints = 0;
@@ -1452,30 +1449,32 @@ int dConnectingJointList (dBodyID in_b1, dBodyID in_b2, dJointID* out_list)
         if (n->body == b2)
             out_list[numConnectingJoints++] = n->joint;
     }
-
+    
     return numConnectingJoints;
 }
 
 
 int dAreConnected (dBodyID b1, dBodyID b2)
 {
-  dAASSERT (b1 && b2);
-  // look through b1's neighbour list for b2
-  for (dxJointNode *n=b1->firstjoint; n; n=n->next) {
-    if (n->body == b2) return 1;
-  }
-  return 0;
+    // TODO: accept one NULL body?
+    dCheckArgRet (b1 && b2, 0);
+    // look through b1's neighbour list for b2
+    for (dxJointNode *n=b1->firstjoint; n; n=n->next) {
+        if (n->body == b2) return 1;
+    }
+    return 0;
 }
 
 
 int dAreConnectedExcluding (dBodyID b1, dBodyID b2, int joint_type)
 {
-  dAASSERT (b1 && b2);
-  // look through b1's neighbour list for b2
-  for (dxJointNode *n=b1->firstjoint; n; n=n->next) {
-    if (dJointGetType (n->joint) != joint_type && n->body == b2) return 1;
-  }
-  return 0;
+    // TODO: accept one NULL body?
+    dCheckArgRet (b1 && b2, 0);
+    // look through b1's neighbour list for b2
+    for (dxJointNode *n=b1->firstjoint; n; n=n->next) {
+        if (dJointGetType (n->joint) != joint_type && n->body == b2) return 1;
+    }
+    return 0;
 }
 
 //****************************************************************************
