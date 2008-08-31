@@ -385,3 +385,20 @@ Matrix Quaternion::toR() const
 %}
 
 
+
+
+// TODO: maybe add some useful methods here?
+%inline %{
+struct AABB {
+    Vector min, max;
+    
+    AABB() {}
+    AABB(const dReal *p) :
+        min(p[0], p[2], p[3]),
+        max(p[1], p[3], p[5])
+    {}
+};
+%}
+
+
+

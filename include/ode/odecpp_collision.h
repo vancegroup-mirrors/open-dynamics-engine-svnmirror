@@ -1,23 +1,23 @@
 /*************************************************************************
- *									 *
- * Open Dynamics Engine, Copyright (C) 2001,2002 Russell L. Smith.	 *
- * All rights reserved.  Email: russ@q12.org   Web: www.q12.org 	 *
- *									 *
- * This library is free software; you can redistribute it and/or	 *
- * modify it under the terms of EITHER: 				 *
+ *                                                                       *
+ * Open Dynamics Engine, Copyright (C) 2001,2002 Russell L. Smith.       *
+ * All rights reserved.  Email: russ@q12.org   Web: www.q12.org          *
+ *                                                                       *
+ * This library is free software; you can redistribute it and/or         *
+ * modify it under the terms of EITHER:                                  *
  *   (1) The GNU Lesser General Public License as published by the Free  *
- *	 Software Foundation; either version 2.1 of the License, or (at  *
- *	 your option) any later version. The text of the GNU Lesser	 *
- *	 General Public License is included with this library in the	 *
- *	 file LICENSE.TXT.						 *
- *   (2) The BSD-style license that is included with this library in	 *
- *	 the file LICENSE-BSD.TXT.					 *
- *									 *
- * This library is distributed in the hope that it will be useful,	 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of	 *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the files	 *
- * LICENSE.TXT and LICENSE-BSD.TXT for more details.			 *
- *									 *
+ *	 Software Foundation; either version 2.1 of the License, or (at      *
+ *	 your option) any later version. The text of the GNU Lesser          *
+ *	 General Public License is included with this library in the         *
+ *	 file LICENSE.TXT.                                                   *
+ *   (2) The BSD-style license that is included with this library in     *
+ *	 the file LICENSE-BSD.TXT.                                           *
+ *                                                                       *
+ * This library is distributed in the hope that it will be useful,       *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the files    *
+ * LICENSE.TXT and LICENSE-BSD.TXT for more details.                     *
+ *                                                                       *
  *************************************************************************/
 
 /* C++ interface for new collision API */
@@ -73,6 +73,8 @@ public:
 
   void setPosition (dReal x, dReal y, dReal z)
     { dGeomSetPosition (_id,x,y,z); }
+  void setPosition (const dVector3 pos)
+    { setPosition (pos[0],pos[1],pos[2]); }
   const dReal * getPosition() const
     { return dGeomGetPosition (_id); }
 
@@ -89,8 +91,8 @@ public:
   void getAABB (dReal aabb[6]) const
     { dGeomGetAABB (_id, aabb); }
 
-  int isSpace()
-    { return dGeomIsSpace (_id); }
+  bool isSpace()
+    { return dGeomIsSpace (_id) != 0; }
 
   void setCategoryBits (unsigned long bits)
     { dGeomSetCategoryBits (_id, bits); }
@@ -105,8 +107,8 @@ public:
     { dGeomEnable (_id); }
   void disable()
     { dGeomDisable (_id); }
-  int isEnabled()
-    { return dGeomIsEnabled (_id); }
+  bool isEnabled() const
+    { return dGeomIsEnabled (_id) != 0; }
 
   void collide2 (dGeomID g, void *data, dNearCallback *callback)
     { dSpaceCollide2 (_id,g,data,callback); }
@@ -132,17 +134,17 @@ public:
 
   void setCleanup (int mode)
     { dSpaceSetCleanup (id(), mode); }
-  int getCleanup()
+  int getCleanup() const
     { return dSpaceGetCleanup (id()); }
 
   void add (dGeomID x)
     { dSpaceAdd (id(), x); }
   void remove (dGeomID x)
     { dSpaceRemove (id(), x); }
-  int query (dGeomID x)
-    { return dSpaceQuery (id(),x); }
+  bool query (dGeomID x) const
+    { return dSpaceQuery (id(),x) != 0; }
 
-  int getNumGeoms()
+  int getNumGeoms() const
     { return dSpaceGetNumGeoms (id()); }
   dGeomID getGeom (int i)
     { return dSpaceGetGeom (id(),i); }
@@ -173,6 +175,8 @@ public:
     { _id = (dGeomID) dHashSpaceCreate (space); }
   void setLevels (int minlevel, int maxlevel)
     { dHashSpaceSetLevels (id(),minlevel,maxlevel); }
+  void getLevels (int *minlevel, int *maxlevel) const
+    { dHashSpaceGetLevels (id(),minlevel,maxlevel); }
 };
 
 

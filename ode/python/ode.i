@@ -32,6 +32,9 @@ bool checkConfiguration(const char*s)
 %}
 
 
+%include "ode/enums.h"
+
+
 %include "types.i"
 
 %include "mass.i"
@@ -41,4 +44,9 @@ bool checkConfiguration(const char*s)
 %include "body.i"
 
 %include "joints.i"
+
+%include "geom.i"
+
+%include "spaces.i"
+
 

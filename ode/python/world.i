@@ -225,6 +225,36 @@ public:
     // TODO: __repr__()
 
 };
+%}
 
+
+%extend World {
+%pythoncode %{
+
+    gravity = property(getGravity, setGravity)
+    erp = property(getERP, setERP)
+    cfm = property(getCFM, setCFM)
+
+    quickStepNumIteration = property(getQuickStepNumIterations,setQuickStepNumIterations)
+    quickStepW = property(getQuickStepW, setQuickStepW)
+
+    autoDisable = property(getAutoDisableFlag, setAutoDisableFlag)
+    autoDisableLinearThreshold = property(getAutoDisableLinearThreshold, setAutoDisableLinearThreshold)
+    autoDisableAngularThreshold = property(getAutoDisableAngularThreshold, setAutoDisableAngularThreshold)
+    autoDisableSteps = property(getAutoDisableSteps, setAutoDisableSteps)
+    autoDisableTime = property(getAutoDisableTime, setAutoDisableTime)
+
+    linearDamping = property(getLinearDamping, setLinearDamping)
+    linearDampingThreshold = property(getLinearDampingThreshold, setLinearDampingThreshold)
+    angularDamping = property(getAngularDamping, setAngularDamping)
+    angularDampingThreshold = property(getAngularDampingThreshold, setAngularDampingThreshold)
+
+    maxAngularSpeed = property(getMaxAngularSpeed, setMaxAngularSpeed)
+    
+    contactSurfaceLayer = property(getContactSurfaceLayer, setContactSurfaceLayer)
 
 %}
+};
+
+
+

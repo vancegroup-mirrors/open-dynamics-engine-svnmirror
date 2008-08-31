@@ -751,38 +751,6 @@ ODE_API void dSpaceCollide (dSpaceID space, void *data, dNearCallback *callback)
 ODE_API void dSpaceCollide2 (dGeomID space1, dGeomID space2, void *data, dNearCallback *callback);
 
 
-/* ************************************************************************ */
-/* standard classes */
-
-/* the maximum number of user classes that are supported */
-enum {
-  dMaxUserClasses = 4
-};
-
-/* class numbers - each geometry object needs a unique number */
-enum {
-  dSphereClass = 0,
-  dBoxClass,
-  dCapsuleClass,
-  dCylinderClass,
-  dPlaneClass,
-  dRayClass,
-  dConvexClass,
-  dGeomTransformClass,
-  dTriMeshClass,
-  dHeightfieldClass,
-
-  dFirstSpaceClass,
-  dSimpleSpaceClass = dFirstSpaceClass,
-  dHashSpaceClass,
-  dSweepAndPruneSpaceClass, // SAP
-  dQuadTreeSpaceClass,
-  dLastSpaceClass = dQuadTreeSpaceClass,
-
-  dFirstUserClass,
-  dLastUserClass = dFirstUserClass + dMaxUserClasses - 1,
-  dGeomNumClasses
-};
 
 
 /**

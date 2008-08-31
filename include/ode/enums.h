@@ -130,5 +130,42 @@ typedef enum dAMotorMode {
 } dAMotorMode;
 
 
+
+
+
+/* ************************************************************************ */
+/* standard classes */
+
+/* the maximum number of user classes that are supported */
+enum {
+    dMaxUserClasses = 4
+};
+
+/* class numbers - each geometry object needs a unique number */
+enum {
+  dSphereClass = 0,
+  dBoxClass,
+  dCapsuleClass,
+  dCylinderClass,
+  dPlaneClass,
+  dRayClass,
+  dConvexClass,
+  dGeomTransformClass,
+  dTriMeshClass,
+  dHeightfieldClass,
+
+  dFirstSpaceClass,
+  dSimpleSpaceClass = dFirstSpaceClass,
+  dHashSpaceClass,
+  dSweepAndPruneSpaceClass, // SAP
+  dQuadTreeSpaceClass,
+  dLastSpaceClass = dQuadTreeSpaceClass,
+
+  dFirstUserClass,
+  dLastUserClass = dFirstUserClass + dMaxUserClasses - 1,
+  dGeomNumClasses
+};
+
+
 #endif
 

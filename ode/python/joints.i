@@ -1,12 +1,7 @@
 // wrappers for all joints
 
 
-%include "ode/enums.h"
-
-
 %apply dReal * OUTPUT { dReal *outA, dReal *outB };
-
-
 
 %immutable dJoint::id;
 

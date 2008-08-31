@@ -17,6 +17,9 @@ public:
 
     Body() : id(0)
     {}
+
+    Body(dBodyID b) : id(b)
+    {}
     
     Body (dWorldID world)
     {

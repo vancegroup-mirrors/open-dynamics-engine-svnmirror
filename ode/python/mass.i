@@ -30,9 +30,10 @@ struct Mass {
         if (this != &m)
             memcpy(&data, &m.data, sizeof data);
     }
-    Mass(const dMass *m)
+
+    Mass copy() const
     {
-        memcpy(&data, m, sizeof data);
+        return Mass(*this);
     }
 
     void set (dReal mass, const Vector& center,
@@ -119,22 +120,41 @@ struct Mass {
     {
         add(m);
     }
-    // TODO: make those properties
-    dReal mass() const
+
+    dReal getMass() const
     {
         return data.mass;
     }
+    void setMass(dReal m)
+    {
+        data.mass = m;
+    }
     
-    Vector center() const
+    Vector getCenter() const
     {
         return Vector(data.c);
     }
+    void setCenter(const Vector& c)
+    {
+        memcpy(data.c, c.data, sizeof data.c);
+    }
     
-    Matrix I() const
+    Matrix getI() const
     {
         return Matrix(data.I);
     }
+    void setI(const Matrix& I)
+    {
+        memcpy(data.I, I.data, sizeof data.I);
+    }
 };
-
-
 %}
+
+%extend Mass {
+
+%pythoncode {
+    mass = property(getMass, setMass)
+    center = property(getCenter, setCenter)
+    I = property(getI, setI)
+}
+};
