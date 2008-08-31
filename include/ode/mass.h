@@ -87,7 +87,7 @@ ODE_API ODE_API_DEPRECATED void dMassSetCappedCylinderTotal(dMass *a, dReal b, i
 
 struct dMass {
   dReal mass;
-  dVector4 c;
+  dVector3 c;
   dMatrix3 I;
 
 #ifdef __cplusplus
@@ -133,6 +133,8 @@ struct dMass {
     { dMassRotate (this,R); }
   void add (const dMass *b)
     { dMassAdd (this,b); }
+  void add (const dMass &b)
+    { dMassAdd (this, &b); }
 #endif
 };
 

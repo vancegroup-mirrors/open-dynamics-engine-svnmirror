@@ -72,9 +72,9 @@ public:
 
   void stepFast1 (dReal stepsize, int maxiterations)
     { dWorldStepFast1 (_id,stepsize,maxiterations); }
-  void setAutoEnableDepthSF1(dWorldID, int depth)
+  void setAutoEnableDepthSF1(int depth)
     { dWorldSetAutoEnableDepthSF1 (_id, depth); }
-  int getAutoEnableDepthSF1(dWorldID) const
+  int getAutoEnableDepthSF1() const
     { return dWorldGetAutoEnableDepthSF1 (_id); }
 
   void quickStep(dReal stepsize)
@@ -104,10 +104,10 @@ public:
     { dWorldSetAutoDisableTime (_id,time); }
   dReal getAutoDisableTime() const
     { return dWorldGetAutoDisableTime (_id); }
-  void setAutoDisableFlag (int do_auto_disable)
+  void setAutoDisableFlag (bool do_auto_disable)
     { dWorldSetAutoDisableFlag (_id,do_auto_disable); }
-  int getAutoDisableFlag() const
-    { return dWorldGetAutoDisableFlag (_id); }
+  bool getAutoDisableFlag() const
+    { return dWorldGetAutoDisableFlag (_id) != 0; }
 
   dReal getLinearDampingThreshold() const
     { return dWorldGetLinearDampingThreshold(_id); }
@@ -493,6 +493,8 @@ public:
     { setAnchor (a[0], a[1], a[2]); }
   void getAnchor (dVector3 result) const
     { dJointGetBallAnchor (_id, result); }
+  void getAnchor1 (dVector3 result) const
+    { getAnchor(result); }
   void getAnchor2 (dVector3 result) const
     { dJointGetBallAnchor2 (_id, result); }
   virtual void setParam (int parameter, dReal value)
@@ -528,6 +530,8 @@ public:
     { setAnchor (a[0], a[1], a[2]); }
   void getAnchor (dVector3 result) const
     { dJointGetHingeAnchor (_id, result); }
+  void getAnchor1 (dVector3 result) const
+    { getAnchor (result); }
   void getAnchor2 (dVector3 result) const
     { dJointGetHingeAnchor2 (_id, result); }
 
@@ -630,6 +634,8 @@ public:
 
   void getAnchor (dVector3 result) const
     { dJointGetUniversalAnchor (_id, result); }
+  void getAnchor1 (dVector3 result) const
+    { getAnchor(result); }
   void getAnchor2 (dVector3 result) const
     { dJointGetUniversalAnchor2 (_id, result); }
   void getAxis1 (dVector3 result) const
@@ -694,6 +700,8 @@ public:
     
   void getAnchor (dVector3 result) const
     { dJointGetHinge2Anchor (_id, result); }
+  void getAnchor1 (dVector3 result) const
+    { getAnchor(result); }
   void getAnchor2 (dVector3 result) const
     { dJointGetHinge2Anchor2 (_id, result); }
   void getAxis1 (dVector3 result) const
@@ -800,6 +808,8 @@ public:
     { setAxis1(a[0], a[1], a[2]); }
   void setAxis2 (dReal x, dReal y, dReal z)
   { dJointSetPUAxis2 (_id, x, y, z); }
+  void setAxis2 (const dVector3 a)
+    { setAxis2(a[0], a[1], a[2]); }
   void setAxis3 (dReal x, dReal y, dReal z)
   { dJointSetPUAxis3 (_id, x, y, z); }
   void setAxis3 (const dVector3 a)
@@ -872,6 +882,8 @@ public:
     { setAnchor (a[0], a[1], a[2]); }
   void getAnchor (dVector3 result) const
     { dJointGetPistonAnchor (_id, result); }
+  void getAnchor1 (dVector3 result) const
+    { getAnchor (result); }
   void getAnchor2 (dVector3 result) const
     { dJointGetPistonAnchor2 (_id, result); }
 
@@ -993,10 +1005,10 @@ public:
   void create (dWorld& world, dJointGroupID group=0)
     { create(world.id(), group); }
 
-  void setMode (int mode)
+  void setMode (dAMotorMode mode)
     { dJointSetAMotorMode (_id, mode); }
-  int getMode() const
-    { return dJointGetAMotorMode (_id); }
+  dAMotorMode getMode() const
+    { return dAMotorMode(dJointGetAMotorMode (_id)); }
 
   void setNumAxes (int num)
     { dJointSetAMotorNumAxes (_id, num); }

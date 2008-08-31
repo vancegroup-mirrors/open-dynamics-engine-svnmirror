@@ -212,6 +212,7 @@ typedef struct dxJoint *dJointID;
 typedef struct dxJointGroup *dJointGroupID;
 
 
+
 /* error numbers */
 
 enum {
@@ -222,25 +223,7 @@ enum {
 };
 
 
-/* joint type numbers */
-
-typedef enum {
-  dJointTypeNone = 0,		/* or "unknown" */
-  dJointTypeBall,
-  dJointTypeHinge,
-  dJointTypeSlider,
-  dJointTypeContact,
-  dJointTypeUniversal,
-  dJointTypeHinge2,
-  dJointTypeFixed,
-  dJointTypeNull,
-  dJointTypeAMotor,
-  dJointTypeLMotor,
-  dJointTypePlane2D,
-  dJointTypePR,
-  dJointTypePU,
-  dJointTypePiston
-} dJointType;
+#include <ode/enums.h>
 
 
 /* an alternative way of setting joint parameters, using joint parameter
@@ -269,74 +252,6 @@ enum {
 */
 
 
-/* standard joint parameter names. why are these here? - because we don't want
- * to include all the joint function definitions in joint.cpp. hmmmm.
- * MSVC complains if we call D_ALL_PARAM_NAMES_X with a blank second argument,
- * which is why we have the D_ALL_PARAM_NAMES macro as well. please copy and
- * paste between these two.
- */
-
-#define D_ALL_PARAM_NAMES(start) \
-  /* parameters for limits and motors */ \
-  dParamLoStop = start, \
-  dParamHiStop, \
-  dParamVel, \
-  dParamFMax, \
-  dParamFudgeFactor, \
-  dParamBounce, \
-  dParamCFM, \
-  dParamStopERP, \
-  dParamStopCFM, \
-  /* parameters for suspension */ \
-  dParamSuspensionERP, \
-  dParamSuspensionCFM, \
-  dParamERP, \
-
-  //////////////////////////////////////////////////////////////////////////////
-  /// \enum  D_ALL_PARAM_NAMES_X
-  ///
-  /// \var dParamGroup This is the starting value of the different group
-  ///                  (i.e. dParamGroup1, dParamGroup2, dParamGroup3)
-  ///                  It also helps in the use of parameter
-  ///                  (dParamGroup2 | dParamFMax) == dParamFMax2
-  //////////////////////////////////////////////////////////////////////////////
-#define D_ALL_PARAM_NAMES_X(start,x) \
-  dParamGroup ## x = start, \
-  /* parameters for limits and motors */ \
-  dParamLoStop ## x = start, \
-  dParamHiStop ## x, \
-  dParamVel ## x, \
-  dParamFMax ## x, \
-  dParamFudgeFactor ## x, \
-  dParamBounce ## x, \
-  dParamCFM ## x, \
-  dParamStopERP ## x, \
-  dParamStopCFM ## x, \
-  /* parameters for suspension */ \
-  dParamSuspensionERP ## x, \
-  dParamSuspensionCFM ## x, \
-  dParamERP ## x,
-
-enum {
-  D_ALL_PARAM_NAMES(0)
-  dParamsInGroup,     ///< Number of parameter in a group
-  D_ALL_PARAM_NAMES_X(0x000,1)
-  D_ALL_PARAM_NAMES_X(0x100,2)
-  D_ALL_PARAM_NAMES_X(0x200,3)
-
-  /* add a multiple of this constant to the basic parameter numbers to get
-   * the parameters for the second, third etc axes.
-   */
-  dParamGroup=0x100
-};
-
-
-/* angular motor mode numbers */
-
-enum {
-  dAMotorUser = 0,
-  dAMotorEuler = 1
-};
 
 
 /* joint force feedback information */
