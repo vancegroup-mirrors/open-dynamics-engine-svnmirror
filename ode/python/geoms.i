@@ -1,154 +1,286 @@
-// wrapper for dGeomID
-
-%immutable Geom::id;
+// wrapper for concrete geoms
 
 %inline %{
-class Geom {
+class Sphere : public Geom {
     // intentionally undefined, don't use these
-    Geom (Geom &);
-    void operator= (Geom &);
-protected:
-    Geom()
-    { id = 0; }
-    ~Geom()
-    { }
+    Sphere (Sphere &);
+    void operator= (Sphere &);
 
 public:
-    dGeomID id;
-
-    void destroy() {
-        if (id) dGeomDestroy (id);
-        id = 0;
-    }
-
-    int getClass() const
+    //Sphere () { }
+    Sphere (dReal radius)
     {
-        return dGeomGetClass (id);
+        id = dCreateSphere (0, radius);
     }
-
-    dSpaceID getSpace() const
+    Sphere (Space& space, dReal radius)
     {
-        return dGeomGetSpace (id);
+        id = dCreateSphere (space.sid(), radius);
     }
-
-    // TODO: deal with this
-    /*
-    void setData (void *data)
+/*
+    void create (Space& space, dReal radius)
     {
-        dGeomSetData (id,data);
-    }
-    void *getData() const
-    {
-        return dGeomGetData (id);
-    }
-    */
-
-    void setBody (dBodyID b)
-    {
-        dGeomSetBody (id,b);
-    }
-    dBodyID getBody() const
-    {
-        return dGeomGetBody (id);
+        destroy();
+        id = dCreateSphere (space.sid(), radius);
     }
 
-    void setPosition (dReal x, dReal y, dReal z)
+    void create (dReal radius)
     {
-        dGeomSetPosition (id,x,y,z);
+        destroy();
+        id = dCreateSphere (0, radius);
     }
-    void setPosition (const Vector& pos)
+*/
+    void setRadius (dReal radius)
     {
-        setPosition (pos[0], pos[1], pos[2]);
+        dGeomSphereSetRadius (id, radius);
     }
-    
-    Vector getPosition() const
+    dReal getRadius() const
     {
-        return Vector(dGeomGetPosition (id));
-    }
-
-    void setRotation (const Matrix& R)
-    {
-        dGeomSetRotation (id,R.data);
-    }
-    Matrix getRotation() const
-    {
-        return Matrix(dGeomGetRotation (id));
-    }
-    
-    void setQuaternion (const Quaternion& quat)
-    {
-        dGeomSetQuaternion (id,quat.data);
-    }
-    Quaternion getQuaternion () const
-    {
-        Quaternion quat;
-        dGeomGetQuaternion (id,quat.data);
-        return quat;
+        return dGeomSphereGetRadius (id);
     }
 
-    AABB getAABB () const
+    // TODO: __rep__()
+};
+%}
+%extend Sphere {
+%pythoncode {
+    radius = property(getRadius, setRadius)
+}
+};
+
+
+%inline %{
+class Box : public Geom {
+    // intentionally undefined, don't use these
+    Box (Box &);
+    void operator= (Box &);
+
+public:
+    //Box () { }
+    Box (dReal lx, dReal ly, dReal lz)
     {
-        dReal aabb[6];
-        dGeomGetAABB (id, aabb);
-        return AABB(aabb);
+        id = dCreateBox (0, lx, ly, lz);
     }
 
-    bool isSpace()
+    Box (Space& space, dReal lx, dReal ly, dReal lz)
     {
-        return dGeomIsSpace (id) != 0;
+        id = dCreateBox (space.sid(), lx, ly, lz);
+    }
+/*
+    void create (dReal lx, dReal ly, dReal lz)
+    {
+        destroy();
+        id = dCreateBox (0,lx,ly,lz);
+    }
+    void create (Space& space, dReal lx, dReal ly, dReal lz)
+    {
+        destroy();
+        id = dCreateBox (space.sid(),lx,ly,lz);
+    }
+*/
+    void setLengths (dReal lx, dReal ly, dReal lz)
+    {
+        dGeomBoxSetLengths (id, lx, ly, lz);
+    }
+    void setLengths (const Vector& len)
+    {
+        dGeomBoxSetLengths (id, len[0], len[1], len[2]);
+    }
+    Vector getLengths () const
+    {
+        Vector result;
+        dGeomBoxGetLengths (id, result.data);
+        return result;
+    }
+};
+%}
+%extend Box {
+%pythoncode {
+    lengths = property(getLengths, setLengths)
+}
+};
+
+
+
+%inline %{
+class Plane : public Geom {
+    // intentionally undefined, don't use these
+    Plane (Plane &);
+    void operator= (Plane &);
+
+public:
+    Plane (dReal a, dReal b, dReal c, dReal d)
+    {
+        id = dCreatePlane (0,a,b,c,d);
+    }
+    Plane (Space& space, dReal a, dReal b, dReal c, dReal d)
+    {
+        id = dCreatePlane (space.sid(),a,b,c,d);
     }
 
-    void setCategoryBits (unsigned long bits)
+    void setParams (dReal a, dReal b, dReal c, dReal d)
     {
-        dGeomSetCategoryBits (id, bits);
+        dGeomPlaneSetParams (id, a, b, c, d);
     }
-    void setCollideBits (unsigned long bits)
+    void getParams (dReal *outA, dReal *outB, dReal *outC, dReal *outD) const
     {
-        dGeomSetCollideBits (id, bits);
+        dVector4 result;
+        dGeomPlaneGetParams (id,result);
+        *outA = result[0];
+        *outB = result[1];
+        *outC = result[2];
+        *outD = result[3];
     }
-    unsigned long getCategoryBits()
-    {
-        return dGeomGetCategoryBits (id);
-    }
-    unsigned long getCollideBits()
-    {
-        return dGeomGetCollideBits (id);
-    }
-
-    void enable()
-    {
-        dGeomEnable (id);
-    }
-    void disable()
-    {
-        dGeomDisable (id);
-    }
-    bool isEnabled() const
-    {
-        return dGeomIsEnabled (id) != 0;
-    }
-
-    // TODO wrap this
-    /*
-    void collide2 (Geom& g, void *data, dNearCallback *callback)
-    {
-        dSpaceCollide2 (id, g.id, data, callback);
-    }
-    */
 };
 %}
 
-%extend Geom {
-    void setEnabled(bool e)
+%inline %{
+class Capsule : public Geom {
+    // intentionally undefined, don't use these
+    Capsule (Capsule &);
+    void operator= (Capsule &);
+
+public:
+    Capsule (dReal radius, dReal length)
     {
-        if (e)
-            $self->enable();
-        else
-            $self->disable();
+        id = dCreateCapsule (0, radius, length);
     }
+    Capsule (Space& space, dReal radius, dReal length)
+    {
+        id = dCreateCapsule (space.sid(), radius, length);
+    }
+
+    void setParams (dReal radius, dReal length)
+    {
+        dGeomCapsuleSetParams (id, radius, length);
+    }
+    void getParams (dReal *outA, dReal *outB) const
+    {
+        dGeomCapsuleGetParams (id, outA, outB);
+    }
+};
+%}
+
+%inline %{
+class Cylinder : public Geom {
+    // intentionally undefined, don't use these
+    Cylinder (Cylinder &);
+    void operator= (Cylinder &);
+
+public:
+    Cylinder (dReal radius, dReal length)
+    {
+        id = dCreateCylinder (0, radius, length);
+    }
+    Cylinder (Space& space, dReal radius, dReal length)
+    {
+        id = dCreateCylinder (space.sid(), radius, length);
+    }
+
+    void setParams (dReal radius, dReal length)
+    {
+        dGeomCylinderSetParams (id, radius, length);
+    }
+    void getParams (dReal *outA, dReal *outB) const
+    {
+        dGeomCylinderGetParams (id, outA, outB);
+    }
+};
+%}
+
+%apply Vector* OUTPUT { Vector* outA, Vector* outB }
+
+%inline %{
+class Ray : public Geom {
+    // intentionally undefined, don't use these
+    Ray (Ray &);
+    void operator= (Ray &);
+
+public:
+    Ray (dReal length)
+    {
+        id = dCreateRay (0, length);
+    }
+    Ray (Space& space, dReal length)
+    {
+        id = dCreateRay (space.sid(),length);
+    }
+
+    void setLength (dReal length)
+    {
+        dGeomRaySetLength (id, length);
+    }
+    dReal getLength() const
+    {
+        return dGeomRayGetLength (id);
+    }
+
+    void set (dReal px, dReal py, dReal pz, dReal dx, dReal dy, dReal dz)
+    {
+        dGeomRaySet (id, px, py, pz, dx, dy, dz);
+    }
+    void set (const Vector& ori, const Vector& dir)
+    {
+        dGeomRaySet (id, ori[0], ori[1], ori[2], dir[0], dir[1], dir[2]);
+    }
+    // TODO: OUTPUT map doesn't seem to be working!
+    void get (Vector *outA, Vector *outB) const
+    {
+        dGeomRayGet (id, outA->data, outB->data);
+    }
+
+    void setParams (int firstContact, int backfaceCull)
+    {
+        dGeomRaySetParams (id, firstContact, backfaceCull);
+    }
+    void getParams (int *outA, int *outB)
+    {
+        dGeomRayGetParams (id, outA, outB);
+    }
+    // TODO: are those documented?
+    void setClosestHit (int closestHit)
+    {
+        dGeomRaySetClosestHit (id, closestHit);
+    }
+    int getClosestHit()
+    {
+        return dGeomRayGetClosestHit (id);
+    }
+    
+    void setOrigin(const Vector& newori)
+    {
+        Vector ori, dir;
+        get(&ori, &dir);
+        set(newori, dir);
+    }
+    Vector getOrigin() const
+    {
+        Vector ori, dir;
+        get(&ori, &dir);
+        return ori;
+    }
+    void setDirection(const Vector& newdir)
+    {
+        Vector ori, dir;
+        get(&ori, &dir);
+        set(ori, newdir);
+    }
+    Vector getDirection() const
+    {
+        Vector ori, dir;
+        get(&ori, &dir);
+        return dir;
+    }
+};
+%}
+%extend Ray {
+
 %pythoncode {
-    enabled = property(isEnabled, setEnabled)
+    length = property(getLength, setLength)
+    
+    origin = property(getOrigin, setOrigin)
+    direction = property(getDirection, setDirection)
 }
 };
+
 
 

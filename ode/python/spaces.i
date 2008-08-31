@@ -79,8 +79,6 @@ public:
 %}
 
 
-%apply int * OUTPUT { int *outA, int *outB };
-
 %inline %{
 class HashSpace : public Space {
     // intentionally undefined, don't use these

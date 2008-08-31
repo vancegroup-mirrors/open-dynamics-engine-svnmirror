@@ -397,6 +397,7 @@ struct AABB {
         min(p[0], p[2], p[3]),
         max(p[1], p[3], p[5])
     {}
+    // TODO: __repr__()
 };
 %}
 

@@ -1,8 +1,6 @@
 // wrappers for all joints
 
 
-%apply dReal * OUTPUT { dReal *outA, dReal *outB };
-
 %immutable dJoint::id;
 
 %inline %{

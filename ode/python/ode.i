@@ -31,6 +31,10 @@ bool checkConfiguration(const char*s)
 }
 %}
 
+%apply int * OUTPUT { int *outA, int *outB };
+%apply dReal * OUTPUT { dReal *outA, dReal *outB };
+%apply dReal * OUTPUT { dReal *outA, dReal *outB, dReal *outC, dReal *outD };
+
 
 %include "ode/enums.h"
 
@@ -45,8 +49,9 @@ bool checkConfiguration(const char*s)
 
 %include "joints.i"
 
-%include "geoms.i"
+%include "geom.i"
 
 %include "spaces.i"
 
+%include "geoms.i"
 

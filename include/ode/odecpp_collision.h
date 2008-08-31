@@ -230,6 +230,8 @@ public:
 
   void setLengths (dReal lx, dReal ly, dReal lz)
     { dGeomBoxSetLengths (_id, lx, ly, lz); }
+  void setLengths (const dVector3 l)
+    { dGeomBoxSetLengths (_id, l[0], l[1], l[2]); }
   void getLengths (dVector3 result) const
     { dGeomBoxGetLengths (_id,result); }
 };
@@ -318,11 +320,13 @@ public:
 
   void setLength (dReal length)
     { dGeomRaySetLength (_id, length); }
-  dReal getLength()
+  dReal getLength() const
     { return dGeomRayGetLength (_id); }
 
   void set (dReal px, dReal py, dReal pz, dReal dx, dReal dy, dReal dz)
     { dGeomRaySet (_id, px, py, pz, dx, dy, dz); }
+  void set (const dVector3 ori, const dVector3 dir)
+    { set (ori[0], ori[1], ori[2], dir[0], dir[1], dir[2]); }
   void get (dVector3 start, dVector3 dir)
     { dGeomRayGet (_id, start, dir); }
 
