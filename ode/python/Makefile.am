@@ -1,7 +1,7 @@
 
 BUILT_SOURCES = $(builddir)/swig_wrap.cpp
 SWIG_SOURCES = ode.i types.i mass.i world.i body.i joints.i \
-                geom.i spaces.i
+                geoms.i spaces.i
 
 
 pkgpython_PYTHON = $(builddir)/ode.py

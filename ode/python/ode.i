@@ -45,7 +45,7 @@ bool checkConfiguration(const char*s)
 
 %include "joints.i"
 
-%include "geom.i"
+%include "geoms.i"
 
 %include "spaces.i"
 
