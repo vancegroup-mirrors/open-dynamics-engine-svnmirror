@@ -75,6 +75,25 @@ struct Quaternion {
     Matrix toR() const;
 };
 %}
+%extend Quaternion {
+%pythoncode %{
+    def getw(self): return self[0]
+    def setw(self,v): self[0]=v
+    def getx(self): return self[1]
+    def setx(self,v): self[1]=v
+    def gety(self): return self[2]
+    def sety(self,v): self[2]=v
+    def getz(self): return self[3]
+    def setz(self,v): self[3]=v
+
+    w = property(getw, setw)
+    x = property(getx, setx)
+    y = property(gety, sety)
+    z = property(getz, setz)
+%}
+};
+
+
 
 
 
@@ -229,23 +248,21 @@ dReal dot(const Vector& a, const Vector& b)
 }
 
 %}
-// TODO: setters aren't working?
 %extend Vector {
 %pythoncode %{
-    def getx(self): return self.__getitem__(0)
-    def setx(self,v): self.__setitem__(0, v)
-    def gety(self): return self.__getitem__(1)
-    def sety(self,v): self.__setitem__(1, v)
-    def getz(self): return self.__getitem__(2)
-    def setz(self,v): self.__setitem__(2, v)
+    def getx(self): return self[0]
+    def setx(self,v): self[0]=v
+    def gety(self): return self[1]
+    def sety(self,v): self[1]=v
+    def getz(self): return self[2]
+    def setz(self,v): self[2]=v
 
-    x = property(getx, getx)
-    y = property(gety, None)
-    z = property(getz, None)
+    x = property(getx, setx)
+    y = property(gety, sety)
+    z = property(getz, setz)
 %}
 };
  
-
 
 
 

@@ -307,7 +307,7 @@ public:
     void setFiniteRotationMode (bool mode)
     {
         dBodySetFiniteRotationMode (id, mode);
-    }
+    }    
     void setFiniteRotationAxis (dReal x, dReal y, dReal z)
     {
         dBodySetFiniteRotationAxis (id, x, y, z);
@@ -466,6 +466,49 @@ public:
     // TODO: __repr__()
 
 };
-
-
 %}
+
+
+// TODO: more of those cool properties
+%extend Body {
+%pythoncode %{
+    position = property(getPosition, setPosition)
+    rotation = property(getRotation, setRotation)
+    quaternion = property(getQuaternion, setQuaternion)
+    
+    mass = property(getMass, setMass)
+    
+    linearVel = property(getLinearVel, setLinearVel)
+    angularVel = property(getAngularVel, setAngularVel)
+
+    force = property(getForce, setForce)
+    torque = property(getTorque, setTorque)
+
+    def setEnabled(self, e):
+        if e: self.enable()
+        else: self.disable()
+    enabled = property(isEnabled, setEnabled)
+
+    finiteRotation = property(getFiniteRotationMode, setFiniteRotationMode)
+    finiteRotationAxis = property(getFiniteRotationAxis, setFiniteRotationAxis)
+
+    gravity = property(getGravityMode, setGravityMode)
+    
+    autoDisable = property(getAutoDisableFlag, setAutoDisableFlag)
+    autoDisableLinearThreshold = property(getAutoDisableLinearThreshold, setAutoDisableLinearThreshold)
+    autoDisableAngularThreshold = property(getAutoDisableAngularThreshold, setAutoDisableAngularThreshold)
+    autoDisableSteps = property(getAutoDisableSteps, setAutoDisableSteps)
+    autoDisableTime = property(getAutoDisableTime, setAutoDisableTime)
+
+    linearDamping = property(getLinearDamping, setLinearDamping)
+    linearDampingThreshold = property(getLinearDampingThreshold, setLinearDampingThreshold)
+    angularDamping = property(getAngularDamping, setAngularDamping)
+    angularDampingThreshold = property(getAngularDampingThreshold, setAngularDampingThreshold)
+    
+    maxAngularSpeed = property(getMaxAngularSpeed, setMaxAngularSpeed)
+    
+    gyroscopic = property(getGyroscopicMode, setGyroscopicMode)
+%}
+};
+
+
