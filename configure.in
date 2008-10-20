@@ -224,7 +224,7 @@ dnl test if we will build demos
 AM_CONDITIONAL(ENABLE_DEMOS, test x$enable_demos = xyes)
 
 dnl Check For Bullet support
-AC_ARG_WITH([bullet],[AC_HELP_STRING([--with-bullet[=PATH]],[Add Bullet Support])],
+AC_ARG_WITH([bullet],[AC_HELP_STRING([--with-bullet[[[[=PATH]]]]],[Add Bullet Support])],
 [
 	bullet=yes
 	AC_DEFINE(USE_BULLET,1,[Use Bullet])
