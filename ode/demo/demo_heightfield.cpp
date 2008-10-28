@@ -210,6 +210,8 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 
 static void start()
 {
+  dAllocateODEDataForThread(dAllocateMaskAll);
+
   static float xyz[3] = {2.1640f,-1.3079f,1.7600f};
   static float hpr[3] = {125.5000f,-17.0000f,0.0000f};
   dsSetViewpoint (xyz,hpr);
@@ -679,6 +681,8 @@ static void simLoop (int pause)
 
 int main (int argc, char **argv)
 {
+        printf("ODE configuration: %s\n", dGetConfiguration());
+        
 	// Is trimesh support built into this ODE?
 	g_allow_trimesh = dCheckConfiguration( "ODE_EXT_trimesh" );
 
@@ -696,7 +700,7 @@ int main (int argc, char **argv)
 	}
 
 	// create world
-	dInitODE();
+	dInitODE2(0);
 	world = dWorldCreate();
 	space = dHashSpaceCreate (0);
 	contactgroup = dJointGroupCreate (0);
@@ -745,8 +749,6 @@ int main (int argc, char **argv)
 	// Place it.
 	dGeomSetRotation( gheight, R );
 	dGeomSetPosition( gheight, pos[0], pos[1], pos[2] );
-
-
 
 	// run simulation
 	dsSimulationLoop (argc,argv,352,288,&fn);

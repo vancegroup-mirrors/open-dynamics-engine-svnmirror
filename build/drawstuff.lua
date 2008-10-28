@@ -1,7 +1,7 @@
 package.name = "drawstuff"
 package.language = "c++"
 package.objdir = "obj/drawstuff"
-package.links = { "ode" }
+package.links = {}
 
 
 -- Append a "d" to the debug version of the libraries
@@ -11,15 +11,10 @@ package.links = { "ode" }
       package.config[v].target = "drawstuffd"
     end
   end
-  
-  
--- Separate distribution files into toolset subdirectories
 
-  if (options["usetargetpath"]) then
-    package.path = options["target"]
-  else
-    package.path = "custom"
-  end
+
+  -- Output is placed in a directory named for the target toolset.
+  package.path = options["target"]
 
 
 -- Package Build Settings
@@ -29,8 +24,8 @@ package.links = { "ode" }
     "DS_DLL",
     "USRDLL"
   }
-  
-  local lib_defines = 
+
+  local lib_defines =
   {
     "DS_LIB"
   }
@@ -41,6 +36,8 @@ package.links = { "ode" }
     package.config["ReleaseSingleLib"].kind = "lib"
     table.insert(package.config["DebugSingleLib"].defines, lib_defines)
     table.insert(package.config["ReleaseSingleLib"].defines, lib_defines)
+    table.insert(package.config["DebugSingleLib"].defines, "dSINGLE")
+    table.insert(package.config["ReleaseSingleLib"].defines, "dSINGLE")
 
     package.config["DebugDoubleLib"].kind = "lib"
     package.config["ReleaseDoubleLib"].kind = "lib"
@@ -57,6 +54,8 @@ package.links = { "ode" }
     package.config["ReleaseSingleDLL"].kind = "dll"
     table.insert(package.config["DebugSingleDLL"].defines, dll_defines)
     table.insert(package.config["ReleaseSingleDLL"].defines, dll_defines)
+    table.insert(package.config["DebugSingleDLL"].defines, "dSINGLE")
+    table.insert(package.config["ReleaseSingleDLL"].defines, "dSINGLE")
 
     package.config["DebugDoubleDLL"].kind = "dll"
     package.config["ReleaseDoubleDLL"].kind = "dll"

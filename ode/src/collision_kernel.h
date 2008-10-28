@@ -65,11 +65,15 @@ internal data structures and functions for collision detection.
 //		GEOM_DIRTY|GEOM_AABB_BAD|GEOM_POSR_BAD
 
 enum {
-  GEOM_DIRTY	= 1,	// geom is 'dirty', i.e. position unknown
-  GEOM_POSR_BAD = 2,	// geom's final posr is not valid
-  GEOM_AABB_BAD	= 4,	// geom's AABB is not valid
-  GEOM_PLACEABLE = 8,	// geom is placeable
-  GEOM_ENABLED = 16,		// geom is enabled
+  GEOM_DIRTY	= 1,    // geom is 'dirty', i.e. position unknown
+  GEOM_POSR_BAD = 2,    // geom's final posr is not valid
+  GEOM_AABB_BAD	= 4,    // geom's AABB is not valid
+  GEOM_PLACEABLE = 8,   // geom is placeable
+  GEOM_ENABLED = 16,    // geom is enabled
+  GEOM_ZERO_SIZED = 32, // geom is zero sized
+
+  GEOM_ENABLE_TEST_MASK = GEOM_ENABLED | GEOM_ZERO_SIZED,
+  GEOM_ENABLE_TEST_VALUE = GEOM_ENABLED,
 
   // Ray specific
   RAY_FIRSTCONTACT = 0x10000,
@@ -102,6 +106,8 @@ struct dxGeom : public dBase {
   dxGeom (dSpaceID _space, int is_placeable);
   virtual ~dxGeom();
 
+  // Set or clear GEOM_ZERO_SIZED flag
+  void updateZeroSizedFlag(bool is_zero_sized) { gflags = is_zero_sized ? (gflags | GEOM_ZERO_SIZED) : (gflags & ~GEOM_ZERO_SIZED); }
 
   // calculate our new final position from our offset and body
   void computePosr();
@@ -176,6 +182,7 @@ struct dxSpace : public dxGeom {
   int count;			// number of geoms in this space
   dxGeom *first;		// first geom in list
   int cleanup;			// cleanup mode, 1=destroy geoms on exit
+  int sublevel;         // space sublevel (used in dSpaceCollide2). NOT TRACKED AUTOMATICALLY!!!
 
   // cached state for getGeom()
   int current_index;		// only valid if current_geom != 0
@@ -194,6 +201,8 @@ struct dxSpace : public dxGeom {
 
   void setCleanup (int mode);
   int getCleanup();
+  void setSublevel(int value);
+  int getSublevel() const;
   int query (dxGeom *geom);
   int getNumGeoms();
   virtual dxGeom *getGeom (int i);
@@ -210,6 +219,16 @@ struct dxSpace : public dxGeom {
   virtual void collide (void *data, dNearCallback *callback)=0;
   virtual void collide2 (void *data, dxGeom *geom, dNearCallback *callback)=0;
 };
+
+
+//****************************************************************************
+// Initialization and finalization functions
+
+void dInitColliders();
+void dFinitColliders();
+
+void dClearPosrCache(void);
+void dFinitUserClasses();
 
 
 #endif

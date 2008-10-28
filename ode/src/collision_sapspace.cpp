@@ -42,8 +42,8 @@
 #include "collision_space_internal.h"
 
 // Reference counting helper for radix sort global data.
-static void RadixSortRef();
-static void RadixSortDeref();
+//static void RadixSortRef();
+//static void RadixSortDeref();
 
 
 // --------------------------------------------------------------------------
@@ -206,7 +206,7 @@ dSpaceID dSweepAndPruneSpaceCreate( dxSpace* space, int axisorder ) {
 
 //==============================================================================
 
-#define GEOM_ENABLED(g) ((g)->gflags & GEOM_ENABLED)
+#define GEOM_ENABLED(g) (((g)->gflags & GEOM_ENABLE_TEST_MASK) == GEOM_ENABLE_TEST_VALUE)
 
 // HACK: We abuse 'next' and 'tome' members of dxGeom to store indice into dirty/geom lists.
 #define GEOM_SET_DIRTY_IDX(g,idx) { (g)->next = (dxGeom*)(size_t)(idx); }

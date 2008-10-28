@@ -117,6 +117,8 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 
 static void start()
 {
+  dAllocateODEDataForThread(dAllocateMaskAll);
+
   static float xyz[3] = {2.1640f,-1.3079f,1.7600f};
   static float hpr[3] = {125.5000f,-17.0000f,0.0000f};
   dsSetViewpoint (xyz,hpr);
@@ -397,7 +399,7 @@ static void simLoop (int pause)
   dSpaceCollide (space,0,&nearCallback);
 
 
-#if 0
+#if 1
   // What is this for??? - Bram
   if (!pause) 
   {
@@ -539,7 +541,7 @@ int main (int argc, char **argv)
     }
 
   // create world
-  dInitODE();
+  dInitODE2(0);
   world = dWorldCreate();
  
   space = dSimpleSpaceCreate(0);
@@ -551,9 +553,9 @@ int main (int argc, char **argv)
 
   // note: can't share tridata if intending to trimesh-trimesh collide
   TriData1 = dGeomTriMeshDataCreate();
-  dGeomTriMeshDataBuildSingle(TriData1, &Vertices[0], 3 * sizeof(dReal), VertexCount, (dTriIndex*)&Indices[0], IndexCount, 3 * sizeof(dTriIndex));
+  dGeomTriMeshDataBuildSingle(TriData1, &Vertices[0], 3 * sizeof(float), VertexCount, (dTriIndex*)&Indices[0], IndexCount, 3 * sizeof(dTriIndex));
   TriData2 = dGeomTriMeshDataCreate();
-  dGeomTriMeshDataBuildSingle(TriData2, &Vertices[0], 3 * sizeof(dReal), VertexCount, (dTriIndex*)&Indices[0], IndexCount, 3 * sizeof(dTriIndex));
+  dGeomTriMeshDataBuildSingle(TriData2, &Vertices[0], 3 * sizeof(float), VertexCount, (dTriIndex*)&Indices[0], IndexCount, 3 * sizeof(dTriIndex));
   
   TriMesh1 = dCreateTriMesh(space, TriData1, 0, 0, 0);
   TriMesh2 = dCreateTriMesh(space, TriData2, 0, 0, 0);

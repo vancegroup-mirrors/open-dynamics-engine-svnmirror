@@ -29,8 +29,6 @@
 #include "collision_util.h"
 
 #if dTRIMESH_ENABLED
-
-#define TRIMESH_INTERNAL
 #include "collision_trimesh_internal.h"
 
 #if dTRIMESH_OPCODE
@@ -251,7 +249,8 @@ int dCollideSTL(dxGeom* g1, dxGeom* SphereGeom, int Flags, dContactGeom* Contact
 	const dVector3& TLPosition = *(const dVector3*)dGeomGetPosition(TriMesh);
 	const dMatrix3& TLRotation = *(const dMatrix3*)dGeomGetRotation(TriMesh);
 
-	SphereCollider& Collider = TriMesh->_SphereCollider;
+	TrimeshCollidersCache *pccColliderCache = GetTrimeshCollidersCache();
+	SphereCollider& Collider = pccColliderCache->_SphereCollider;
 
 	const dVector3& Position = *(const dVector3*)dGeomGetPosition(SphereGeom);
 	dReal Radius = dGeomSphereGetRadius(SphereGeom);
@@ -289,7 +288,7 @@ int dCollideSTL(dxGeom* g1, dxGeom* SphereGeom, int Flags, dContactGeom* Contact
 	}
 	else {
 		Collider.SetTemporalCoherence(false);
-		Collider.Collide(dxTriMesh::defaultSphereCache, Sphere, TriMesh->Data->BVTree, null, 
+		Collider.Collide(pccColliderCache->defaultSphereCache, Sphere, TriMesh->Data->BVTree, null, 
 						 &MakeMatrix(TLPosition, TLRotation, amatrix));
  	}
 
@@ -318,6 +317,7 @@ int dCollideSTL(dxGeom* g1, dxGeom* SphereGeom, int Flags, dContactGeom* Contact
 			dVector3 dv[3];
 			if (!Callback(TriMesh, SphereGeom, TriIndex))
 				continue;
+			
 			FetchTriangle(TriMesh, TriIndex, TLPosition, TLRotation, dv);
 
 			dVector3& v0 = dv[0];
@@ -340,12 +340,12 @@ int dCollideSTL(dxGeom* g1, dxGeom* SphereGeom, int Flags, dContactGeom* Contact
 			dVector4 Plane;
 			dCROSS(Plane, =, vu, vv);
 
-			dReal Area = dSqrt(dDOT(Plane, Plane));	// We can use this later
-			Plane[0] /= Area;
-			Plane[1] /= Area;
-			Plane[2] /= Area;
-
-			Plane[3] = dDOT(Plane, v0);	
+			// Even though all triangles might be initially valid, 
+			// a triangle may degenerate into a segment after applying 
+			// space transformation.
+			if (!dSafeNormalize3(Plane)) {
+				continue;
+			}
 
 			/* If the center of the sphere is within the positive halfspace of the
 				* triangle's plane, allow a contact to be generated.
@@ -354,7 +354,7 @@ int dCollideSTL(dxGeom* g1, dxGeom* SphereGeom, int Flags, dContactGeom* Contact
 				* to be adjusted (penetration has occured anyway).
 				*/
 		  
-			dReal side = dDOT(Plane,Position) - Plane[3];
+			dReal side = dDOT(Plane,Position) - dDOT(Plane, v0);
 
 			if(side < REAL(0.0)) {
 				continue;

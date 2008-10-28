@@ -31,15 +31,10 @@ project.name = "ode"
   addoption("no-dif",        		"Exclude DIF (Dynamics Interchange Format) exports")
   addoption("no-trimesh",    		"Exclude trimesh collision geometry")
   addoption("no-alloca",     		"Use heap memory instead of the stack (experimental)")
+  addoption("enable-ou",            "Use TLS for global variables (experimental)")
 
-
--- If the `--usetargetpath` flag is specified, each set of generated files
--- be placed in a directory named for the target toolset. This flag is
--- used by the `--makeall` command (see below).
-
-  if (options["usetargetpath"]) then
-    project.path = options["target"]
-  end
+  -- Output is placed in a directory named for the target toolset.
+  project.path = options["target"]
 
 
 -- Set the output directories

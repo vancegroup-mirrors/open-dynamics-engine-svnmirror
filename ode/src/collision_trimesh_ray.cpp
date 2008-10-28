@@ -31,8 +31,6 @@
 #if dTRIMESH_ENABLED
 
 #include "collision_util.h"
-
-#define TRIMESH_INTERNAL
 #include "collision_trimesh_internal.h"
 
 #if dTRIMESH_OPCODE
@@ -47,7 +45,8 @@ int dCollideRTL(dxGeom* g1, dxGeom* RayGeom, int Flags, dContactGeom* Contacts, 
 	const dVector3& TLPosition = *(const dVector3*)dGeomGetPosition(TriMesh);
 	const dMatrix3& TLRotation = *(const dMatrix3*)dGeomGetRotation(TriMesh);
 
-	RayCollider& Collider = TriMesh->_RayCollider;
+	TrimeshCollidersCache *pccColliderCache = GetTrimeshCollidersCache();
+	RayCollider& Collider = pccColliderCache->_RayCollider;
 
 	dReal Length = dGeomRayGetLength(RayGeom);
 
@@ -76,14 +75,14 @@ int dCollideRTL(dxGeom* g1, dxGeom* RayGeom, int Flags, dContactGeom* Contacts, 
 	Matrix4x4 amatrix;
         int TriCount = 0;
         if (Collider.Collide(WorldRay, TriMesh->Data->BVTree, &MakeMatrix(TLPosition, TLRotation, amatrix))) {
-                TriCount = TriMesh->Faces.GetNbFaces();
+                TriCount = pccColliderCache->Faces.GetNbFaces();
         }
 
         if (TriCount == 0) {
                 return 0;
         }
 	
-	const CollisionFace* Faces = TriMesh->Faces.GetFaces();
+	const CollisionFace* Faces = pccColliderCache->Faces.GetFaces();
 
 	int OutTriCount = 0;
 	for (int i = 0; i < TriCount; i++) {
@@ -100,16 +99,6 @@ int dCollideRTL(dxGeom* g1, dxGeom* RayGeom, int Flags, dContactGeom* Contacts, 
 			dVector3 dv[3];
 			FetchTriangle(TriMesh, TriIndex, TLPosition, TLRotation, dv);
 
-			// No sense to save on single type conversion in algorithm of this size.
-			// If there would be a custom typedef for distance type it could be used 
-			// instead of dReal. However using float directly is the loss of abstraction 
-			// and possible loss of precision in future.
-			/*float*/ dReal T = Faces[i].mDistance;
-			Contact->pos[0] = Origin[0] + (Direction[0] * T);
-			Contact->pos[1] = Origin[1] + (Direction[1] * T);
-			Contact->pos[2] = Origin[2] + (Direction[2] * T);
-			Contact->pos[3] = REAL(0.0);
-				
 			dVector3 vu;
 			vu[0] = dv[1][0] - dv[0][0];
 			vu[1] = dv[1][1] - dv[0][1];
@@ -124,17 +113,31 @@ int dCollideRTL(dxGeom* g1, dxGeom* RayGeom, int Flags, dContactGeom* Contacts, 
 
 			dCROSS(Contact->normal, =, vv, vu);	// Reversed
 
-			dNormalize3(Contact->normal);
+			// Even though all triangles might be initially valid, 
+			// a triangle may degenerate into a segment after applying 
+			// space transformation.
+			if (dSafeNormalize3(Contact->normal))
+			{
+				// No sense to save on single type conversion in algorithm of this size.
+				// If there would be a custom typedef for distance type it could be used 
+				// instead of dReal. However using float directly is the loss of abstraction 
+				// and possible loss of precision in future.
+				/*float*/ dReal T = Faces[i].mDistance;
+				Contact->pos[0] = Origin[0] + (Direction[0] * T);
+				Contact->pos[1] = Origin[1] + (Direction[1] * T);
+				Contact->pos[2] = Origin[2] + (Direction[2] * T);
+				Contact->pos[3] = REAL(0.0);
 
-			Contact->depth = T;
-			Contact->g1 = TriMesh;
-			Contact->g2 = RayGeom;
-				
-			OutTriCount++;
+				Contact->depth = T;
+				Contact->g1 = TriMesh;
+				Contact->g2 = RayGeom;
+					
+				OutTriCount++;
 
-			// Putting "break" at the end of loop prevents unnecessary checks on first pass and "continue"
-			if (OutTriCount >= (Flags & NUMC_MASK)) {
-				break;
+				// Putting "break" at the end of loop prevents unnecessary checks on first pass and "continue"
+				if (OutTriCount >= (Flags & NUMC_MASK)) {
+					break;
+				}
 			}
 		}
 	}

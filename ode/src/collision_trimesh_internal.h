@@ -22,34 +22,18 @@
 
 // TriMesh code by Erwin de Vries.
 // Modified for FreeSOLID Compatibility by Rodrigo Hernandez
+// Trimesh caches separation by Oleh Derevenko
+
 
 #ifndef _ODE_COLLISION_TRIMESH_INTERNAL_H_
 #define _ODE_COLLISION_TRIMESH_INTERNAL_H_
 
-int dCollideCylinderTrimesh(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip);
-int dCollideTrimeshPlane(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip);
-
-int dCollideSTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip);
-int dCollideBTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip);
-int dCollideRTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip);
-int dCollideTTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip);
-int dCollideCCTL(dxGeom *o1, dxGeom *o2, int flags, dContactGeom *contact, int skip);
-
-PURE_INLINE int dCollideRayTrimesh( dxGeom *ray, dxGeom *trimesh, int flags,
-									dContactGeom *contact, int skip )
-{
-	// Swapped case, for code that needs it (heightfield initially)
-	// The other ray-geom colliders take geoms in a swapped order to the
-	// dCollideRTL function which is annoying when using function pointers.
-	return dCollideRTL( trimesh, ray, flags, contact, skip );
-}
-
 //****************************************************************************
 // dxTriMesh class
 
-#ifdef TRIMESH_INTERNAL
 
 #include "collision_kernel.h"
+#include "collision_trimesh_colliders.h"
 #include <ode/collision_trimesh.h>
 
 #if dTRIMESH_OPCODE
@@ -61,6 +45,114 @@ using namespace Opcode;
 #if dTRIMESH_GIMPACT
 #include <GIMPACT/gimpact.h>
 #endif
+
+#if dTLS_ENABLED
+#include "odetls.h"
+#endif
+
+
+
+
+#if dTRIMESH_OPCODE
+#if dTRIMESH_OPCODE_USE_NEW_TRIMESH_TRIMESH_COLLIDER
+
+// New trimesh collider hash table types
+enum
+{
+	MAXCONTACT_X_NODE = 4,
+	CONTACTS_HASHSIZE = 256,
+};
+
+struct CONTACT_KEY
+{
+	dContactGeom * m_contact;
+	unsigned int m_key;
+};
+
+struct CONTACT_KEY_HASH_NODE
+{
+	CONTACT_KEY m_keyarray[MAXCONTACT_X_NODE];
+	int m_keycount;
+};
+
+struct CONTACT_KEY_HASH_TABLE
+{
+public:
+	CONTACT_KEY_HASH_NODE &operator[](unsigned int index) { return m_storage[index]; }
+
+private:
+	CONTACT_KEY_HASH_NODE m_storage[CONTACTS_HASHSIZE];
+};
+
+#endif // dTRIMESH_OPCODE_USE_NEW_TRIMESH_TRIMESH_COLLIDER
+#endif // dTRIMESH_OPCODE
+
+
+
+struct TrimeshCollidersCache
+{
+	TrimeshCollidersCache()
+	{
+#if dTRIMESH_OPCODE
+		InitOPCODECaches();
+#endif // dTRIMESH_OPCODE
+	}
+
+#if dTRIMESH_OPCODE
+
+	void InitOPCODECaches();
+
+
+	// Collider caches
+	BVTCache ColCache;
+
+#if dTRIMESH_OPCODE_USE_NEW_TRIMESH_TRIMESH_COLLIDER
+	CONTACT_KEY_HASH_TABLE _hashcontactset;
+#endif
+
+	// Colliders
+/* -- not used -- also uncomment in InitOPCODECaches()
+	PlanesCollider _PlanesCollider; -- not used 
+*/
+	SphereCollider _SphereCollider;
+	OBBCollider _OBBCollider;
+	RayCollider _RayCollider;
+	AABBTreeCollider _AABBTreeCollider;
+/* -- not used -- also uncomment in InitOPCODECaches()
+	LSSCollider _LSSCollider;
+*/
+	// Trimesh caches
+	CollisionFaces Faces;
+	SphereCache defaultSphereCache;
+	OBBCache defaultBoxCache;
+	LSSCache defaultCapsuleCache;
+
+#endif // dTRIMESH_OPCODE
+};
+
+#if dTLS_ENABLED
+
+inline TrimeshCollidersCache *GetTrimeshCollidersCache()
+{
+	return COdeTls::GetTrimeshCollidersCache();
+}
+
+
+#else // dTLS_ENABLED
+
+inline TrimeshCollidersCache *GetTrimeshCollidersCache()
+{
+	extern TrimeshCollidersCache g_ccTrimeshCollidersCache;
+
+	return &g_ccTrimeshCollidersCache;
+}
+
+
+#endif // dTLS_ENABLED
+
+
+
+
 
 struct dxTriMeshData  : public dBase 
 {
@@ -200,38 +292,27 @@ struct dxTriMesh : public dxGeom{
 	// Instance data for last transform.
     dMatrix4 last_trans;
 
-	// Colliders
-	static PlanesCollider _PlanesCollider;
-	static SphereCollider _SphereCollider;
-	static OBBCollider _OBBCollider;
-	static RayCollider _RayCollider;
-	static AABBTreeCollider _AABBTreeCollider;
-	static LSSCollider _LSSCollider;
-
 	// Some constants
-	static CollisionFaces Faces;
 	// Temporal coherence
 	struct SphereTC : public SphereCache{
 		dxGeom* Geom;
 	};
 	dArray<SphereTC> SphereTCCache;
-	static SphereCache defaultSphereCache;
 
 	struct BoxTC : public OBBCache{
 		dxGeom* Geom;
 	};
 	dArray<BoxTC> BoxTCCache;
-	static OBBCache defaultBoxCache;
 	
 	struct CapsuleTC : public LSSCache{
 		dxGeom* Geom;
 	};
 	dArray<CapsuleTC> CapsuleTCCache;
-	static LSSCache defaultCapsuleCache;
 #endif // dTRIMESH_OPCODE
 
 #if dTRIMESH_GIMPACT
     GIM_TRIMESH  m_collision_trimesh;
+	GBUFFER_MANAGER_DATA m_buffer_managers[G_BUFFER_MANAGER__MAX];
 #endif  // dTRIMESH_GIMPACT
 };
 
@@ -245,20 +326,16 @@ inline dContactGeom* SAFECONTACT(int Flags, dContactGeom* Contacts, int Index, i
 #endif
 
 #if dTRIMESH_OPCODE
-inline void FetchTriangle(dxTriMesh* TriMesh, int Index, dVector3 Out[3]){
-	VertexPointers VP;
-	TriMesh->Data->Mesh.GetTriangle(VP, Index);
-	for (int i = 0; i < 3; i++){
-		Out[i][0] = VP.Vertex[i]->x;
-		Out[i][1] = VP.Vertex[i]->y;
-		Out[i][2] = VP.Vertex[i]->z;
-		Out[i][3] = 0;
-	}
+
+inline unsigned FetchTriangleCount(dxTriMesh* TriMesh)
+{
+	return TriMesh->Data->Mesh.GetNbTriangles();
 }
 
 inline void FetchTriangle(dxTriMesh* TriMesh, int Index, const dVector3 Position, const dMatrix3 Rotation, dVector3 Out[3]){
 	VertexPointers VP;
-	TriMesh->Data->Mesh.GetTriangle(VP, Index);
+	ConversionArea VC;
+	TriMesh->Data->Mesh.GetTriangle(VP, Index, VC);
 	for (int i = 0; i < 3; i++){
 		dVector3 v;
 		v[0] = VP.Vertex[i]->x;
@@ -272,6 +349,12 @@ inline void FetchTriangle(dxTriMesh* TriMesh, int Index, const dVector3 Position
 		Out[i][2] += Position[2];
 		Out[i][3] = 0;
 	}
+}
+
+inline void FetchTransformedTriangle(dxTriMesh* TriMesh, int Index, dVector3 Out[3]){
+	const dVector3& Position = *(const dVector3*)dGeomGetPosition(TriMesh);
+	const dMatrix3& Rotation = *(const dMatrix3*)dGeomGetRotation(TriMesh);
+	FetchTriangle(TriMesh, Index, Position, Rotation, Out);
 }
 
 inline Matrix4x4& MakeMatrix(const dVector3 Position, const dMatrix3 Rotation, Matrix4x4& Out){
@@ -321,14 +404,13 @@ inline Matrix4x4& MakeMatrix(dxGeom* g, Matrix4x4& Out){
 			(b)[3] = 0;                   \
 		}
 
-		inline void gim_trimesh_get_triangle_verticesODE(GIM_TRIMESH * trimesh, GUINT triangle_index, dVector3 v1, dVector3 v2, dVector3 v3) {   
-			vec3f * transformed_vertices = GIM_BUFFER_ARRAY_POINTER(vec3f,trimesh->m_transformed_vertex_buffer,0);
-    
-			GUINT * triangle_indices = GIM_BUFFER_ARRAY_POINTER(GUINT,trimesh->m_tri_index_buffer,triangle_index*3);
-    
-			dVECTOR3_VEC3F_COPY(v1, transformed_vertices[triangle_indices[0]]);
-			dVECTOR3_VEC3F_COPY(v2, transformed_vertices[triangle_indices[1]]);
-			dVECTOR3_VEC3F_COPY(v3, transformed_vertices[triangle_indices[2]]);
+		inline void gim_trimesh_get_triangle_verticesODE(GIM_TRIMESH * trimesh, GUINT32 triangle_index, dVector3 v1, dVector3 v2, dVector3 v3) {   
+			vec3f src1, src2, src3;
+			gim_trimesh_get_triangle_vertices(trimesh, triangle_index, src1, src2, src3);
+
+			dVECTOR3_VEC3F_COPY(v1, src1);
+			dVECTOR3_VEC3F_COPY(v2, src2);
+			dVECTOR3_VEC3F_COPY(v3, src3);
 		}
 
 		// Anything calling gim_trimesh_get_triangle_vertices from within ODE 
@@ -381,9 +463,15 @@ inline Matrix4x4& MakeMatrix(dxGeom* g, Matrix4x4& Out){
 
 	#endif // dDouble
 
-inline void FetchTriangle(dxTriMesh* TriMesh, int Index, const dVector3 Position, const dMatrix3 Rotation, dVector3 Out[3]){
-	// why is this not implemented?
-	dAASSERT(false);
+inline unsigned FetchTriangleCount(dxTriMesh* TriMesh)
+{
+	return gim_trimesh_get_triangle_count(&TriMesh->m_collision_trimesh);
+}
+
+inline void FetchTransformedTriangle(dxTriMesh* TriMesh, int Index, dVector3 Out[3]){
+	gim_trimesh_locks_work_data(&TriMesh->m_collision_trimesh);	
+	gim_trimesh_get_triangle_vertices(&TriMesh->m_collision_trimesh, (GUINT32)Index, Out[0], Out[1], Out[2]);
+	gim_trimesh_unlocks_work_data(&TriMesh->m_collision_trimesh);
 }
 
 inline void MakeMatrix(const dVector3 Position, const dMatrix3 Rotation, mat4f m)
@@ -564,6 +652,5 @@ bool IntersectCapsuleTri( const dVector3 segOrigin, const dVector3 segEnd,
     return ( sqrDist <= (radius * radius) );
 }
 
-#endif	//TRIMESH_INTERNAL
 
 #endif	//_ODE_COLLISION_TRIMESH_INTERNAL_H_

@@ -12,11 +12,14 @@
     "cylvssphere",
     "feedback",
     "friction",
+    "gyroscopic",
     "heightfield",
     "hinge",
     "I",
     "jointPR",
+    "jointPU",
     "joints",
+    "motion",
     "motor",
     "ode",
     "piston",
@@ -35,13 +38,8 @@
   end
 
 
--- Separate distribution files into toolset subdirectories
-
-  if (options["usetargetpath"]) then
-    packagepath = options["target"]
-  else
-    packagepath = "custom"
-  end
+  -- Output is placed in a directory named for the target toolset.
+  packagepath = options["target"]
 
 
 -- Factory function for demo packages
@@ -85,10 +83,14 @@
    end
 
    if (not options["enable-static-only"]) then
+    table.insert(package.config["DebugSingleDLL"].defines, "dSINGLE")
+    table.insert(package.config["ReleaseSingleDLL"].defines, "dSINGLE")
     table.insert(package.config["DebugDoubleDLL"].defines, "dDOUBLE")
     table.insert(package.config["ReleaseDoubleDLL"].defines, "dDOUBLE")
    end
    if (not options["enable-shared-only"]) then
+    table.insert(package.config["DebugSingleLib"].defines, "dSINGLE")
+    table.insert(package.config["ReleaseSingleLib"].defines, "dSINGLE")
     table.insert(package.config["DebugDoubleLib"].defines, "dDOUBLE")
     table.insert(package.config["ReleaseDoubleLib"].defines, "dDOUBLE")
    end

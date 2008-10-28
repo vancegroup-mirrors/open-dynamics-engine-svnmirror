@@ -27,7 +27,6 @@
 #if !dTRIMESH_ENABLED
 
 #include "collision_util.h"
-#define TRIMESH_INTERNAL
 #include "collision_trimesh_internal.h"
 
 dxTriMesh::dxTriMesh(dSpaceID Space, dTriMeshDataID Data) : dxGeom(Space, 1){ type = dTriMeshClass; }
@@ -36,7 +35,7 @@ dxTriMesh::~dxTriMesh(){}
 int dxTriMesh::AABBTest(dxGeom* g, dReal aabb[6]) { return 0; }
 void dxTriMesh::computeAABB() { dSetZero (aabb,6); }
 
-static dMatrix4 identity[] = { 
+static dMatrix4 identity = {
 	REAL( 0.0 ), REAL( 0.0 ), REAL( 0.0 ), REAL( 0.0 ),
 	REAL( 0.0 ), REAL( 0.0 ), REAL( 0.0 ), REAL( 0.0 ),
 	REAL( 0.0 ), REAL( 0.0 ), REAL( 0.0 ), REAL( 0.0 ),
@@ -51,7 +50,7 @@ void dGeomTriMeshDataSet(dTriMeshDataID g, int data_id, void* in_data) {}
 void* dGeomTriMeshDataGet(dTriMeshDataID g, int data_id) { return 0; }
 
 ODE_API void dGeomTriMeshSetLastTransform( dGeomID g, dMatrix4 last_trans ) {}
-ODE_API dReal* dGeomTriMeshGetLastTransform( dGeomID g ) { return (dReal*)identity; }
+ODE_API dReal* dGeomTriMeshGetLastTransform( dGeomID g ) { return identity; }
 
 dGeomID dCreateTriMesh(dSpaceID space, 
 		       dTriMeshDataID Data,

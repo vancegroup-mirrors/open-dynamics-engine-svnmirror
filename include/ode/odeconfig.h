@@ -15,6 +15,10 @@
 #include <string.h>
 #include <float.h>
 
+#if defined(ODE_DLL) || defined(ODE_LIB) || !defined(_MSC_VER)
+#define __ODE__
+#endif
+
 /* Define a DLL export symbol for those platforms that need it */
 #if defined(_MSC_VER)
   #if defined(ODE_DLL)
@@ -26,6 +30,14 @@
 
 #if !defined(ODE_API)
   #define ODE_API
+#endif
+
+#if defined(_MSC_VER)
+#  define ODE_API_DEPRECATED __declspec(deprecated)
+#elif defined (__GNUC__) && ( (__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)) )
+#  define ODE_API_DEPRECATED __attribute__((__deprecated__))
+#else
+#  define ODE_API_DEPRECATED
 #endif
 
 /* Well-defined common data types...need to define for 64 bit systems */
@@ -62,13 +74,17 @@
     #ifdef HUGE_VALF
       #define dInfinity HUGE_VALF
     #else
-      #define dInfinity HUGE_VAL
+      #define dInfinity ((float)HUGE_VAL)
     #endif
   #else
     #define dInfinity HUGE_VAL
   #endif
 #else
-  #define dInfinity ((1.0)/(0.0))
+  #ifdef dSINGLE
+    #define dInfinity ((float)(1.0/0.0))
+  #else
+    #define dInfinity (1.0/0.0)
+  #endif
 #endif
 
 

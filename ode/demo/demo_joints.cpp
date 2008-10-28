@@ -90,13 +90,6 @@ static dReal max_error = 0;
 //****************************************************************************
 // utility stuff
 
-static char loCase (char a)
-{
-  if (a >= 'A' && a <= 'Z') return a + ('a'-'A');
-  else return a;
-}
-
-
 static dReal length (dVector3 a)
 {
   return dSqrt (a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
@@ -941,6 +934,8 @@ dReal doStuffAndGetError (int n)
 
 static void start()
 {
+  dAllocateODEDataForThread(dAllocateMaskAll);
+
   static float xyz[3] = {1.0382f,-1.0811f,1.4700f};
   static float hpr[3] = {135.0000f,-19.5000f,0.0000f};
   dsSetViewpoint (xyz,hpr);
@@ -1063,7 +1058,7 @@ void doTest (int argc, char **argv, int n, int fatal_if_bad_n)
 int main (int argc, char **argv)
 {
   int i;
-  dInitODE();
+  dInitODE2(0);
 
   // process the command line args. anything that starts with `-' is assumed
   // to be a drawstuff argument.

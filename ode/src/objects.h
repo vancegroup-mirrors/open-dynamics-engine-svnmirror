@@ -35,14 +35,15 @@
 // some body flags
 
 enum {
-  dxBodyFlagFiniteRotation = 1,		// use finite rotations
-  dxBodyFlagFiniteRotationAxis = 2,	// use finite rotations only along axis
-  dxBodyDisabled = 4,			// body is disabled
-  dxBodyNoGravity = 8,			// body is not influenced by gravity
-  dxBodyAutoDisable = 16,		// enable auto-disable on body
-  dxBodyLinearDamping = 32,             // using linear damping
-  dxBodyAngularDamping = 64,            // using angular damping
-  dxBodyMaxAngularSpeed = 128,          // using maximum angular speed
+  dxBodyFlagFiniteRotation =        1,  // use finite rotations
+  dxBodyFlagFiniteRotationAxis =    2,  // use finite rotations only along axis
+  dxBodyDisabled =                  4,  // body is disabled
+  dxBodyNoGravity =                 8,  // body is not influenced by gravity
+  dxBodyAutoDisable =               16, // enable auto-disable on body
+  dxBodyLinearDamping =             32, // use linear damping
+  dxBodyAngularDamping =            64, // use angular damping
+  dxBodyMaxAngularSpeed =           128,// use maximum angular speed
+  dxBodyGyroscopic =                256,// use gyroscopic term
 };
 
 
@@ -50,6 +51,7 @@ enum {
 
 struct dBase {
   void *operator new (size_t size) { return dAlloc (size); }
+  void *operator new (size_t size, void *p) { return p; }
   void operator delete (void *ptr, size_t size) { dFree (ptr,size); }
   void *operator new[] (size_t size) { return dAlloc (size); }
   void operator delete[] (void *ptr, size_t size) { dFree (ptr,size); }
@@ -62,8 +64,10 @@ struct dObject : public dBase {
   dxWorld *world;		// world this object is in
   dObject *next;		// next object of this type in list
   dObject **tome;		// pointer to previous object's next ptr
-  void *userdata;		// user settable data
   int tag;			// used by dynamics algorithms
+  void *userdata;		// user settable data
+  dObject(dxWorld *w);
+  virtual ~dObject() { }
 };
 
 
@@ -111,7 +115,7 @@ struct dxPosR {
 
 struct dxBody : public dObject {
   dxJointNode *firstjoint;	// list of attached joints
-  int flags;			// some dxBodyFlagXXX flags
+  unsigned flags;			// some dxBodyFlagXXX flags
   dGeomID geom;			// first collision geom associated with body
   dMass mass;			// mass parameters about POR
   dMatrix3 invI;		// inverse of mass.I
@@ -134,6 +138,8 @@ struct dxBody : public dObject {
   void (*moved_callback)(dxBody*); // let the user know the body moved
   dxDampingParameters dampingp; // damping parameters, depends on flags
   dReal max_angular_speed;      // limit the angular velocity to this magnitude
+
+  dxBody(dxWorld *w);
 };
 
 

@@ -8,8 +8,204 @@ the rules for this file:
   * keep the format consistent (79 char width, M/D/Y date format).
 
 ------------------------------------------------------------------------------
+10/15/08 Remi Ricard (papaDoc)
+        * Applying patch #2158425 64-bit GIMPACT provided by Mark
+          William. This patch enable GIMPACT to works on 64-bit machine.
+
+10/15/08 Remi Ricard (papaDoc)
+        * Add function dJointGetPRAngle and dJointGetPRAngleRate
+
+10/15/08 Remi Ricard (papaDoc)
+        * Enable the motor on the rotoide part of the PR joint
+
+10/15/08 Remi Ricard (papaDoc)
+        * Add unit test to check if using directly a joint
+          or using after setting with default values is the same.
+        * Add function setRelativeValues called in dJointAttach for
+          all joints.
+
+10/10/08 Remi Ricard (papaDoc)
+        * Fix bug in dJointGetPUAxis2. The axis was not multiplied with the
+          the rotation matrix of the good body.
+        * Fix bug if there is only one body on the PU joint the axis returned
+          was not the right one.
+        * Add unit test to verify previous bug.
+
+10/03/08 Rodrigo Hernandez (Kwizatz)
+	* Added Blender script to create ODE convex geoms under tools.
+
+10/01/08 Rodrigo Hernandez (Kwizatz)
+	* Convex-Convex collision detection code is finally stable.
+
+08/31/08 Daniel K. O.
+        * Applied patch 2080674: Improved dBodySetRotation; now exact rotation
+          matrices are preserved until the next simulation step.
+
+08/07/08 Daniel K. O.
+        * Fixed strict aliasing issue that was breaking the new trimesh collider.
+
+07/24/08 Daniel K. O.
+        * New functions: dBodyGetGyroscopicMode and dBodySetGyroscopicMode
+          (patch #2019242).
+
+07/15/08  Remi Ricard (papaDoc)
+        * Add a new define ODE_API_DEPRECATED to mark function as deprecated
+          when necessary.
+
+07/14/08 Remi Ricard (papaDoc)
+        * Finish adding patch 1336066: Joint feedback in quickstep by jsinecky
+        * demo_boxstack.cpp can now print joint feedback
+
+07/11/08 Daniel K. O.
+        * Bumped version for 0.10.1
+        * Added proper usage of libtool's version info.
+
+07/10/08 Remi Ricard (papaDoc)
+        * Add new function dJointSetPistonAnchorOffset
+        * Add unittest for the piston joint
+        * Fix problem with dJointGetPistonPosition and 
+          dJointGetPistonPositionRate when the joint is attached to only
+          a body 2. The sign was inversed. 
+
+07/09/08 Remi Ricard (papaDoc)
+        * Optimize function Multiply1_12q1 in quickstep
+          Patch proposed by Riemer v.d. Zee and modified by Patrick Baggett
+
+07/08/08 Remi Ricard (papaDoc)
+        * Update the slider joint to have the same behavior as the other joint
+          when there is only a body2 attached to it.
+        * Update documentation for the slider joint.
+        * Remove warning by using REAL()
+        * Add new unittest for dJointGetSliderPositionRate
+
+07/08/08 Remi Ricard (papaDoc)
+        * Update unittest for the slider.
+        * Rename the new function dJointSetHingeAxisDelta to 
+          dJointSetHingeAxisOffset. This remove will remove confusion with 
+          the old function dJointSetHingeAnchorDelta
+        * Update documentation for the Hinge unittest
+        * Remove warning by using REAL()
+
+07/07/08 Daniel K. O.
+        * Max Correcting Vel doesn't affect bounciness, as before.
+
+07/03/08 Remi Ricard (papaDoc)
+        * Add new function dJointSetHingeAxisDelta
+        * Add unittest for this new function
+
+06/17/08 Remi Ricard (papaDoc)
+
+        *  Move the computation of the Relative Rotation for the slider joint
+           into a function.
+        * Add unittest for to check qrel 
+
+06/17/08 Remi Ricard (papaDoc)
+
+       * Remove unused variables. 
+       * Remove a conversion warning between unsigned int and int
+        
+06/17/08 Remi Ricard (papaDoc)
+
+        * Move the function hingeComputeRelativeRotation as a member of 
+          the hinge structure/class.
+
+06/17/08 Remi Ricard (papaDoc)
+
+        *  Move the computation of the Relative Rotation for the fixed joint
+           into a function.
+
+06/16/08 Remi Ricard (papaDoc)
+
+        * Add testunit for the dxJointFixed
+
+06/04/08 Daniel K. O.
+
+        * Moved joints to ode/src/joints, converted them to true virtual
+          methods.
+
+06/02/08 Daniel K. O.
+
+        * Added an Auto<T> template to step.cpp to handle memory deallocation.
+
+05/09/08 Daniel K. O.
+
+        * Applied patch #1335202: Contact Joint Motion (with some corrections),
+          and added demo_motion.
+
+05/01/08 Oleh_Derevenko
+
+        * Memory leak in GIMPACT fixed (reported by Derek)
+
+04/28/08 Oleh_Derevenko
+
+        * Added possibility to collide a space of lower sublevel as a geometry
+          against another space of a higher level with dSpaceCollide2.
+          dSpaceSetSublevel/dSpaceGetSublevel are used for sublevel assignment/
+          retrieval.
+
+04/27/08 Oleh_Derevenko
+
+        * Fixed incorrect memory copying which could lead to memory corruption
+          in GIMPACT (luckily, in unused code)
+        * Fixed possible memory read beyond the end of allocated buffer along
+          with unnecessary extra memory copying in GIMPACT.
+        * Fixed buffer reserve being incorrectly reset to zero for bitsets 
+          what resulted in unnecessary memory reallocations in GIMPACT.
+        * Implemented support for ability to run collision detection from
+          multiple threads for separate spaces.
+           
+04/14/08 Oleh_Derevenko
+
+        * Fixed possible memory corruption in new trimesh-trimesh collider
+          in case if two degenerated triangles are checked against each other.
+
+04/12/08 Oleh_Derevenko
+
+        * Fixed sporadic assertion failure on vector normalization caused
+          by small triangles degenerating into segments during space 
+          transformations.
+
+03/28/08 Remi
+
+        * Fix a bug in dJointXXXGetInfo. The value in limot.limit was not
+          always updated. (Ex: If hi and lo limit were changed). 
+
+03/27/08 Remi
+
+        * Added a new Joint: Prismatic Universal (patch #1828454).
+
+         Daniel K. O.
+
+        * Fixed bug #1841309: collide2() method buggy.
+
+03/18/08 Rodrigo
+
+        * New function: dVector4Copy.
+
+03/14/08 david
+
+        * Added stub calls for trimesh functions.
+        * Applied patch #1914232: dGetConfiguration.
+        * Applied patch #1655333: Optimize the function dNormalize3.
+        * New function: dSetColliderOverride.
+        * New function: dCheckConfiguration.
+        
+         Daniel K. O.
+
+        * Disabled building shared library by default with autotools.
+
+03/13/08 david
+
+        * New function: dJointGetNumBodies (patch #1901550).
+        * New function: dSpaceGetClass (patch #1901637).
+        * Applied patch #1901649: Add missing function in the export
+
+03/12/08 Rodrigo
+
+        * Fixed drawstuff build issues on OSX.
 
 01/12/08 Daniel K. O.
+
 	* Fixed a typedef bug in configure.in.
 	* Added dCylinder to the C++ wrappers.
 	* Applied patch 1851394: support for GIMPACT with double precision,
@@ -73,7 +269,7 @@ the rules for this file:
 
 	* Fixed two bugs in cyl/plane collision test.
 
-09/13/06 remi
+09/13/06 Remi
 
 	* New Rotoide - Prismatic joint type
 	* dJointGetUniversalAngles for efficient angle retrieval.

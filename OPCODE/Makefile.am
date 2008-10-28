@@ -1,9 +1,7 @@
-if OPCODE
-
 SUBDIRS = Ice
 
 noinst_LTLIBRARIES = libOPCODE.la
-libOPCODE_la_CPPFLAGS= -fno-strict-aliasing -I$(top_srcdir)/include
+AM_CPPFLAGS= -fno-strict-aliasing -I$(top_srcdir)/include
 
 libOPCODE_la_SOURCES =  OPC_AABBCollider.cpp    OPC_AABBCollider.h \
                         OPC_AABBTree.cpp        OPC_AABBTree.h \
@@ -16,6 +14,7 @@ libOPCODE_la_SOURCES =  OPC_AABBCollider.cpp    OPC_AABBCollider.h \
                         OPC_MeshInterface.cpp   OPC_MeshInterface.h \
                         OPC_Model.cpp           OPC_Model.h \
                         OPC_OBBCollider.cpp     OPC_OBBCollider.h \
+                        OPC_ThreadLocalData.cpp OPC_ThreadLocalData.h \
                         Opcode.cpp              Opcode.h \
                         OPC_OptimizedTree.cpp   OPC_OptimizedTree.h \
                         OPC_Picking.cpp         OPC_Picking.h \
@@ -41,4 +40,3 @@ libOPCODE_la_SOURCES =  OPC_AABBCollider.cpp    OPC_AABBCollider.h \
                         OPC_LSSTriOverlap.h \
                         OPC_RayTriOverlap.h 
 
-endif

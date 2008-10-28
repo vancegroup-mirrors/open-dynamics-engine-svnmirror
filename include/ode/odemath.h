@@ -255,6 +255,11 @@ do { \
 
 #define DECL template <class TA, class TB, class TC> PURE_INLINE void
 
+/* 
+Note: NEVER call any of these functions/macros with the same variable for A and C, 
+it is not equivalent to A*=B.
+*/
+
 DECL dMULTIPLY0_331(TA *A, const TB *B, const TC *C) { dMULTIPLYOP0_331(A,=,B,C); }
 DECL dMULTIPLY1_331(TA *A, const TB *B, const TC *C) { dMULTIPLYOP1_331(A,=,B,C); }
 DECL dMULTIPLY0_133(TA *A, const TB *B, const TC *C) { dMULTIPLYOP0_133(A,=,B,C); }
@@ -297,31 +302,43 @@ extern "C" {
 /*
  * normalize 3x1 and 4x1 vectors (i.e. scale them to unit length)
  */
-ODE_API int  dSafeNormalize3 (dVector3 a);
-ODE_API int  dSafeNormalize4 (dVector4 a);
 
-// For some reason demo_chain1.c does not understand "inline" keyword.
+#if defined(__ODE__)
+
+int  _dSafeNormalize3 (dVector3 a);
+int  _dSafeNormalize4 (dVector4 a);
+	
 static __inline void _dNormalize3(dVector3 a)
 {
-	int bNormalizationResult = dSafeNormalize3(a);
+	int bNormalizationResult = _dSafeNormalize3(a);
 	dIASSERT(bNormalizationResult);
 	dVARIABLEUSED(bNormalizationResult);
 }
 
 static __inline void _dNormalize4(dVector4 a)
 {
-	int bNormalizationResult = dSafeNormalize4(a);
+	int bNormalizationResult = _dSafeNormalize4(a);
 	dIASSERT(bNormalizationResult);
 	dVARIABLEUSED(bNormalizationResult);
 }
 
+#endif // defined(__ODE__)
+
 // For DLL export
+ODE_API int  dSafeNormalize3 (dVector3 a);
+ODE_API int  dSafeNormalize4 (dVector4 a);
 ODE_API void dNormalize3 (dVector3 a); // Potentially asserts on zero vec
 ODE_API void dNormalize4 (dVector4 a); // Potentially asserts on zero vec
 
+#if defined(__ODE__)
+
 // For internal use
+#define dSafeNormalize3(a) _dSafeNormalize3(a)
+#define dSafeNormalize4(a) _dSafeNormalize4(a)
 #define dNormalize3(a) _dNormalize3(a)
 #define dNormalize4(a) _dNormalize4(a)
+
+#endif // defined(__ODE__)
 
 /*
  * given a unit length "normal" vector n, generate vectors p and q vectors
