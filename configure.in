@@ -224,38 +224,37 @@ dnl test if we will build demos
 AM_CONDITIONAL(ENABLE_DEMOS, test x$enable_demos = xyes)
 
 dnl Check For Bullet support
-AC_ARG_WITH([bullet],[AC_HELP_STRING([--with-bullet[[[[=PATH]]]]],[Add Bullet Support])],
+AC_ARG_WITH([bullet],[AC_HELP_STRING([--with-bullet=<bullet root source directory>],[Add Bullet Support])],
 [
-	bullet=yes
-	AC_DEFINE(USE_BULLET,1,[Use Bullet])
-	temp=`pwd`
-	if test $withval != yes
-	then
-		cd "$withval"
-		BULLET_SRC_PATH=`pwd`
-		if test $BULLET_SRC_PATH = $temp
-		then
-			AC_MSG_ERROR([Bullet src path not found])
-		fi
-		cd "$temp"
-	else
-		cd "$srcdir"
-		BULLET_SRC_PATH="`pwd`/Bullet/Source"
-		cd "$temp"
-		cd "$BULLET_SRC_PATH"
-		if test `pwd` = $temp
-		then
-			AC_MSG_ERROR([Local Bullet Source path not found])
-		fi		
-		cd "$temp"
-	fi
+bullet_src_dir=$withval
+bullet=yes
 ],
 [
-	bullet=no
-	BULLET_SRC_PATH=""	
+bullet_src_dir=""
+bullet=no
 ])
+if test "$bullet" != no
+then
+	BULLET_SRC_PATH="$bullet_src_dir"
+else
+	BULLET_SRC_PATH=""
+fi
 AM_CONDITIONAL(BULLET, test "$bullet" != no)
 AC_SUBST(BULLET_SRC_PATH)
+
+dnl Check if the user wants to profile ODE using gprof
+AC_MSG_CHECKING(for gprof)
+AC_ARG_ENABLE([gprof],[AC_HELP_STRING([--enable-gprof],[enable profiling with gprof])],gprof=$enableval,gprof=no)
+if test "$gprof" != no
+then
+    CFLAGS="-pg $CFLAGS"
+    CPPFLAGS="-pg $CPPFLAGS"
+    CXXFLAGS="-pg $CXXFLAGS"
+    AC_CHECK_LIB(gmon, main,[LIBS="$LIBS -lgmon"])
+    AC_MSG_RESULT(enabled)
+else
+    AC_MSG_RESULT(no)
+fi
 
 dnl Check for autoscan sugested functions
 AC_CHECK_LIB(m, [main])
@@ -367,6 +366,3 @@ echo "  Is the CPU x86-64:       $cpu64"
 echo "  Headers will be installed in $prefix/include/ode"
 echo "  Libraries will be installed in $prefix/lib"
 echo "  Building in directory    $BUILDDIR"
-if test $bullet != no ; then
-echo "  Building Bullet from     $BULLET_SRC_PATH"
-fi
