@@ -217,7 +217,7 @@ dxJointSlider::getInfo2 ( dxJoint::Info2 *info )
 void dJointSetSliderAxis ( dJointID j, dReal x, dReal y, dReal z )
 {
     dxJointSlider* joint = ( dxJointSlider* ) j;
-    int i;
+//    int i;
     dUASSERT ( joint, "bad joint argument" );
     checktype ( joint, Slider );
     setAxes ( joint, x, y, z, joint->axis1, 0 );
@@ -231,7 +231,7 @@ void dJointSetSliderAxis ( dJointID j, dReal x, dReal y, dReal z )
 void dJointSetSliderAxisDelta ( dJointID j, dReal x, dReal y, dReal z, dReal dx, dReal dy, dReal dz )
 {
     dxJointSlider* joint = ( dxJointSlider* ) j;
-    int i;
+//    int i;
     dUASSERT ( joint, "bad joint argument" );
     checktype ( joint, Slider );
     setAxes ( joint, x, y, z, joint->axis1, 0 );

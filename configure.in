@@ -241,22 +241,40 @@ else
         new_trimesh=no
 fi
 
+dnl Check For Bullet support
+AC_ARG_WITH([bullet],[AC_HELP_STRING([--with-bullet[[[[=PATH]]]]],[Add Bullet Support])],
+[
+	bullet=yes
+	AC_DEFINE(USE_BULLET,1,[Use Bullet])
+	temp=`pwd`
+	if test $withval != yes
+	then
+		cd "$withval"
+		BULLET_SRC_PATH=`pwd`
+		if test $BULLET_SRC_PATH = $temp
+		then
+			AC_MSG_ERROR([Bullet src path not found])
+		fi
+		cd "$temp"
+	else
+		cd "$srcdir"
+		BULLET_SRC_PATH="`pwd`/Bullet/Source"
+		cd "$temp"
+		cd "$BULLET_SRC_PATH"
+		if test `pwd` = $temp
+		then
+			AC_MSG_ERROR([Local Bullet Source path not found])
+		fi		
+		cd "$temp"
+	fi
+],
+[
+	bullet=no
+	BULLET_SRC_PATH=""	
+])
+AM_CONDITIONAL(BULLET, test "$bullet" != no)
+AC_SUBST(BULLET_SRC_PATH)
 
-dnl Check if the user wants to profile ODE using gprof
-AC_MSG_CHECKING(for gprof)
-AC_ARG_ENABLE([gprof],
-        AS_HELP_STRING([--enable-gprof],[enable profiling with gprof]),
-        gprof=$enableval,
-        gprof=no)
-if test "$gprof" != no
-then
-    CFLAGS="-pg $CFLAGS"
-    CXXFLAGS="-pg $CXXFLAGS"
-    AC_MSG_RESULT(enabled)
-    AC_CHECK_LIB(gmon, main,[LIBS="$LIBS -lgmon"])
-else
-    AC_MSG_RESULT(no)
-fi
 
 dnl Check for autoscan sugested functions
 AC_CHECK_LIB(m, [main])
