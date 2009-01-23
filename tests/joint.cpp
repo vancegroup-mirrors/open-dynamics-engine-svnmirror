@@ -106,7 +106,7 @@ SUITE(JointHinge2)
         dxJointHinge2* joint = (dxJointHinge2*)jId;
 
         // Original position inside the limits
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -114,7 +114,7 @@ SUITE(JointHinge2)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -124,7 +124,7 @@ SUITE(JointHinge2)
         dBodySetPosition (bId2, 0, 1, 0);
         dRFromAxisAndAngle (R, 1, REAL(0.0), REAL(0.0), REAL(0.0));
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -133,7 +133,7 @@ SUITE(JointHinge2)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -146,7 +146,7 @@ SUITE(JointHinge2)
         dBodySetRotation (bId2, R);
         dJointSetHinge2Param(jId, dParamLoStop, -2*M_PI);
         dJointSetHinge2Param(jId, dParamHiStop,  2*M_PI);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -158,7 +158,7 @@ SUITE(JointHinge2)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, -M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(2, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -168,7 +168,7 @@ SUITE(JointHinge2)
         dBodySetPosition (bId2, 0, 1, 0);
         dRFromAxisAndAngle (R, 1, REAL(0.0), REAL(0.0), REAL(0.0));
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -177,7 +177,7 @@ SUITE(JointHinge2)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, -M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(2, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -189,27 +189,27 @@ SUITE(JointHinge2)
         dBodySetRotation (bId2, R);
         dJointSetHinge2Param(jId, dParamLoStop, -2*M_PI);
         dJointSetHinge2Param(jId, dParamHiStop,  2*M_PI);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
 
         /// Motorize the first joint angle
         dJointSetHinge2Param(jId, dParamFMax, 2);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
 
         /// Motorize the second joint angle
         dJointSetHinge2Param(jId, dParamFMax2, 2);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(6, info.m);
 
         /// Unmotorize the first joint angle
         dJointSetHinge2Param(jId, dParamFMax, 0);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
     }
@@ -291,7 +291,7 @@ SUITE(JointUniversal)
         dxJointUniversal* joint = (dxJointUniversal*)jId;
 
         // Original position inside the limits
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -299,7 +299,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -309,7 +309,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 1, 0);
         dRFromAxisAndAngle (R, 1, REAL(0.0), REAL(0.0), REAL(0.0));
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -318,7 +318,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -331,7 +331,7 @@ SUITE(JointUniversal)
         dBodySetRotation (bId2, R);
         dJointSetUniversalParam(jId, dParamLoStop, -2*M_PI);
         dJointSetUniversalParam(jId, dParamHiStop,  2*M_PI);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -343,7 +343,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, -M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(2, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -353,7 +353,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 1, 0);
         dRFromAxisAndAngle (R, 1, REAL(0.0), REAL(0.0), REAL(0.0));
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -362,7 +362,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 1, 0, 0, -M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(2, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -374,27 +374,27 @@ SUITE(JointUniversal)
         dBodySetRotation (bId2, R);
         dJointSetUniversalParam(jId, dParamLoStop, -2*M_PI);
         dJointSetUniversalParam(jId, dParamHiStop,  2*M_PI);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
 
         /// Motorize the first joint angle
         dJointSetUniversalParam(jId, dParamFMax, 2);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
 
 
         /// Motorize the second joint angle
         dJointSetUniversalParam(jId, dParamFMax2, 2);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(6, info.m);
 
         /// Unmotorize the first joint angle
         dJointSetUniversalParam(jId, dParamFMax, 0);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(5, info.m);
     }
@@ -431,7 +431,7 @@ SUITE(JointUniversal)
         dxJointUniversal* joint = (dxJointUniversal*)jId;
 
         // Original position inside the limits
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -439,7 +439,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 0, 1, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(1, joint->limot2.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -449,7 +449,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 1, 0);
         dRFromAxisAndAngle (R, 0, 1, 0, 0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot2.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -458,7 +458,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 0, 1, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(1, joint->limot2.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -471,7 +471,7 @@ SUITE(JointUniversal)
         dBodySetRotation (bId2, R);
         dJointSetUniversalParam(jId, dParamLoStop2, -2*M_PI);
         dJointSetUniversalParam(jId, dParamHiStop2,  2*M_PI);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot2.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -483,7 +483,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 0, 1, 0, -M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(2, joint->limot2.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -493,7 +493,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 1, 0);
         dRFromAxisAndAngle (R, 0, 1, 0, 0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot2.limit);
         CHECK_EQUAL(4, info.m);
 
@@ -502,7 +502,7 @@ SUITE(JointUniversal)
         dBodySetPosition (bId2, 0, 0, 1);
         dRFromAxisAndAngle (R, 0, 1, 0, -M_PI/2.0);
         dBodySetRotation (bId2, R);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(2, joint->limot2.limit);
         CHECK_EQUAL(5, info.m);
 
@@ -514,27 +514,27 @@ SUITE(JointUniversal)
         dBodySetRotation (bId2, R);
         dJointSetUniversalParam(jId, dParamLoStop2, -2*M_PI);
         dJointSetUniversalParam(jId, dParamHiStop2,  2*M_PI);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot2.limit);
         CHECK_EQUAL(4, info.m);
 
 
         /// Motorize the first joint angle
         dJointSetUniversalParam(jId, dParamFMax, 2);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot2.limit);
         CHECK_EQUAL(5, info.m);
 
 
         /// Motorize the second joint angle
         dJointSetUniversalParam(jId, dParamFMax2, 2);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot2.limit);
         CHECK_EQUAL(6, info.m);
 
         /// Unmotorize the first joint angle
         dJointSetUniversalParam(jId, dParamFMax, 0);
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
         CHECK_EQUAL(0, joint->limot2.limit);
         CHECK_EQUAL(5, info.m);
     }
@@ -599,7 +599,7 @@ SUITE(JointPR)
         dJointSetPRParam(jId, dParamLoStop2, -M_PI);
         dJointSetPRParam(jId, dParamHiStop2, M_PI);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -624,7 +624,7 @@ SUITE(JointPR)
 
         dBodySetPosition(bId2, 0, -100, 0);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(2, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -633,7 +633,7 @@ SUITE(JointPR)
 
         dBodySetPosition(bId2, 0, 100, 0);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -647,7 +647,7 @@ SUITE(JointPR)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -677,7 +677,7 @@ SUITE(JointPR)
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(1, joint->limotR.limit);
@@ -691,7 +691,7 @@ SUITE(JointPR)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -755,7 +755,7 @@ SUITE(JointPR)
         dJointSetPRParam(jId, dParamLoStop2, -M_PI);
         dJointSetPRParam(jId, dParamHiStop2, M_PI);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -782,7 +782,7 @@ SUITE(JointPR)
 
         dBodySetPosition(bId2, 0, -100, 0);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(2, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -791,7 +791,7 @@ SUITE(JointPR)
 
         dBodySetPosition(bId2, 0, 100, 0);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -805,7 +805,7 @@ SUITE(JointPR)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -836,7 +836,7 @@ SUITE(JointPR)
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(1, joint->limotR.limit);
@@ -850,7 +850,7 @@ SUITE(JointPR)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -1311,7 +1311,7 @@ SUITE(JointPU)
         dJointSetPUParam(jId, dParamLoStop3, -dInfinity);
         dJointSetPUParam(jId, dParamHiStop3,  dInfinity);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1334,7 +1334,7 @@ SUITE(JointPU)
 
         dBodySetPosition(bId2, REAL(-100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
 
         CHECK_EQUAL(0, joint->limot1.limit);
@@ -1345,7 +1345,7 @@ SUITE(JointPU)
 
         dBodySetPosition(bId2, REAL(100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1360,7 +1360,7 @@ SUITE(JointPU)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
 
         CHECK_EQUAL(0, joint->limot1.limit);
@@ -1391,7 +1391,7 @@ SUITE(JointPU)
         dRFromAxisAndAngle (R, 0, 1, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1406,7 +1406,7 @@ SUITE(JointPU)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1439,7 +1439,7 @@ SUITE(JointPU)
         dRFromAxisAndAngle (R, 0, 1, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1456,7 +1456,7 @@ SUITE(JointPU)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1550,7 +1550,7 @@ SUITE(JointPU)
         dJointSetPUParam(jId, dParamLoStop3, -dInfinity);
         dJointSetPUParam(jId, dParamHiStop3,  dInfinity);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1573,7 +1573,7 @@ SUITE(JointPU)
 
         dBodySetPosition(bId2, REAL(-100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
 
         CHECK_EQUAL(0, joint->limot1.limit);
@@ -1584,7 +1584,7 @@ SUITE(JointPU)
 
         dBodySetPosition(bId2, REAL(100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1599,7 +1599,7 @@ SUITE(JointPU)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
 
         CHECK_EQUAL(0, joint->limot1.limit);
@@ -1630,7 +1630,7 @@ SUITE(JointPU)
         dRFromAxisAndAngle (R, 0, 1, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1645,7 +1645,7 @@ SUITE(JointPU)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1678,7 +1678,7 @@ SUITE(JointPU)
         dRFromAxisAndAngle (R, 0, 1, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -1695,7 +1695,7 @@ SUITE(JointPU)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limot1.limit);
         CHECK_EQUAL(0, joint->limot2.limit);
@@ -2202,7 +2202,7 @@ SUITE(JointPiston)
         dJointSetPistonParam(jId, dParamLoStop2, -M_PI);
         dJointSetPistonParam(jId, dParamHiStop2 , M_PI);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2224,7 +2224,7 @@ SUITE(JointPiston)
 
         dBodySetPosition(bId2, REAL(-100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(2, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2233,7 +2233,7 @@ SUITE(JointPiston)
 
         dBodySetPosition(bId2, REAL(100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotR.limit);
         CHECK_EQUAL(1, joint->limotP.limit);
@@ -2247,7 +2247,7 @@ SUITE(JointPiston)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
 
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2273,7 +2273,7 @@ SUITE(JointPiston)
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limotR.limit);
         CHECK_EQUAL(0, joint->limotP.limit);
@@ -2286,7 +2286,7 @@ SUITE(JointPiston)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotR.limit);
         CHECK_EQUAL(0, joint->limotP.limit);
@@ -2315,7 +2315,7 @@ SUITE(JointPiston)
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(2, joint->limotP.limit);
         CHECK_EQUAL(1, joint->limotR.limit);
@@ -2331,7 +2331,7 @@ SUITE(JointPiston)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2422,7 +2422,7 @@ SUITE(JointPiston)
         dJointSetPistonParam(jId, dParamHiStop2,  M_PI);
 
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2443,7 +2443,7 @@ SUITE(JointPiston)
 
         dBodySetPosition(bId2, REAL(-100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(2, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2452,7 +2452,7 @@ SUITE(JointPiston)
 
         dBodySetPosition(bId2, REAL(100.0), REAL(0.0), REAL(0.0));
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(1, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2466,7 +2466,7 @@ SUITE(JointPiston)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2491,7 +2491,7 @@ SUITE(JointPiston)
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(1, joint->limotR.limit);
@@ -2504,7 +2504,7 @@ SUITE(JointPiston)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);
@@ -2534,7 +2534,7 @@ SUITE(JointPiston)
         dRFromAxisAndAngle (R, 1, 0, 0, M_PI/2.0);
         dBodySetRotation (bId2, R);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(2, joint->limotP.limit);
         CHECK_EQUAL(1, joint->limotR.limit);
@@ -2550,7 +2550,7 @@ SUITE(JointPiston)
                            };
         dBodySetRotation (bId2, R_final);
 
-        joint->getInfo1(&info);
+        joint->getInfo1(&info, 0);
 
         CHECK_EQUAL(0, joint->limotP.limit);
         CHECK_EQUAL(0, joint->limotR.limit);

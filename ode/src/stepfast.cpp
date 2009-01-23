@@ -684,7 +684,7 @@ dInternalStepIslandFast (dxWorld * world, dxBody * const *bodies, int nb, dxJoin
 	int *ofs = (int *) ALLOCA (nj * sizeof (int));
 	for (i = 0, j = 0; j < nj; j++)
 	{	// i=dest, j=src
-		joints[j]->getInfo1 (info + i);
+                joints[j]->getInfo1 (info + i, stepsize);
 		dIASSERT (info[i].m >= 0 && info[i].m <= 6 && info[i].nub >= 0 && info[i].nub <= info[i].m);
 		if (info[i].m > 0)
 		{

@@ -31,6 +31,8 @@
 dxJointHinge::dxJointHinge( dxWorld *w ) :
         dxJoint( w )
 {
+    prevAngle = 0.0;
+
     dSetZero( anchor1, 4 );
     dSetZero( anchor2, 4 );
     dSetZero( axis1, 4 );
@@ -43,7 +45,7 @@ dxJointHinge::dxJointHinge( dxWorld *w ) :
 
 
 void
-dxJointHinge::getInfo1( dxJoint::Info1 *info )
+dxJointHinge::getInfo1( dxJoint::Info1 *info, dReal stepsize )
 {
     info->nub = 5;
 
@@ -56,12 +58,14 @@ dxJointHinge::getInfo1( dxJoint::Info1 *info )
     if (( limot.lostop >= -M_PI || limot.histop <= M_PI ) &&
             limot.lostop <= limot.histop )
     {
-        dReal angle = getHingeAngle( node[0].body,
-                                     node[1].body,
-                                     axis1, qrel );
-        if ( limot.testRotationalLimit( angle ) )
+        dReal angle = getHingeAngle( node[0].body, node[1].body, axis1, qrel );
+        dReal rate  =  dJointGetHingeAngleRate(this);
+        if ( limot.testRotationalLimit( prevAngle,  &angle, rate, stepsize) )
             info->m = 6;
+        prevAngle = angle;
     }
+    else
+        prevAngle = getHingeAngle( node[0].body, node[1].body, axis1, qrel );
 }
 
 
@@ -219,6 +223,9 @@ void dJointSetHingeAxisOffset( dJointID j, dReal x, dReal y, dReal z, dReal dang
     joint->qrel[1] = qOffset[1];
     joint->qrel[2] = qOffset[2];
     joint->qrel[3] = qOffset[3];
+
+    joint->prevAngle = getHingeAngle( joint->node[0].body, joint->node[1].body,
+                                      joint->axis1, joint->qrel );
 }
 
 
@@ -384,5 +391,7 @@ dxJointHinge::computeInitialRelativeRotation()
             qrel[3] = -node[0].body->q[3];
         }
     }
+
+    prevAngle = getHingeAngle( node[0].body, node[1].body, axis1, qrel );
 }
 

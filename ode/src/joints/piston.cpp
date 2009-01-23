@@ -171,7 +171,7 @@ dReal dJointGetPistonAngleRate ( dJointID j )
 
 
 void
-dxJointPiston::getInfo1 ( dxJoint::Info1 *info )
+dxJointPiston::getInfo1 ( dxJoint::Info1 *info, dReal )
 {
     info->nub = 4; // Number of unbound variables
     // The only bound variable is one linear displacement
@@ -185,7 +185,7 @@ dxJointPiston::getInfo1 ( dxJoint::Info1 *info )
     {
         // measure joint position
         dReal pos = dJointGetPistonPosition ( this );
-        limotP.testRotationalLimit ( pos );     // N.B. The fucntion is ill named
+        limotP.testLimit ( pos );
     }
 
     // powered Piston or at limits needs an extra constraint row
@@ -200,7 +200,7 @@ dxJointPiston::getInfo1 ( dxJoint::Info1 *info )
         // measure joint position
         dReal angle = getHingeAngle ( node[0].body, node[1].body, axis1,
                                       qrel );
-        limotR.testRotationalLimit ( angle );
+        limotR.testLimit ( angle );
     }
 
     // powered Piston or at limits needs an extra constraint row

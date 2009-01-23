@@ -203,7 +203,7 @@ dReal dJointGetPUPositionRate( dJointID j )
 
 
 void
-dxJointPU::getInfo1( dxJoint::Info1 *info )
+dxJointPU::getInfo1( dxJoint::Info1 *info, dReal stepsize )
 {
     info->m = 3;
     info->nub = 3;
@@ -217,7 +217,7 @@ dxJointPU::getInfo1( dxJoint::Info1 *info )
     {
         // measure joint position
         dReal pos = dJointGetPUPosition( this );
-        limotP.testRotationalLimit( pos );  // N.B. The function is ill named
+        limotP.testLimit( pos );
     }
 
     if ( limotP.limit || limotP.fmax > 0 ) info->m++;
@@ -237,9 +237,9 @@ dxJointPU::getInfo1( dxJoint::Info1 *info )
         dReal angle1, angle2;
         getAngles( &angle1, &angle2 );
         if ( limiting1 )
-            limot1.testRotationalLimit( angle1 );
+            limot1.testLimit( angle1 );
         if ( limiting2 )
-            limot2.testRotationalLimit( angle2 );
+            limot2.testLimit( angle2 );
     }
 
     if ( limot1.limit || limot1.fmax > 0 ) info->m++;

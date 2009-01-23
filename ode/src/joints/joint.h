@@ -120,7 +120,7 @@ struct dxJoint : public dObject
     dxJoint( dxWorld *w );
     virtual ~dxJoint();
 
-    virtual void getInfo1( Info1* info ) = 0;
+    virtual void getInfo1( Info1* info, dReal stepsize = -dInfinity ) = 0;
     virtual void getInfo2( Info2* info ) = 0;
     virtual dJointType type() const = 0;
     virtual size_t size() const = 0;
@@ -161,7 +161,8 @@ struct dxJointLimitMotor
     void init( dxWorld * );
     void set( int num, dReal value );
     dReal get( int num );
-    int testRotationalLimit( dReal angle );
+    int testLimit( dReal value );
+    int testRotationalLimit( dReal prevAngle, dReal *angle, dReal rate, dReal stepsize);
     int addLimot( dxJoint *joint, dxJoint::Info2 *info, int row,
                   const dVector3 ax1, int rotational );
 };

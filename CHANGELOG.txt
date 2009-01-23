@@ -10,6 +10,13 @@ the rules for this file:
 ------------------------------------------------------------------------------
 
 01/23/09 Remi Ricard (papaDoc)
+         * Start the implementation of a better testRotationalLimit
+         * Rename testRotationalLimit to testLimit
+         * Add new function testRotationalLimit, change  getInfo API
+         * Hinge now use the new testRotationalLimit
+         * Add unit test
+
+01/23/09 Remi Ricard (papaDoc)
          * Add new function dJointSetUniversalAxis1Offset and dJointSetUniversalAxis2Offset
          * Add unittest for those funcitons.
 

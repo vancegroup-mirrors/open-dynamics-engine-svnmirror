@@ -38,7 +38,7 @@ dxJointBall::dxJointBall( dxWorld *w ) :
 
 
 void
-dxJointBall::getInfo1( dxJoint::Info1 *info )
+dxJointBall::getInfo1( dxJoint::Info1 *info,  dReal )
 {
     info->m = 3;
     info->nub = 3;

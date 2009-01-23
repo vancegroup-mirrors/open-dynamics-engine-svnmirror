@@ -40,7 +40,7 @@ dxJointFixed::dxJointFixed ( dxWorld *w ) :
 
 
 void
-dxJointFixed::getInfo1 ( dxJoint::Info1 *info )
+dxJointFixed::getInfo1 ( dxJoint::Info1 *info, dReal )
 {
     info->m = 6;
     info->nub = 6;

@@ -34,7 +34,7 @@ dxJointNull::dxJointNull( dxWorld *w ) :
 }
 
 void
-dxJointNull::getInfo1( dxJoint::Info1 *info )
+dxJointNull::getInfo1( dxJoint::Info1 *info, dReal )
 {
     info->m = 0;
     info->nub = 0;

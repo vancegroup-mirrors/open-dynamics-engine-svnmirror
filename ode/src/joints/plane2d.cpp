@@ -61,7 +61,7 @@ dxJointPlane2D::dxJointPlane2D( dxWorld *w ) :
 
 
 void
-dxJointPlane2D::getInfo1( dxJoint::Info1 *info )
+dxJointPlane2D::getInfo1( dxJoint::Info1 *info, dReal )
 {
     info->nub = 3;
     info->m = 3;

@@ -254,7 +254,7 @@ dxJointUniversal::getAngle2()
 
 
 void
-dxJointUniversal::getInfo1( dxJoint::Info1 *info )
+dxJointUniversal::getInfo1( dxJoint::Info1 *info, dReal stepsize )
 {
     info->nub = 4;
     info->m = 4;
@@ -274,9 +274,9 @@ dxJointUniversal::getInfo1( dxJoint::Info1 *info )
         dReal angle1, angle2;
         getAngles( &angle1, &angle2 );
         if ( limiting1 )
-            limot1.testRotationalLimit( angle1 );
+            limot1.testLimit( angle1 );
         if ( limiting2 )
-            limot2.testRotationalLimit( angle2 );
+            limot2.testLimit( angle2 );
     }
 
     if ( limot1.limit || limot1.fmax > 0 ) info->m++;

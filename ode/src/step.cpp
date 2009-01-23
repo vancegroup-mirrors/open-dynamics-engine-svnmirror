@@ -336,7 +336,7 @@ void dInternalStepIsland_x1 (dxWorld *world, dxBody * const *body, int nb,
   ALLOCA(int,ofs,nj*sizeof(int));
 
   for (i=0, j=0; j<nj; j++) {	// i=dest, j=src
-    joint[j]->getInfo1 (info+i);
+    joint[j]->getInfo1 (info+i, stepsize);
     dIASSERT (info[i].m >= 0 && info[i].m <= 6 &&
 	      info[i].nub >= 0 && info[i].nub <= info[i].m);
     if (info[i].m > 0) {
@@ -681,7 +681,7 @@ void dInternalStepIsland_x2 (dxWorld *world, dxBody * const *body, int nb,
   ALLOCA(dxJoint::Info1,info,nj*sizeof(dxJoint::Info1));
   ALLOCA(int,ofs,nj*sizeof(int));
   for (i=0, j=0; j<nj; j++) {	// i=dest, j=src
-    joint[j]->getInfo1 (info+i);
+    joint[j]->getInfo1 (info+i, stepsize);
     dIASSERT (info[i].m >= 0 && info[i].m <= 6 &&
 	      info[i].nub >= 0 && info[i].nub <= info[i].m);
     if (info[i].m > 0) {

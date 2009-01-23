@@ -181,7 +181,7 @@ dxJointAMotor::setEulerReferenceVectors()
 
 
 void
-dxJointAMotor::getInfo1( dxJoint::Info1 *info )
+dxJointAMotor::getInfo1( dxJoint::Info1 *info, dReal )
 {
     info->m = 0;
     info->nub = 0;
@@ -197,8 +197,7 @@ dxJointAMotor::getInfo1( dxJoint::Info1 *info )
     // see if we're powered or at a joint limit for each axis
     for ( int i = 0; i < num; i++ )
     {
-        if ( limot[i].testRotationalLimit( angle[i] ) ||
-                limot[i].fmax > 0 )
+        if ( limot[i].testLimit( angle[i] ) || limot[i].fmax > 0 )
         {
             info->m++;
         }

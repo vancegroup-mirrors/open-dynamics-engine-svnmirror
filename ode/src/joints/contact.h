@@ -33,7 +33,7 @@ struct dxJointContact : public dxJoint
     dContact contact;
 
     dxJointContact( dxWorld* w );
-    virtual void getInfo1( Info1* info );
+    virtual void getInfo1( Info1* info, dReal );
     virtual void getInfo2( Info2* info );
     virtual dJointType type() const;
     virtual size_t size() const;

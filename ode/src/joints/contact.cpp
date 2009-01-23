@@ -36,7 +36,7 @@ dxJointContact::dxJointContact( dxWorld *w ) :
 
 
 void
-dxJointContact::getInfo1( dxJoint::Info1 *info )
+dxJointContact::getInfo1( dxJoint::Info1 *info, dReal )
 {
     // make sure mu's >= 0, then calculate number of constraint rows and number
     // of unbounded rows.

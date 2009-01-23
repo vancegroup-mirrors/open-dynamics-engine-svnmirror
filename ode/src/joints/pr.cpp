@@ -176,7 +176,7 @@ dReal dJointGetPRAngleRate( dJointID j )
 
 
 void
-dxJointPR::getInfo1( dxJoint::Info1 *info )
+dxJointPR::getInfo1( dxJoint::Info1 *info, dReal )
 {
     info->nub = 4;
     info->m = 4;
@@ -189,7 +189,7 @@ dxJointPR::getInfo1( dxJoint::Info1 *info )
     {
         // measure joint position
         dReal pos = dJointGetPRPosition( this );
-        limotP.testRotationalLimit( pos );  // N.B. The function is ill named
+        limotP.testLimit( pos );
     }
 
     // powered needs an extra constraint row
@@ -204,7 +204,7 @@ dxJointPR::getInfo1( dxJoint::Info1 *info )
         dReal angle = getHingeAngle( node[0].body,
                                      node[1].body,
                                      axisR1, qrel );
-        limotR.testRotationalLimit( angle );
+        limotR.testLimit( angle );
     }
 
     // powered morit or at limits needs an extra constraint row

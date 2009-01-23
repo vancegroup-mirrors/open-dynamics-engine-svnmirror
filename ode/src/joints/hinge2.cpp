@@ -70,7 +70,7 @@ dxJointHinge2::dxJointHinge2( dxWorld *w ) :
 
 
 void
-dxJointHinge2::getInfo1( dxJoint::Info1 *info )
+dxJointHinge2::getInfo1( dxJoint::Info1 *info, dReal )
 {
     info->m = 4;
     info->nub = 4;
@@ -81,7 +81,7 @@ dxJointHinge2::getInfo1( dxJoint::Info1 *info )
             limot1.lostop <= limot1.histop )
     {
         dReal angle = measureAngle();
-        limot1.testRotationalLimit( angle );
+        limot1.testLimit( angle );
     }
     if ( limot1.limit || limot1.fmax > 0 ) info->m++;
 

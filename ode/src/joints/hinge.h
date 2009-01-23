@@ -30,6 +30,8 @@
 
 struct dxJointHinge : public dxJoint
 {
+    dReal prevAngle;    ///< The previous joint angle
+
     dVector3 anchor1;   // anchor w.r.t first body
     dVector3 anchor2;   // anchor w.r.t second body
     dVector3 axis1;     // axis w.r.t first body
@@ -38,7 +40,7 @@ struct dxJointHinge : public dxJoint
     dxJointLimitMotor limot; // limit and motor information
 
     dxJointHinge( dxWorld *w );
-    virtual void getInfo1( Info1* info );
+    virtual void getInfo1( Info1* info, dReal stepsize );
     virtual void getInfo2( Info2* info );
     virtual dJointType type() const;
     virtual size_t size() const;

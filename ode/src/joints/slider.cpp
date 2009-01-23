@@ -105,7 +105,7 @@ dReal dJointGetSliderPositionRate ( dJointID j )
 
 
 void
-dxJointSlider::getInfo1 ( dxJoint::Info1 *info )
+dxJointSlider::getInfo1 ( dxJoint::Info1 *info, dReal )
 {
     info->nub = 5;
 

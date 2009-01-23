@@ -519,18 +519,24 @@ dReal dxJointLimitMotor::get( int num )
 }
 
 
-int dxJointLimitMotor::testRotationalLimit( dReal angle )
+/**
+ * \brief Test where the value is situated with respect to joint limits.
+ *
+ * \retval 1 The value is outside the limits
+ * \retval 0 The value is inside the limits
+ */
+int dxJointLimitMotor::testLimit( dReal value )
 {
-    if ( angle <= lostop )
+    if ( value <= lostop )
     {
         limit = 1;
-        limit_err = angle - lostop;
+        limit_err = value - lostop;
         return 1;
     }
-    else if ( angle >= histop )
+    else if ( value >= histop )
     {
         limit = 2;
-        limit_err = angle - histop;
+        limit_err = value - histop;
         return 1;
     }
     else
@@ -539,6 +545,51 @@ int dxJointLimitMotor::testRotationalLimit( dReal angle )
         return 0;
     }
 }
+
+/**
+ * \brief Test where the angle is situated with respect to joint limits.
+ *
+ * The wrapping of the angle is taken into account
+ *
+ * \retval 1 The value is outside the limits
+ * \retval 0 The value is inside the limits
+ */
+int dxJointLimitMotor::testRotationalLimit( dReal prevAngle, dReal *angle, dReal rate , dReal stepsize)
+{
+    if ( rate > 0 )
+    {
+        dReal diff =  *angle - prevAngle;
+        // The angle value must have increase
+        if ( diff < 0 )
+        {
+            // A wrap around occured, undo it to get the good limit crossing
+            *angle += 2*M_PI;
+        }
+        else if ( diff > (rate*stepsize) )
+        {
+            *angle -= 2*M_PI;
+        }
+
+    }
+    else if ( rate < 0 )
+    {
+        dReal diff = *angle - prevAngle;
+
+        // The angle value must have decrease
+        if ( diff > 0 )
+        {
+            // A wrap around occured, undo it to get the good limit crossing
+            *angle -= 2*M_PI;
+        }
+        else if (diff < (rate*stepsize) )
+        {
+            *angle += 2*M_PI;
+        }
+    }
+
+    return testLimit(*angle);
+}
+
 
 
 int dxJointLimitMotor::addLimot( dxJoint *joint,
@@ -612,7 +663,7 @@ int dxJointLimitMotor::addLimot( dxJoint *joint,
                 // being powered into the limit then we apply the maximum motor force
                 // in that direction, because the motor is working against the
                 // immovable limit. if the joint is being powered away from the limit
-                // then we have problems because actually we need *two* lcp
+                // then we be problems because actually we need *two* lcp
                 // constraints to handle this case. so we fake it and apply some
                 // fraction of the maximum force. the fraction to use can be set as
                 // a fudge factor.

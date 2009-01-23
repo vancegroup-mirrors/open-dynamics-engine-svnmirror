@@ -65,7 +65,7 @@ dxJointLMotor::computeGlobalAxes( dVector3 ax[3] )
 }
 
 void
-dxJointLMotor::getInfo1( dxJoint::Info1 *info )
+dxJointLMotor::getInfo1( dxJoint::Info1 *info, dReal )
 {
     info->m = 0;
     info->nub = 0;
