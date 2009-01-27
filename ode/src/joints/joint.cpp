@@ -66,7 +66,7 @@ bool dxJoint::isEnabled() const
 {
     return ( (flags & dJOINT_DISABLED) == 0 &&
              (node[0].body->invMass > 0 ||
-             (node[1].body && node[1].body->invMass > 0)) );
+              (node[1].body && node[1].body->invMass > 0)) );
 }
 
 //****************************************************************************
@@ -549,27 +549,41 @@ int dxJointLimitMotor::testLimit( dReal value )
 /**
  * \brief Test where the angle is situated with respect to joint limits.
  *
- * The wrapping of the angle is taken into account
+ * This function also test for any angle wrapping by comparing the actual
+ * value with respect to the previous value in relation with the rate of
+ * the joint. if the value does not was a wrapping is suspected and the
+ * angle value is modified.
+ *
+ * @param prevAngle The previous angle (from the previous step).
+ * @param angle     The current angle of the joint. N.B. This value can change.
+ * @param rate      The rate of the joint
+ * @param stepsize  The time step size used by the stepping function
  *
  * \retval 1 The value is outside the limits
  * \retval 0 The value is inside the limits
  */
-int dxJointLimitMotor::testRotationalLimit( dReal prevAngle, dReal *angle, dReal rate , dReal stepsize)
+int dxJointLimitMotor::testRotationalLimit( dReal prevAngle, dReal *angle,
+        dReal rate , dReal stepsize)
 {
     if ( rate > 0 )
     {
-        dReal diff =  *angle - prevAngle;
+        dReal diff = *angle - prevAngle;
         // The angle value must have increase
         if ( diff < 0 )
         {
             // A wrap around occured, undo it to get the good limit crossing
             *angle += 2*M_PI;
         }
-        else if ( diff > (rate*stepsize) )
+        else
         {
-            *angle -= 2*M_PI;
+            // If a wrapping occured the difference will be of 2*M_PI
+            // so an epsilon of 0.25*PI was added for any possible
+            // round off or numerical error.
+            if ( diff > ((rate*stepsize) + REAL(0.25)*M_PI) )
+            {
+                *angle -= 2*M_PI;
+            }
         }
-
     }
     else if ( rate < 0 )
     {
@@ -581,10 +595,17 @@ int dxJointLimitMotor::testRotationalLimit( dReal prevAngle, dReal *angle, dReal
             // A wrap around occured, undo it to get the good limit crossing
             *angle -= 2*M_PI;
         }
-        else if (diff < (rate*stepsize) )
+        else
         {
-            *angle += 2*M_PI;
+            // If a wrapping occured the difference will be of 2*M_PI
+            // so an epsilon of 0.25*PI was added for any possible
+            // round off or numerical error.
+            if (diff < ((rate*stepsize)  - REAL(0.25)*M_PI) )
+            {
+                *angle += 2*M_PI;
+            }
         }
+
     }
 
     return testLimit(*angle);

@@ -9,6 +9,11 @@ the rules for this file:
 
 ------------------------------------------------------------------------------
 
+01/27/09 Remi Ricard (papaDoc)
+         * Add an epsilon to the testRotationalLimit to avoid round off error
+           or numerical error.
+         * Add an unittest which had a numerical error in the angle value.
+
 01/23/09 Remi Ricard (papaDoc)
          * Start the implementation of a better testRotationalLimit
          * Rename testRotationalLimit to testLimit
