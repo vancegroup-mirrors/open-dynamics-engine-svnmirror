@@ -9,6 +9,14 @@ the rules for this file:
 
 ------------------------------------------------------------------------------
 
+01/29/09 Remi Ricard (papaDoc)
+        * Fix bug: Fix problem when attaching no body to a joint. Before calling
+          setRelativeValues a check is made for bodies.
+        * Add an epsilon to the testRotationalLimit to avoid round off error
+          or numerical error when the diff is not in the same direction as the rate.
+        * Remove compilation warning
+        * Add unittest
+
 01/27/09 Remi Ricard (papaDoc)
          * Add an epsilon to the testRotationalLimit to avoid round off error
            or numerical error.

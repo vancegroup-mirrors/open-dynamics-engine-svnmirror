@@ -569,7 +569,7 @@ int dxJointLimitMotor::testRotationalLimit( dReal prevAngle, dReal *angle,
     {
         dReal diff = *angle - prevAngle;
         // The angle value must have increase
-        if ( diff < 0 )
+        if ( diff < -(REAL(0.25)*M_PI) )
         {
             // A wrap around occured, undo it to get the good limit crossing
             *angle += 2*M_PI;
@@ -590,7 +590,7 @@ int dxJointLimitMotor::testRotationalLimit( dReal prevAngle, dReal *angle,
         dReal diff = *angle - prevAngle;
 
         // The angle value must have decrease
-        if ( diff > 0 )
+        if ( diff > (REAL(0.25)*M_PI) )
         {
             // A wrap around occured, undo it to get the good limit crossing
             *angle -= 2*M_PI;

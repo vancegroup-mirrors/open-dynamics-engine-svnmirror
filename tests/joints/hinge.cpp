@@ -1301,18 +1301,18 @@ SUITE (TestdxJointHinge)
 
             bId1 = dBodyCreate (wId);
             dBodySetMass (bId1,&m);
-            dBodySetPosition (bId1, 0.5*SIDE, 0.5*SIDE, 1);
+            dBodySetPosition (bId1, REAL(0.5)*SIDE, REAL(0.5)*SIDE, 1);
             dBodySetQuaternion (bId1,q);
 
             bId2 = dBodyCreate (wId);
             dBodySetMass (bId2,&m);
-            dBodySetPosition (bId2,-0.5*SIDE,-0.5*SIDE,1);
+            dBodySetPosition (bId2,-REAL(0.5)*SIDE,-REAL(0.5)*SIDE,1);
             dBodySetQuaternion (bId2,q);
 
             jId = dJointCreateHinge (wId, 0);
             dJointAttach (jId, bId1, bId2);
             dJointSetHingeAnchor (jId, 0, 0, 1);
-            dJointSetHingeAxis (jId, 1, -1, 1.41421356);
+            dJointSetHingeAxis (jId, 1, -1, REAL(1.41421356));
         }
 
         ~dxJointHinge_Fixture_as_demo_hinge()
@@ -1320,15 +1320,18 @@ SUITE (TestdxJointHinge)
             dWorldDestroy (wId);
         }
 
+		void 
         simLoop()
         {
-            const dReal kd = -0.3;        // angular damping constant
+            const dReal kd = -REAL(0.3);        // angular damping constant
 
             static dReal a=0;
             const dReal *w = dBodyGetAngularVel (bId1);
-            dBodyAddTorque (bId1,kd*w[0],kd*w[1]+0.1*cos(a),kd*w[2]+0.1*sin(a));
+            dBodyAddTorque (bId1, kd*w[0], 
+					kd*w[1] + REAL(0.1)*cos(a), 
+					kd*w[2] + REAL(0.1)*sin(a));
             dWorldStep (wId, 0.05);
-            a += 0.01;
+            a += REAL(0.01);
         }
 
 
@@ -1355,13 +1358,11 @@ SUITE (TestdxJointHinge)
 
         CHECK_CLOSE (0, r2d(dJointGetHingeAngle(jId)), 1e-4);
 
-        dxJointHinge_Fixture_as_demo_hinge::simLoop();
-
-        CHECK_CLOSE (0, r2d(dJointGetHingeAngle (jId)), 1e-4);
-
-        dxJointHinge_Fixture_as_demo_hinge::simLoop();
-
-        CHECK_CLOSE (0, r2d(dJointGetHingeAngle (jId)), 1e-4);
+        for (int i=0; i < 300; ++i)
+        {
+            dxJointHinge_Fixture_as_demo_hinge::simLoop();
+            CHECK_CLOSE (0, r2d(dJointGetHingeAngle (jId)), 1e-4);
+        }
     }
 
 
