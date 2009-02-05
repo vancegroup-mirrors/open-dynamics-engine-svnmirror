@@ -1380,10 +1380,7 @@ void dJointAttach (dxJoint *joint, dxBody *body1, dxBody *body2)
     joint->node[1].next = body1->firstjoint;
     body1->firstjoint = &joint->node[1];
   }
-  else {
-      joint->node[1].next = 0;
-  }
-
+  else joint->node[1].next = 0;
   if (body2) {
     joint->node[0].next = body2->firstjoint;
     body2->firstjoint = &joint->node[0];
@@ -1396,7 +1393,7 @@ void dJointAttach (dxJoint *joint, dxBody *body1, dxBody *body2)
   // Calculate the values depending on the bodies.
   // Only need to calculate relative value if a body exist
   if (body1 || body2)
-      joint->setRelativeValues();
+    joint->setRelativeValues();
 }
 
 void dJointEnable (dxJoint *joint)
