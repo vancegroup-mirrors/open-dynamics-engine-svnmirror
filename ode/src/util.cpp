@@ -27,6 +27,15 @@
 #include "util.h"
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/bind.hpp>
+#include <ode/timer.h>
+
+#undef REPORT_THREAD_TIMING
+#undef TIMING
+#ifdef TIMING
+#define IFTIMING(x) x
+#else
+#define IFTIMING(x) ((void)0)
+#endif
 
 static void InternalFreeWorldProcessContext (dxWorldProcessContext *context);
 
@@ -563,12 +572,25 @@ void dxProcessOneIsland(dxWorldProcessContext *context,dxWorldProcessContext *is
                         dxJoint *const *jointstart,
                         int jcount)
 {
-    dAllocateODEDataForThread(dAllocateMaskAll);
+    #ifdef REPORT_THREAD_TIMING
+    struct timeval tv;
+    double cur_time;
+    gettimeofday(&tv,NULL);
+    cur_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+    //printf("island thread started time %f\n",cur_time);
+    #endif
 
+    //dAllocateODEDataForThread(dAllocateMaskAll);
     BEGIN_STATE_SAVE(island_context, island_stepperstate) {
       stepper (context,island_context,world,bodystart,bcount,jointstart,jcount,stepsize);
     } END_STATE_SAVE(island_context, island_stepperstate);
-    dCleanupODEAllDataForThread();
+    //dCleanupODEAllDataForThread();
+
+    #ifdef REPORT_THREAD_TIMING
+    gettimeofday(&tv,NULL);
+    double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+    printf("----- island thread start time %f ended at time %f with duration %f\n",cur_time,end_time,end_time - cur_time);
+    #endif
 }
 
 void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
@@ -590,8 +612,22 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
   dxBody *const *bodystart = body;
   dxJoint *const *jointstart = joint;
 
+  IFTIMING(dTimerStart("preprocessing islands"));
   int island_index = 0;
   int const *const sizesend = islandsizes + islandcount * sizeelements;
+
+
+
+  #ifdef REPORT_THREAD_TIMING
+  struct timeval tv;
+  double cur_time;
+  gettimeofday(&tv,NULL);
+  cur_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+  printf(">>>>>>>>>>>> start island spawn threads at time %f\n",cur_time);
+  #endif
+
+
+
   for (int const *sizescurr = islandsizes; sizescurr != sizesend; sizescurr += sizeelements) {
     int bcount = sizescurr[0];
     int jcount = sizescurr[1];
@@ -603,9 +639,13 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
     dIASSERT(island_wmem != NULL);
     dxWorldProcessContext *island_context = island_wmem->GetWorldProcessingContext();
 
-#define TPOOLISLAND
-#ifdef TPOOLISLAND
-    world->threadpool->schedule(boost::bind(dxProcessOneIsland,context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount));
+#define USE_TPISLAND
+#ifdef USE_TPISLAND
+    IFTIMING(dTimerNow("scheduling island"));
+    if (world->threadpool->size() > 1)
+      world->threadpool->schedule(boost::bind(dxProcessOneIsland,context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount));
+    else //automatically skip threadpool if only 1 thread allocated
+      dxProcessOneIsland(context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
 #else
     dxProcessOneIsland(context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
 #endif
@@ -613,7 +653,20 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
     bodystart += bcount;
     jointstart += jcount;
   }
-  world->threadpool->wait();
+#ifdef USE_TPISLAND
+  IFTIMING(dTimerNow("islands wait"));
+  if (world->threadpool->size() > 1)
+    world->threadpool->wait();
+#endif
+  IFTIMING(dTimerEnd());
+  IFTIMING(dTimerReport (stdout,1));
+
+
+  #ifdef REPORT_THREAD_TIMING
+  gettimeofday(&tv,NULL);
+  double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+  printf("<<<<<<<<<<<< all island threads stopped at time %f with duration %f\n",end_time,end_time - cur_time);
+  #endif
 
   for (int jj=0; jj < islandcount; jj++)
     world->island_wmems[jj]->GetWorldProcessingContext()->CleanupContext();
