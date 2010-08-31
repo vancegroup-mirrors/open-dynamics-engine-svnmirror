@@ -1572,6 +1572,10 @@ dxWorld * dWorldCreate()
   w->body_flags = 0; // everything disabled
 
   w->wmem = 0;
+  for (int jj=0; jj < 1000; jj++)
+  {
+    w->island_wmems[jj] = 0;
+  }
 
   w->adis.idle_steps = 10;
   w->adis.idle_time = 0;
@@ -1590,6 +1594,8 @@ dxWorld * dWorldCreate()
   w->dampingp.linear_threshold = REAL(0.01) * REAL(0.01);
   w->dampingp.angular_threshold = REAL(0.01) * REAL(0.01);  
   w->max_angular_speed = dInfinity;
+
+  w->threadpool = new boost::threadpool::pool(4);
 
   return w;
 }
@@ -1629,6 +1635,8 @@ void dWorldDestroy (dxWorld *w)
   if (w->wmem) {
     w->wmem->Release();
   }
+
+  delete w->threadpool;
 
   delete w;
 }

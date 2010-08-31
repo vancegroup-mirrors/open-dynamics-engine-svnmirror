@@ -899,8 +899,7 @@ void dInternalStepIsland_x2 (dxWorldProcessContext *context,
 }
 
 //****************************************************************************
-
-void dInternalStepIsland (dxWorldProcessContext *context, 
+void dInternalStepIsland (dxWorldProcessContext *shared_context, dxWorldProcessContext *context, 
                           dxWorld *world, dxBody * const *body, int nb,
                           dxJoint * const *joint, int nj, dReal stepsize)
 {

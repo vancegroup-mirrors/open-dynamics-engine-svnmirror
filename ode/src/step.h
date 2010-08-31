@@ -28,7 +28,7 @@
 size_t dxEstimateStepMemoryRequirements (
   dxBody * const *body, int nb, dxJoint * const *_joint, int _nj);
 
-void dInternalStepIsland (dxWorldProcessContext *context, dxWorld *world,
+void dInternalStepIsland (dxWorldProcessContext *shared_context,dxWorldProcessContext *context, dxWorld *world,
 			  dxBody * const *body, int nb,
 			  dxJoint * const *joint, int nj,
 			  dReal stepsize);

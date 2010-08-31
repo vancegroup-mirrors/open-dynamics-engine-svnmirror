@@ -731,7 +731,7 @@ struct dJointWithInfo1
   dxJoint::Info1 info;
 };
 
-void dxQuickStepper (dxWorldProcessContext *context, 
+void dxQuickStepper (dxWorldProcessContext *shared_context,dxWorldProcessContext *context, 
   dxWorld *world, dxBody * const *body, int nb,
   dxJoint * const *_joint, int _nj, dReal stepsize)
 {
@@ -981,9 +981,9 @@ void dxQuickStepper (dxWorldProcessContext *context,
         // format:
         //
         //   l1 l1 l1 a1 a1 a1 l2 l2 l2 a2 a2 a2 \    .
-        //   l1 l1 l1 a1 a1 a1 l2 l2 l2 a2 a2 a2  }-- jacobian for joint 0, body 1 and body 2 (3 rows)
+        //   l1 l1 l1 a1 a1 a1 l2 l2 l2 a2 a2 a2  )-- jacobian for joint 0, body 1 and body 2 (3 rows)
         //   l1 l1 l1 a1 a1 a1 l2 l2 l2 a2 a2 a2 /
-        //   l1 l1 l1 a1 a1 a1 l2 l2 l2 a2 a2 a2 }--- jacobian for joint 1, body 1 and body 2 (3 rows)
+        //   l1 l1 l1 a1 a1 a1 l2 l2 l2 a2 a2 a2 )--- jacobian for joint 1, body 1 and body 2 (3 rows)
         //   etc...
         //
         //   (lll) = linear jacobian data

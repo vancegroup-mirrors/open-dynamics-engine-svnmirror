@@ -25,6 +25,8 @@
 #include "objects.h"
 #include "joints/joint.h"
 #include "util.h"
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/bind.hpp>
 
 static void InternalFreeWorldProcessContext (dxWorldProcessContext *context);
 
@@ -45,17 +47,19 @@ void dxWorldProcessContext::CleanupContext()
   FreePreallocationsContext();
 }
 
-void dxWorldProcessContext::SavePreallocations(int islandcount, int const *islandsizes, dxBody *const *bodies, dxJoint *const *joints)
+void dxWorldProcessContext::SavePreallocations(int islandcount, int const *islandsizes, dxBody *const *bodies, dxJoint *const *joints, size_t const *islandreqs)
 {
   m_IslandCount = islandcount;
+  m_pIslandReqs = islandreqs;
   m_pIslandSizes = islandsizes;
   m_pBodies = bodies;
   m_pJoints = joints;
 }
 
-void dxWorldProcessContext::RetrievePreallocations(int &islandcount, int const *&islandsizes, dxBody *const *&bodies, dxJoint *const *&joints)
+void dxWorldProcessContext::RetrievePreallocations(int &islandcount, int const *&islandsizes, dxBody *const *&bodies, dxJoint *const *&joints, size_t const *&islandreqs)
 {
   islandcount = m_IslandCount;
+  islandreqs = m_pIslandReqs;
   islandsizes = m_pIslandSizes;
   bodies = m_pBodies;
   joints = m_pJoints;
@@ -65,6 +69,7 @@ void dxWorldProcessContext::OffsetPreallocations(size_t stOffset)
 {
   // m_IslandCount = -- no offset for count
   m_pIslandSizes = m_pIslandSizes ? (int const *)((size_t)m_pIslandSizes + stOffset) : NULL;
+  m_pIslandReqs = m_pIslandReqs ? (size_t const *)((size_t)m_pIslandReqs + stOffset) : NULL;
   m_pBodies = m_pBodies ? (dxBody *const *)((size_t)m_pBodies + stOffset) : NULL;
   m_pJoints = m_pJoints ? (dxJoint *const *)((size_t)m_pJoints + stOffset) : NULL;
 }
@@ -73,6 +78,7 @@ void dxWorldProcessContext::CopyPreallocations(const dxWorldProcessContext *othe
 {
   m_IslandCount = othercontext->m_IslandCount;
   m_pIslandSizes = othercontext->m_pIslandSizes;
+  m_pIslandReqs = othercontext->m_pIslandReqs;
   m_pBodies = othercontext->m_pBodies;
   m_pJoints = othercontext->m_pJoints;
 }
@@ -81,6 +87,7 @@ void dxWorldProcessContext::ClearPreallocations()
 {
   m_IslandCount = 0;
   m_pIslandSizes = NULL;
+  m_pIslandReqs = NULL;
   m_pBodies = NULL;
   m_pJoints = NULL;
 }
@@ -371,6 +378,8 @@ static size_t EstimateIslandsProcessingMemoryRequirements(dxWorld *world, size_t
 
   size_t islandcounts = dEFFICIENT_SIZE(world->nb * 2 * sizeof(int));
   res += islandcounts;
+  size_t islandreqs = dEFFICIENT_SIZE(world->nb * sizeof(size_t));
+  res += islandreqs;
 
   size_t bodiessize = dEFFICIENT_SIZE(world->nb * sizeof(dxBody*));
   size_t jointssize = dEFFICIENT_SIZE(world->nj * sizeof(dxJoint*));
@@ -380,6 +389,11 @@ static size_t EstimateIslandsProcessingMemoryRequirements(dxWorld *world, size_t
   return res;
 }
 
+// sorts out islands,
+// cllocates array for island information into arrays: body[nj], joint[nb], islandsizes[2*nb]
+//   context->SavePreallocations(islandcount, islandsizes, body, joint,islandreqs);
+// and put into context
+//
 static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessContext *context, 
   dxWorld *world, dReal stepsize, dmemestimate_fn_t stepperestimate)
 {
@@ -393,33 +407,42 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
   // Make array for island body/joint counts
   int *islandsizes = context->AllocateArray<int>(2 * nb);
   int *sizescurr;
+  size_t *islandreqs = context->AllocateArray<size_t>(nb);
+  size_t *islandreqscurr;
 
   // make arrays for body and joint lists (for a single island) to go into
-  dxBody **body = context->AllocateArray<dxBody *>(nb);
-  dxJoint **joint = context->AllocateArray<dxJoint *>(nj);
+  dxBody **body = context->AllocateArray<dxBody *>(nb);  // allocates a block of pointers and get back a pointer to first element
+  dxJoint **joint = context->AllocateArray<dxJoint *>(nj);  // allocates a block of pointers and get back a pointer to first element
 
   BEGIN_STATE_SAVE(context, stackstate) {
-    // allocate a stack of unvisited bodies in the island. the maximum size of
+    // stack is used to hold untagged bodies when traversing through all the joint-linked bodies.
+    // at the end, all the bodies in the stack are popped back out into the island.
+    //
+    // allocate a stack of UNVISITED BODIES in the island. the maximum size of
     // the stack can be the lesser of the number of bodies or joints, because
     // new bodies are only ever added to the stack by going through untagged
     // joints. all the bodies in the stack must be tagged!
     int stackalloc = (nj < nb) ? nj : nb;
-    dxBody **stack = context->AllocateArray<dxBody *>(stackalloc);
+    dxBody **stack = context->AllocateArray<dxBody *>(stackalloc);  // a body stack
 
     {
-      // set all body/joint tags to 0
-      for (dxBody *b=world->firstbody; b; b=(dxBody*)b->next) b->tag = 0;
-      for (dxJoint *j=world->firstjoint; j; j=(dxJoint*)j->next) j->tag = 0;
+      // set all body/joint island_tags to 0
+      for (dxBody *b=world->firstbody; b; b=(dxBody*)b->next) b->island_tag = 0;
+      for (dxJoint *j=world->firstjoint; j; j=(dxJoint*)j->next) j->island_tag = 0;
     }
 
+    int island_count = 0;
     sizescurr = islandsizes;
+    islandreqscurr = islandreqs;
     dxBody **bodystart = body;
     dxJoint **jointstart = joint;
+    // loop through all body, tag each one as it is processed
+    // every step in this for loop is one island
     for (dxBody *bb=world->firstbody; bb; bb=(dxBody*)bb->next) {
       // get bb = the next enabled, untagged body, and tag it
-      if (!bb->tag) {
+      if (!bb->island_tag) {
         if (!(bb->flags & dxBodyDisabled)) {
-          bb->tag = 1;
+          bb->island_tag = 1;
 
           dxBody **bodycurr = bodystart;
           dxJoint **jointcurr = jointstart;
@@ -431,19 +454,19 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
           dxBody *b = bb;
 
           while (true) {
-            // traverse and tag all body's joints, add untagged connected bodies
+            // traverse and island_tag all body's joints, add untagged connected bodies
             // to stack
             for (dxJointNode *n=b->firstjoint; n; n=n->next) {
               dxJoint *njoint = n->joint;
-              if (!njoint->tag) {
+              if (!njoint->island_tag) {
                 if (njoint->isEnabled()) {
-                  njoint->tag = 1;
+                  njoint->island_tag = 1;
                   *jointcurr++ = njoint;
 
                   dxBody *nbody = n->body;
                   // Body disabled flag is not checked here. This is how auto-enable works.
-                  if (nbody && nbody->tag <= 0) {
-                    nbody->tag = 1;
+                  if (nbody && nbody->island_tag <= 0) {
+                    nbody->island_tag = 1;
                     // Make sure all bodies are in the enabled state.
                     nbody->flags &= ~dxBodyDisabled;
                     stack[stacksize++] = nbody;
@@ -470,17 +493,19 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
           sizescurr[1] = jcount;
           sizescurr += sizeelements;
 
-          size_t islandreq = stepperestimate(bodystart, bcount, jointstart, jcount);
-          maxreq = (maxreq > islandreq) ? maxreq : islandreq;
+          *islandreqscurr = stepperestimate(bodystart, bcount, jointstart, jcount);
+          maxreq = (maxreq > *islandreqscurr) ? maxreq : *islandreqscurr;
+          //printf("island %d complete, stepper  %d maxreq %d \n",island_count++,*islandreqscurr, maxreq);
+          islandreqscurr += 1;
 
           bodystart = bodycurr;
           jointstart = jointcurr;
         } else {
-          bb->tag = -1; // Not used so far (assigned to retain consistency with joints)
+          bb->island_tag = -1; // Not used so far (assigned to retain consistency with joints)
         }
       }
     }
-  } END_STATE_SAVE(context, stackstate);
+  } END_STATE_SAVE(context, stackstate);  // restores contex pointer m_pAllocCurrent back to what it was before this block
 
 # ifndef dNODEBUG
   // if debugging, check that all objects (except for disabled bodies,
@@ -489,10 +514,10 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
   {
     for (dxBody *b=world->firstbody; b; b=(dxBody*)b->next) {
       if (b->flags & dxBodyDisabled) {
-        if (b->tag > 0) dDebug (0,"disabled body tagged");
+        if (b->island_tag > 0) dDebug (0,"disabled body tagged");
       }
       else {
-        if (b->tag <= 0) dDebug (0,"enabled body not tagged");
+        if (b->island_tag <= 0) dDebug (0,"enabled body not tagged");
       }
     }
     for (dxJoint *j=world->firstjoint; j; j=(dxJoint*)j->next) {
@@ -500,17 +525,23 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
         (j->node[1].body && (j->node[1].body->flags & dxBodyDisabled)==0) )
         && 
         j->isEnabled() ) {
-          if (j->tag <= 0) dDebug (0,"attached enabled joint not tagged");
+          if (j->island_tag <= 0) dDebug (0,"attached enabled joint not tagged");
       }
       else {
-        if (j->tag > 0) dDebug (0,"unattached or disabled joint tagged");
+        if (j->island_tag > 0) dDebug (0,"unattached or disabled joint tagged");
       }
     }
   }
 # endif
 
   int islandcount = (sizescurr - islandsizes) / sizeelements;
-  context->SavePreallocations(islandcount, islandsizes, body, joint);
+  context->SavePreallocations(islandcount, islandsizes, body, joint,islandreqs);
+
+  //printf("total island count: %d\n",islandcount);
+  for (int j=0; j<islandcount; j++)
+  {
+    //printf("island:%d bodycount:%d jointcount:%d islandreqs:%d \n",j,islandsizes[2*j],islandsizes[2*j+1],islandreqs[j]);
+  }
 
   return maxreq;
 }
@@ -526,6 +557,20 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
 // bodies will not be included in the simulation. disabled bodies are
 // re-enabled if they are found to be part of an active island.
 
+void dxProcessOneIsland(dxWorldProcessContext *context,dxWorldProcessContext *island_context, dxWorld *world, dReal stepsize, dstepper_fn_t stepper,
+                        dxBody *const* bodystart,
+                        int bcount,
+                        dxJoint *const *jointstart,
+                        int jcount)
+{
+    dAllocateODEDataForThread(dAllocateMaskAll);
+
+    BEGIN_STATE_SAVE(island_context, island_stepperstate) {
+      stepper (context,island_context,world,bodystart,bcount,jointstart,jcount,stepsize);
+    } END_STATE_SAVE(island_context, island_stepperstate);
+    dCleanupODEAllDataForThread();
+}
+
 void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
 {
   const int sizeelements = 2;
@@ -536,27 +581,42 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
   dxWorldProcessContext *context = wmem->GetWorldProcessingContext(); 
 
   int islandcount;
+  size_t const *islandreqs;
   int const *islandsizes;
   dxBody *const *body;
   dxJoint *const *joint;
-  context->RetrievePreallocations(islandcount, islandsizes, body, joint);
+  context->RetrievePreallocations(islandcount, islandsizes, body, joint, islandreqs);
 
   dxBody *const *bodystart = body;
   dxJoint *const *jointstart = joint;
 
+  int island_index = 0;
   int const *const sizesend = islandsizes + islandcount * sizeelements;
   for (int const *sizescurr = islandsizes; sizescurr != sizesend; sizescurr += sizeelements) {
     int bcount = sizescurr[0];
     int jcount = sizescurr[1];
 
-    BEGIN_STATE_SAVE(context, stepperstate) {
-      // now do something with body and joint lists
-      stepper (context,world,bodystart,bcount,jointstart,jcount,stepsize);
-    } END_STATE_SAVE(context, stepperstate);
+    //printf("debug: islandcount %d bcount %d jcount %d \n", islandcount,bcount, jcount);
+
+    dxStepWorkingMemory *island_wmem = world->island_wmems[island_index];
+    island_index++;
+    dIASSERT(island_wmem != NULL);
+    dxWorldProcessContext *island_context = island_wmem->GetWorldProcessingContext();
+
+#define TPOOLISLAND
+#ifdef TPOOLISLAND
+    world->threadpool->schedule(boost::bind(dxProcessOneIsland,context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount));
+#else
+    dxProcessOneIsland(context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
+#endif
 
     bodystart += bcount;
     jointstart += jcount;
   }
+  world->threadpool->wait();
+
+  for (int jj=0; jj < islandcount; jj++)
+    world->island_wmems[jj]->GetWorldProcessingContext()->CleanupContext();
 
   context->CleanupContext();
   dIASSERT(context->IsStructureValid());
@@ -713,7 +773,7 @@ static void InternalFreeWorldProcessContext (dxWorldProcessContext *context)
 bool dxReallocateWorldProcessContext (dxWorld *world, 
   dReal stepsize, dmemestimate_fn_t stepperestimate)
 {
-  dxStepWorkingMemory *wmem = AllocateOnDemand(world->wmem);
+  dxStepWorkingMemory *wmem = AllocateOnDemand(world->wmem);  // this is starting a new instance of dxStepWorkingMemory
   if (!wmem) return false;
 
   dxWorldProcessContext *oldcontext = wmem->GetWorldProcessingContext();
@@ -724,6 +784,10 @@ bool dxReallocateWorldProcessContext (dxWorld *world,
 
   dxWorldProcessContext *context = oldcontext;
 
+  // EstimateIslandsProcessingMemoryRequirements allocates memeory for 3 arrays:
+  //    islandsizes: integer arrays, 2*n_islands in size, contains bodycount and jointcount for each island
+  //    body: one array with all the 'active' bodies, all indexed by islandsizes
+  //    joint: one array with all the 'active' joints, all indexed by islandsizes
   size_t sesize;
   size_t islandsreq = EstimateIslandsProcessingMemoryRequirements(world, sesize);
   dIASSERT(islandsreq == dEFFICIENT_SIZE(islandsreq));
@@ -732,16 +796,45 @@ bool dxReallocateWorldProcessContext (dxWorld *world,
   size_t stepperestimatereq = islandsreq + sesize;
   context = InternalReallocateWorldProcessContext(context, stepperestimatereq, memmgr, 1.0f, reserveinfo->m_uiReserveMinimum);
   
+  //
+  // above context allocation of the island arrays is successful, then we proceed to allocate more spaces for the actual stepping work
+  //
+  // we want to start multiple contexts, one for each island.
+  //
   if (context)
   {
     size_t stepperreq = BuildIslandsAndEstimateStepperMemoryRequirements(context, world, stepsize, stepperestimate);
     dIASSERT(stepperreq == dEFFICIENT_SIZE(stepperreq));
 
-    size_t memreq = stepperreq + islandsreq;
-    context = InternalReallocateWorldProcessContext(context, memreq, memmgr, reserveinfo->m_fReserveFactor, reserveinfo->m_uiReserveMinimum);
+    // retrieve results of BuildIslandsAndEstimateStepperMemoryRequirements
+    int islandcount;
+    size_t const *islandreqs;
+    int const *islandsizes;
+    dxBody *const *body;
+    dxJoint *const *joint;
+    context->RetrievePreallocations(islandcount, islandsizes, body, joint, islandreqs);
+
+    for (int jj = 0; jj < islandcount; jj++)
+    {
+      // for individual islands
+      dxStepWorkingMemory *island_wmem = AllocateOnDemand(world->island_wmems[jj]);  // this is starting a new instance of dxStepWorkingMemory
+      if (!island_wmem) return false;
+
+      dxWorldProcessContext *island_oldcontext = island_wmem->GetWorldProcessingContext();
+      dIASSERT (!island_oldcontext || island_oldcontext->IsStructureValid());
+
+      const dxWorldProcessMemoryReserveInfo *island_reserveinfo = island_wmem->SureGetMemoryReserveInfo();
+      const dxWorldProcessMemoryManager *island_memmgr = island_wmem->SureGetMemoryManager();
+
+      dxWorldProcessContext *island_context = island_oldcontext;
+
+      size_t island_memreq = islandreqs[jj]; //  + islandsreq;
+      island_context = InternalReallocateWorldProcessContext(island_context, island_memreq, island_memmgr, island_reserveinfo->m_fReserveFactor, island_reserveinfo->m_uiReserveMinimum);
+      island_wmem->SetWorldProcessingContext(island_context); // set dxStepWorkingMemory to context
+    }
   }
 
-  wmem->SetWorldProcessingContext(context);
+  wmem->SetWorldProcessingContext(context); // set dxStepWorkingMemory to context
   return context != NULL;
 }
 

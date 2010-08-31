@@ -30,6 +30,7 @@
 #include <ode/memory.h>
 #include <ode/mass.h>
 #include "array.h"
+#include <boost/threadpool.hpp>
 
 class dxStepWorkingMemory;
 
@@ -66,6 +67,7 @@ struct dObject : public dBase {
   dObject *next;		// next object of this type in list
   dObject **tome;		// pointer to previous object's next ptr
   int tag;			// used by dynamics algorithms
+  int island_tag;		// used by island algorithms for grouping
   void *userdata;		// user settable data
   dObject(dxWorld *w);
   virtual ~dObject() { }
@@ -151,11 +153,13 @@ struct dxWorld : public dBase {
   dxAutoDisable adis;		// auto-disable parameters
   int body_flags;               // flags for new bodies
   dxStepWorkingMemory *wmem; // Working memory object for dWorldStep/dWorldQuickStep
+  dxStepWorkingMemory *island_wmems[1000]; // Working memory object for dWorldStep/dWorldQuickStep
 
   dxQuickStepParameters qs;
   dxContactParameters contactp;
   dxDampingParameters dampingp; // damping parameters
   dReal max_angular_speed;      // limit the angular velocity to this magnitude
+  boost::threadpool::pool *threadpool;
 };
 
 
