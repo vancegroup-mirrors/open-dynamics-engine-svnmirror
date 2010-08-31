@@ -1454,6 +1454,19 @@ void dJointSetFeedback (dxJoint *joint, dJointFeedback *f)
   joint->feedback = f;
 }
 
+void dJointSetDamping (dxJoint *joint, dReal damping)
+{
+  dAASSERT (joint);
+
+  if (damping > 0.0)
+  {
+    // set use_damping to true
+    joint->use_damping = true;
+    // damping coefficient is in jicurr->info.damping_coefficient);
+    joint->damping_coefficient = damping;
+    // FIXME: only hinge joint and slider are implemented at this time
+  }
+}
 
 dJointFeedback *dJointGetFeedback (dxJoint *joint)
 {

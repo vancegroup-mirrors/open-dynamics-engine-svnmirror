@@ -1722,6 +1722,12 @@ ODE_API int dJointIsEnabled (dJointID);
 ODE_API void dJointSetData (dJointID, void *data);
 
 /**
+ * @brief Set the user-data pointer
+ * @ingroup joints
+ */
+ODE_API void dJointSetDamping (dJointID, dReal damping);
+
+/**
  * @brief Get the user-data pointer
  * @ingroup joints
  */
