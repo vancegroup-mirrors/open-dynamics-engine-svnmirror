@@ -1599,7 +1599,7 @@ dxWorld * dWorldCreate()
   w->dampingp.angular_threshold = REAL(0.01) * REAL(0.01);  
   w->max_angular_speed = dInfinity;
 
-  w->threadpool = new boost::threadpool::pool(2);
+  w->threadpool = new boost::threadpool::pool(1);
   w->row_threadpool = new boost::threadpool::pool(1);
 
   return w;
