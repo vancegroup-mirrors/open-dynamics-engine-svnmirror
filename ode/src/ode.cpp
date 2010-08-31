@@ -1599,8 +1599,8 @@ dxWorld * dWorldCreate()
   w->dampingp.angular_threshold = REAL(0.01) * REAL(0.01);  
   w->max_angular_speed = dInfinity;
 
-  w->threadpool = new boost::threadpool::pool(1);
-  w->row_threadpool = new boost::threadpool::pool(1);
+  w->threadpool = NULL; // new boost::threadpool::pool(0);
+  w->row_threadpool = NULL; // new boost::threadpool::pool(0);
 
   return w;
 }
@@ -1641,7 +1641,15 @@ void dWorldDestroy (dxWorld *w)
     w->wmem->Release();
   }
 
-  delete w->threadpool;
+  if (w->threadpool) {
+    w->threadpool->wait();
+    delete w->threadpool;
+  }
+
+  if (w->row_threadpool) {
+    w->row_threadpool->wait();
+    delete w->row_threadpool;
+  }
 
   delete w;
 }
@@ -1658,25 +1666,29 @@ void dWorldSetGravity (dWorldID w, dReal x, dReal y, dReal z)
 void dWorldSetIslandThreads (dWorldID w, int num_island_threads)
 {
   dAASSERT (w);
-  if (w->threadpool)
-  {
+  if (w->threadpool) {
     w->threadpool->wait();
     delete w->threadpool;
+    w->threadpool = NULL;
   }
-  w->threadpool = new boost::threadpool::pool(num_island_threads);
-  printf("setting island pool threads to %d\n",num_island_threads);
+  if (num_island_threads > 0) {
+    w->threadpool = new boost::threadpool::pool(num_island_threads);
+    printf("setting island pool threads to %d\n",num_island_threads);
+  }
 }
 
 void dWorldSetQuickstepThreads (dWorldID w, int num_quickstep_threads)
 {
   dAASSERT (w);
-  if (w->row_threadpool)
-  {
+  if (w->row_threadpool) {
     w->row_threadpool->wait();
     delete w->row_threadpool;
+    w->row_threadpool = NULL;
   }
-  w->row_threadpool = new boost::threadpool::pool(num_quickstep_threads);
-  printf("setting quickstep pool threads to %d\n",num_quickstep_threads);
+  if (num_quickstep_threads > 0) {
+    w->row_threadpool = new boost::threadpool::pool(num_quickstep_threads);
+    printf("setting quickstep pool threads to %d\n",num_quickstep_threads);
+  }
 }
 
 void dWorldGetGravity (dWorldID w, dVector3 g)

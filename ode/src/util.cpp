@@ -642,7 +642,8 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
 #define USE_TPISLAND
 #ifdef USE_TPISLAND
     IFTIMING(dTimerNow("scheduling island"));
-    if (world->threadpool->size() > 1)
+    //printf("debug opende tp %d\n",world->threadpool->size());
+    if (world->threadpool && world->threadpool->size() > 0)
       world->threadpool->schedule(boost::bind(dxProcessOneIsland,context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount));
     else //automatically skip threadpool if only 1 thread allocated
       dxProcessOneIsland(context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
@@ -655,7 +656,7 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
   }
 #ifdef USE_TPISLAND
   IFTIMING(dTimerNow("islands wait"));
-  if (world->threadpool->size() > 1)
+  if (world->threadpool && world->threadpool->size() > 0)
     world->threadpool->wait();
 #endif
   IFTIMING(dTimerEnd());
