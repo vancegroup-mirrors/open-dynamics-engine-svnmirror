@@ -309,6 +309,16 @@ ODE_API int dWorldSetStepMemoryManager(dWorldID w, const dWorldStepMemoryFunctio
 ODE_API int dWorldStep (dWorldID w, dReal stepsize);
 
 /**
+ * @brief Step the world using the algorithm of Drumwright and Shell.
+ * This uses a "big matrix" method that takes time on the order of m^3.
+ * This is currently the most robust and accurate method.
+ * @ingroup world
+ * @param stepsize the number of seconds that the simulation has to advance.
+ * @returns 1 for success and 0 for failure
+ */
+ODE_API int dWorldRobustStep (dWorldID, dReal stepsize);
+
+/**
  * @brief Quick-step the world.
  *
  * This uses an iterative method that takes time on the order of m*N
@@ -371,6 +381,26 @@ ODE_API void dWorldImpulseToForce
  dWorldID, dReal stepsize,
  dReal ix, dReal iy, dReal iz, dVector3 force
  );
+
+/**
+ * @brief Set the maximum number of iterations that the RobustStep method 
+ *        performs per step.
+ * @ingroup world
+ * @remarks
+ * More iterations may give a more accurate solution, but may take
+ * longer to compute.
+ * @param num The default is 100 iterations.
+ */
+ODE_API void dWorldSetRobustStepMaxIterations (dWorldID, int num);
+
+
+/**
+ * @brief Get the maximum number of iterations that the RobustStep method 
+ *        performs per step.
+ * @ingroup world
+ * @return nr of iterations
+ */
+ODE_API int dWorldGetRobustStepMaxIterations (dWorldID);
 
 
 /**

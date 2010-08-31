@@ -52,12 +52,15 @@ libode_la_SOURCES =     nextafterf.c \
                         odemath.cpp \
                         odeou.h \
                         odetls.h \
+                        optimize.cpp optimize.h \
                         plane.cpp \
                         quickstep.cpp quickstep.h \
                         ray.cpp \
+                        robuststep.cpp robuststep.h \
                         rotation.cpp \
                         sphere.cpp \
                         step.cpp step.h \
+												symm.c \
                         timer.cpp \
                         util.cpp util.h
 
@@ -124,5 +127,16 @@ libode_la_SOURCES+=     collision_trimesh_trimesh.cpp \
                         collision_trimesh_plane.cpp
 endif
 
+#################################
+#   B O O S T  A D D I T I O N
+#################################
+
+AM_CPPFLAGS += $(BOOST_CPPFLAGS)
+# These other two are unnecessary, because only boost's shared array is 
+# used, which consists only of a header. 
+# If boost is used more completely, these need to be added (and a check
+# for the requisite library in the configure.in)
+#libode_la_LDFLAGS += $(BOOST_THREAD_LDFLAGS)
+#libode_la_LIBS += $(BOOST_THREAD_LIBS)
 
 

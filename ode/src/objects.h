@@ -26,6 +26,7 @@
 #ifndef _ODE_OBJECT_H_
 #define _ODE_OBJECT_H_
 
+#include <limits>
 #include <ode/common.h>
 #include <ode/memory.h>
 #include <ode/mass.h>
@@ -99,6 +100,17 @@ struct dxQuickStepParameters {
   dReal w;			// the SOR over-relaxation parameter
 };
 
+// robust-step parameters
+struct dxRobustStepParameters {
+  dxRobustStepParameters() 
+  { 
+     eps_feas = eps = std::numeric_limits<dReal>::epsilon(); 
+     max_iterations = 100;
+  }
+  dReal eps_feas;                       // feasibility tolerance
+  dReal eps;                            // solution tolerance
+  int max_iterations;                   // maximum number of iterations
+};
 
 // contact generation parameters
 struct dxContactParameters {
@@ -156,6 +168,7 @@ struct dxWorld : public dBase {
   dxStepWorkingMemory *island_wmems[1000]; // Working memory object for dWorldStep/dWorldQuickStep
 
   dxQuickStepParameters qs;
+  dxRobustStepParameters rs;
   dxContactParameters contactp;
   dxDampingParameters dampingp; // damping parameters
   dReal max_angular_speed;      // limit the angular velocity to this magnitude

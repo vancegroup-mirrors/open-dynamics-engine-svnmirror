@@ -98,7 +98,11 @@ AM_CONDITIONAL(X86_64_SYSTEM, test x$cpu64 = xyes)
 dnl check for required headers
 AC_CHECK_HEADERS( [alloca.h stdio.h inttypes.h stdint.h stdlib.h math.h \
                   string.h stdarg.h malloc.h float.h time.h sys/time.h ])
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([limits], [], [AC_MSG_ERROR([C++ limits is required])])
+AC_LANG_POP()
 
+BOOST_FIND_HEADER([boost/shared_array.hpp])
 
 opcode=no
 gimpact=no

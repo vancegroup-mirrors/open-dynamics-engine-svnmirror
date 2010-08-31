@@ -39,6 +39,7 @@
 #include "quickstep.h"
 #include "util.h"
 #include "odetls.h"
+#include "robuststep.h"
 
 // misc defines
 #define ALLOCA dALLOCA16
@@ -1839,6 +1840,19 @@ int dWorldQuickStep (dWorldID w, dReal stepsize)
   return result;
 }
 
+int dWorldRobustStep(dWorldID w, dReal stepsize)
+{
+  dUASSERT (w,"bad world argument");
+  dUASSERT (stepsize > 0,"stepsize must be > 0");
+  bool result = false;
+  if (dxReallocateWorldProcessContext(w, stepsize, &dxEstimateRobustStepMemoryRequirements))
+  {
+    dxProcessIslands(w, stepsize, &dRobustStepIsland);
+    result = true;
+  }
+
+  return result;
+}
 
 void dWorldImpulseToForce (dWorldID w, dReal stepsize,
 			   dReal ix, dReal iy, dReal iz,
@@ -2037,6 +2051,17 @@ int dWorldGetQuickStepNumIterations (dWorldID w)
 	return w->qs.num_iterations;
 }
 
+void dWorldSetRobustStepMaxIterations (dWorldID w, int num)
+{
+	dAASSERT(w);
+	w->rs.max_iterations = num;
+}
+
+int dWorldGetRobustStepMaxIterations (dWorldID w)
+{
+	dAASSERT(w);
+	return w->rs.max_iterations;
+}
 
 void dWorldSetQuickStepW (dWorldID w, dReal param)
 {
