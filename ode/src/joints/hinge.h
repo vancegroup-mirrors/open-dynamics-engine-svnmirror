@@ -36,6 +36,7 @@ struct dxJointHinge : public dxJoint
     dVector3 axis2;     // axis w.r.t second body
     dQuaternion qrel;   // initial relative rotation body1 -> body2
     dxJointLimitMotor limot; // limit and motor information
+    dReal cumulative_angle; // save a cumulative angle so we can use larger then +/-pi limits
 
     dxJointHinge( dxWorld *w );
     virtual void getSureMaxInfo( SureMaxInfo* info );
