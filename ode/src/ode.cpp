@@ -1586,6 +1586,9 @@ dxWorld * dWorldCreate()
 
   w->qs.num_iterations = 20;
   w->qs.w = REAL(1.3);
+  w->qs.num_chunks = 1;
+  w->qs.num_overlap = 0;
+  w->qs.sor_lcp_tolerance = 0;
 
   w->contactp.max_vel = dInfinity;
   w->contactp.min_depth = 0;
@@ -1596,7 +1599,8 @@ dxWorld * dWorldCreate()
   w->dampingp.angular_threshold = REAL(0.01) * REAL(0.01);  
   w->max_angular_speed = dInfinity;
 
-  w->threadpool = new boost::threadpool::pool(4);
+  w->threadpool = new boost::threadpool::pool(2);
+  w->row_threadpool = new boost::threadpool::pool(1);
 
   return w;
 }
@@ -1651,6 +1655,29 @@ void dWorldSetGravity (dWorldID w, dReal x, dReal y, dReal z)
   w->gravity[2] = z;
 }
 
+void dWorldSetIslandThreads (dWorldID w, int num_island_threads)
+{
+  dAASSERT (w);
+  if (w->threadpool)
+  {
+    w->threadpool->wait();
+    delete w->threadpool;
+  }
+  w->threadpool = new boost::threadpool::pool(num_island_threads);
+  printf("setting island pool threads to %d\n",num_island_threads);
+}
+
+void dWorldSetQuickstepThreads (dWorldID w, int num_quickstep_threads)
+{
+  dAASSERT (w);
+  if (w->row_threadpool)
+  {
+    w->row_threadpool->wait();
+    delete w->row_threadpool;
+  }
+  w->row_threadpool = new boost::threadpool::pool(num_quickstep_threads);
+  printf("setting quickstep pool threads to %d\n",num_quickstep_threads);
+}
 
 void dWorldGetGravity (dWorldID w, dVector3 g)
 {
@@ -2037,6 +2064,23 @@ void dWorldSetMaxAngularSpeed(dWorldID w, dReal max_speed)
         w->max_angular_speed = max_speed;
 }
 
+void dWorldSetQuickStepTolerance (dWorldID w, dReal tol)
+{
+	dAASSERT(w);
+	w->qs.sor_lcp_tolerance = tol;
+}
+
+void dWorldSetQuickStepNumChunks (dWorldID w, int num)
+{
+	dAASSERT(w);
+	w->qs.num_chunks = num;
+}
+
+void dWorldSetQuickStepNumOverlap (dWorldID w, int num)
+{
+	dAASSERT(w);
+	w->qs.num_overlap = num;
+}
 
 void dWorldSetQuickStepNumIterations (dWorldID w, int num)
 {

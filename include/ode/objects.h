@@ -76,6 +76,19 @@ ODE_API void dWorldDestroy (dWorldID world);
  */
 ODE_API void dWorldSetGravity (dWorldID, dReal x, dReal y, dReal z);
 
+/**
+ * @brief Set the number of thread pool threads for islands
+ *
+ * @ingroup world
+ */
+ODE_API void dWorldSetIslandThreads (dWorldID, int num_island_threads);
+
+/**
+ * @brief Set the number of thread pool threads for quickstep
+ *
+ * @ingroup world
+ */
+ODE_API void dWorldSetQuickstepThreads (dWorldID, int num_quickstep_threads);
 
 /**
  * @brief Get the gravity vector for a given world.
@@ -393,6 +406,24 @@ ODE_API void dWorldImpulseToForce
  */
 ODE_API void dWorldSetRobustStepMaxIterations (dWorldID, int num);
 
+
+/**
+ * @brief Set the tolerance of when sor lcp stops
+ * @param num The default is 1 chunk
+ */
+void dWorldSetQuickStepTolerance (dWorldID, dReal tol);
+
+/**
+ * @brief Set the number of chunks quickstep divide up constraint rows
+ * @param num The default is 1 chunk
+ */
+void dWorldSetQuickStepNumChunks (dWorldID, int num);
+
+/**
+ * @brief Set the number of overlap when quickstep divide up constraint rows
+ * @param num The default is 0 overlap
+ */
+void dWorldSetQuickStepNumOverlap (dWorldID, int num);
 
 /**
  * @brief Get the maximum number of iterations that the RobustStep method 

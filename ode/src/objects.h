@@ -98,6 +98,9 @@ struct dxDampingParameters {
 struct dxQuickStepParameters {
   int num_iterations;		// number of SOR iterations to perform
   dReal w;			// the SOR over-relaxation parameter
+  int num_chunks;		// divide rows to these many chunks
+  int num_overlap;		// divide rows but over lap this many rows
+  dReal sor_lcp_tolerance;	// the stop if rms_error falls below this
 };
 
 // robust-step parameters
@@ -173,6 +176,7 @@ struct dxWorld : public dBase {
   dxDampingParameters dampingp; // damping parameters
   dReal max_angular_speed;      // limit the angular velocity to this magnitude
   boost::threadpool::pool *threadpool;
+  boost::threadpool::pool *row_threadpool;
 };
 
 
