@@ -1677,7 +1677,7 @@ void dWorldSetIslandThreads (dWorldID w, int num_island_threads)
   }
 }
 
-void dWorldSetQuickstepThreads (dWorldID w, int num_quickstep_threads)
+void dWorldSetQuickStepThreads (dWorldID w, int num_quickstep_threads)
 {
   dAASSERT (w);
   if (w->row_threadpool) {

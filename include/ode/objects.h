@@ -88,7 +88,7 @@ ODE_API void dWorldSetIslandThreads (dWorldID, int num_island_threads);
  *
  * @ingroup world
  */
-ODE_API void dWorldSetQuickstepThreads (dWorldID, int num_quickstep_threads);
+ODE_API void dWorldSetQuickStepThreads (dWorldID, int num_quickstep_threads);
 
 /**
  * @brief Get the gravity vector for a given world.
