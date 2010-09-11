@@ -546,7 +546,7 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
 # endif
 
   int islandcount = (sizescurr - islandsizes) / sizeelements;
-  context->SavePreallocations(islandcount, islandsizes, body, joint,islandreqs);
+  context->SavePreallocations(islandcount, islandsizes, body, joint, islandreqs);
 
   //printf("total island count: %d and summary below: \n",islandcount);
   //for (int j=0; j<islandcount; j++)
@@ -875,8 +875,8 @@ bool dxReallocateWorldProcessContext (dxWorld *world,
 
       dxWorldProcessContext *island_context = island_oldcontext;
 
-      size_t island_memreq = islandreqs[jj]; //  + islandsreq;
-      island_context = InternalReallocateWorldProcessContext(island_context, island_memreq, island_memmgr, island_reserveinfo->m_fReserveFactor, island_reserveinfo->m_uiReserveMinimum);
+      // this is where islandreqs is used, to MakeArenaSize
+      island_context = InternalReallocateWorldProcessContext(island_context, islandreqs[jj], island_memmgr, island_reserveinfo->m_fReserveFactor, island_reserveinfo->m_uiReserveMinimum);
       island_wmem->SetWorldProcessingContext(island_context); // set dxStepWorkingMemory to context
     }
   }
