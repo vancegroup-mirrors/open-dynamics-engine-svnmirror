@@ -218,7 +218,7 @@ struct dxWorldProcessContext
 #define BEGIN_STATE_SAVE(context, state) void *state = context->SaveState();
 #define END_STATE_SAVE(context, state) context->RestoreState(state)
 
-typedef void (*dstepper_fn_t) (dxWorldProcessContext *context,dxWorldProcessContext *island_context, 
+typedef void (*dstepper_fn_t) (dxWorldProcessContext *context,  // put island stepper context here
         dxWorld *world, dxBody * const *body, int nb,
         dxJoint * const *_joint, int _nj, dReal stepsize);
 

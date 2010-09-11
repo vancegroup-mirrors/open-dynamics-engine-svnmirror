@@ -1705,7 +1705,7 @@ static bool copt_hess2(dReal* x, int n, int idx, dReal* H, void* data)
 //****************************************************************************
 // a convex optimization version of dxInternalStepIsland
 //****************************************************************************
-void dxRobustStepIsland(dxWorldProcessContext* shared_context, dxWorldProcessContext* context, dxWorld *world, 
+void dxRobustStepIsland(dxWorldProcessContext* context, dxWorld *world, 
                         dxBody * const *body, int nb,
                         dxJoint * const *joint, int nj, dReal stepsize)
 {
@@ -1725,7 +1725,7 @@ void dxRobustStepIsland(dxWorldProcessContext* shared_context, dxWorldProcessCon
   // if there are no contact constraints, do the original island stepper
   if (nc == 0)
   {
-    dInternalStepIsland(shared_context, context, world, body, nb, joint, nj, stepsize);
+    dInternalStepIsland(context, world, body, nb, joint, nj, stepsize);
     return;
   }
 
@@ -2157,7 +2157,7 @@ void dxRobustStepIsland(dxWorldProcessContext* shared_context, dxWorldProcessCon
 
 //****************************************************************************
 
-void dRobustStepIsland(dxWorldProcessContext* shared_context, dxWorldProcessContext* context, dxWorld *world, dxBody * const *body, int nb,
+void dRobustStepIsland(dxWorldProcessContext* context, dxWorld *world, dxBody * const *body, int nb,
 			  dxJoint * const *joint, int nj, dReal stepsize)
 {
 
@@ -2165,7 +2165,7 @@ void dRobustStepIsland(dxWorldProcessContext* shared_context, dxWorldProcessCont
   dMemoryFlag = d_MEMORY_OK;
 #endif
 
-  dxRobustStepIsland(shared_context, context, world,body,nb,joint,nj,stepsize);
+  dxRobustStepIsland(context, world,body,nb,joint,nj,stepsize);
 
 #ifdef dUSE_MALLOC_FOR_ALLOCA
     if (dMemoryFlag == d_MEMORY_OUT_OF_MEMORY) {

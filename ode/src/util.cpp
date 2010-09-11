@@ -387,7 +387,7 @@ static size_t EstimateIslandsProcessingMemoryRequirements(dxWorld *world, size_t
 
   size_t islandcounts = dEFFICIENT_SIZE(world->nb * 2 * sizeof(int));
   res += islandcounts;
-  size_t islandreqs = dEFFICIENT_SIZE(world->nb * sizeof(size_t));
+  size_t islandreqs = dEFFICIENT_SIZE(world->nb * sizeof(size_t)); // keep separate islandreqs for each island
   res += islandreqs;
 
   size_t bodiessize = dEFFICIENT_SIZE(world->nb * sizeof(dxBody*));
@@ -416,6 +416,7 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
   // Make array for island body/joint counts
   int *islandsizes = context->AllocateArray<int>(2 * nb);
   int *sizescurr;
+  // an array to save all islandreqs for each thread
   size_t *islandreqs = context->AllocateArray<size_t>(nb);
   size_t *islandreqscurr;
 
@@ -502,6 +503,7 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
           sizescurr[1] = jcount;
           sizescurr += sizeelements;
 
+          // save individual islandreq for each island separately
           *islandreqscurr = stepperestimate(bodystart, bcount, jointstart, jcount);
           maxreq = (maxreq > *islandreqscurr) ? maxreq : *islandreqscurr;
           //printf("island %d complete, stepper  %d maxreq %d \n",island_count++,*islandreqscurr, maxreq);
@@ -546,11 +548,9 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
   int islandcount = (sizescurr - islandsizes) / sizeelements;
   context->SavePreallocations(islandcount, islandsizes, body, joint,islandreqs);
 
-  //printf("total island count: %d\n",islandcount);
-  for (int j=0; j<islandcount; j++)
-  {
+  //printf("total island count: %d and summary below: \n",islandcount);
+  //for (int j=0; j<islandcount; j++)
     //printf("island:%d bodycount:%d jointcount:%d islandreqs:%d \n",j,islandsizes[2*j],islandsizes[2*j+1],islandreqs[j]);
-  }
 
   return maxreq;
 }
@@ -566,31 +566,29 @@ static size_t BuildIslandsAndEstimateStepperMemoryRequirements(dxWorldProcessCon
 // bodies will not be included in the simulation. disabled bodies are
 // re-enabled if they are found to be part of an active island.
 
-void dxProcessOneIsland(dxWorldProcessContext *context,dxWorldProcessContext *island_context, dxWorld *world, dReal stepsize, dstepper_fn_t stepper,
+void dxProcessOneIsland(dxWorldProcessContext *island_context, dxWorld *world, dReal stepsize, dstepper_fn_t stepper,
                         dxBody *const* bodystart,
                         int bcount,
                         dxJoint *const *jointstart,
                         int jcount)
 {
-    #ifdef REPORT_THREAD_TIMING
+#ifdef REPORT_THREAD_TIMING
     struct timeval tv;
     double cur_time;
     gettimeofday(&tv,NULL);
     cur_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
-    //printf("island thread started time %f\n",cur_time);
-    #endif
+    printf("island thread started time %f\n",cur_time);
+#endif
 
-    //dAllocateODEDataForThread(dAllocateMaskAll);
     BEGIN_STATE_SAVE(island_context, island_stepperstate) {
-      stepper (context,island_context,world,bodystart,bcount,jointstart,jcount,stepsize);
+      stepper (island_context,world,bodystart,bcount,jointstart,jcount,stepsize);
     } END_STATE_SAVE(island_context, island_stepperstate);
-    //dCleanupODEAllDataForThread();
 
-    #ifdef REPORT_THREAD_TIMING
+#ifdef REPORT_THREAD_TIMING
     gettimeofday(&tv,NULL);
     double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
     printf("----- island thread start time %f ended at time %f with duration %f\n",cur_time,end_time,end_time - cur_time);
-    #endif
+#endif
 }
 
 void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
@@ -616,26 +614,20 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
   int island_index = 0;
   int const *const sizesend = islandsizes + islandcount * sizeelements;
 
-
-
-  #ifdef REPORT_THREAD_TIMING
+#ifdef REPORT_THREAD_TIMING
   struct timeval tv;
   double cur_time;
   gettimeofday(&tv,NULL);
   cur_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
   printf(">>>>>>>>>>>> start island spawn threads at time %f\n",cur_time);
-  #endif
-
-
+#endif
 
   for (int const *sizescurr = islandsizes; sizescurr != sizesend; sizescurr += sizeelements) {
     int bcount = sizescurr[0];
     int jcount = sizescurr[1];
 
-    //printf("debug: islandcount %d bcount %d jcount %d \n", islandcount,bcount, jcount);
-
-    dxStepWorkingMemory *island_wmem = world->island_wmems[island_index];
-    island_index++;
+    // get working memory for each island
+    dxStepWorkingMemory *island_wmem = world->island_wmems[island_index++];
     dIASSERT(island_wmem != NULL);
     dxWorldProcessContext *island_context = island_wmem->GetWorldProcessingContext();
 
@@ -644,11 +636,11 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
     IFTIMING(dTimerNow("scheduling island"));
     //printf("debug opende tp %d\n",world->threadpool->size());
     if (world->threadpool && world->threadpool->size() > 0)
-      world->threadpool->schedule(boost::bind(dxProcessOneIsland,context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount));
+      world->threadpool->schedule(boost::bind(dxProcessOneIsland,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount));
     else //automatically skip threadpool if only 1 thread allocated
-      dxProcessOneIsland(context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
+      dxProcessOneIsland(island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
 #else
-    dxProcessOneIsland(context,island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
+    dxProcessOneIsland(island_context, world, stepsize, stepper,bodystart, bcount, jointstart, jcount);
 #endif
 
     bodystart += bcount;
@@ -663,11 +655,11 @@ void dxProcessIslands (dxWorld *world, dReal stepsize, dstepper_fn_t stepper)
   IFTIMING(dTimerReport (stdout,1));
 
 
-  #ifdef REPORT_THREAD_TIMING
+#ifdef REPORT_THREAD_TIMING
   gettimeofday(&tv,NULL);
   double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
   printf("<<<<<<<<<<<< all island threads stopped at time %f with duration %f\n",end_time,end_time - cur_time);
-  #endif
+#endif
 
   for (int jj=0; jj < islandcount; jj++)
     world->island_wmems[jj]->GetWorldProcessingContext()->CleanupContext();
@@ -840,6 +832,7 @@ bool dxReallocateWorldProcessContext (dxWorld *world,
 
   // EstimateIslandsProcessingMemoryRequirements allocates memeory for 3 arrays:
   //    islandsizes: integer arrays, 2*n_islands in size, contains bodycount and jointcount for each island
+  //    islandreqs: integer arrays, n_islands in size, contains memory requirements for each island
   //    body: one array with all the 'active' bodies, all indexed by islandsizes
   //    joint: one array with all the 'active' joints, all indexed by islandsizes
   size_t sesize;

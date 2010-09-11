@@ -1057,7 +1057,7 @@ struct dJointWithInfo1
   dxJoint::Info1 info;
 };
 
-void dxQuickStepper (dxWorldProcessContext *shared_context,dxWorldProcessContext *context, 
+void dxQuickStepper (dxWorldProcessContext *context, 
   dxWorld *world, dxBody * const *body, int nb,
   dxJoint * const *_joint, int _nj, dReal stepsize)
 {

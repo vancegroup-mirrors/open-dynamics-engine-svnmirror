@@ -27,10 +27,10 @@
 
 size_t dxEstimateRobustStepMemoryRequirements(dxBody* const* body, int nb, dxJoint* const* _joint, int _nj);
 
-void dRobustStepIsland (dxWorldProcessContext* shared_context, dxWorldProcessContext* context, dxWorld *world,
-			  dxBody * const *body, int nb,
-			  dxJoint * const *joint, int nj,
-			  dReal stepsize);
+void dRobustStepIsland (dxWorldProcessContext* context, dxWorld *world,
+			dxBody * const *body, int nb,
+			dxJoint * const *joint, int nj,
+			dReal stepsize);
 
 
 
