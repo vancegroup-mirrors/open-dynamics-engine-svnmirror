@@ -33,6 +33,28 @@
 #include "lcp.h"
 #include "util.h"
 
+#include <sys/time.h>
+
+
+
+#undef REPORT_THREAD_TIMING
+#define USE_TPROW
+#undef TIMING
+#undef REPORT_MONITOR
+#undef SHOW_CONVERGENCE
+//#define LOCAL_STEPPING  // not yet implemented
+#undef RECOMPUTE_RMS
+#undef USE_1NORM
+
+
+
+#ifdef USE_TPROW
+// added for threading per constraint rows
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/bind.hpp>
+#include "ode/odeinit.h"
+#endif
+
 typedef const dReal *dRealPtr;
 typedef dReal *dRealMutablePtr;
 
@@ -62,6 +84,7 @@ typedef dReal *dRealMutablePtr;
 // or hardly at all, but it doesn't seem to hurt.
 
 #define RANDOMLY_REORDER_CONSTRAINTS 1
+#undef LOCK_WHILE_RANDOMLY_REORDER_CONSTRAINTS
 
 #define USE_JOINT_DAMPING
 
@@ -341,115 +364,63 @@ static int compare_index_error (const void *a, const void *b)
 
 #endif
 
-static void SOR_LCP (dxWorldProcessContext *context,
-  const int m, const int nb, dRealMutablePtr J, int *jb, dxBody * const *body,
-  dRealPtr invI, dRealMutablePtr lambda, dRealMutablePtr fc, dRealMutablePtr b,
-  dRealPtr lo, dRealPtr hi, dRealPtr cfm, const int *findex,
-  const dxQuickStepParameters *qs,
-#ifdef USE_JOINT_DAMPING
-  const int m_damp,dRealMutablePtr J_damp, dRealPtr coeff_damp, int *jb_damp,dRealMutablePtr v_damp,
-  dRealMutablePtr f_damp,dRealMutablePtr v_joint_damp, dRealPtr JiM, // damping related
-#endif
-  const dReal stepsize) // for updating v_damp along the way
+static void ComputeRows(
+                int thread_id,
+                IndexError* order,
+                dxBody* const *body,
+                int* tmpInt,
+                dReal* tmpReal,
+                const int** tmpIntPtr,
+                dRealPtr* tmpRealPtr,
+                dRealMutablePtr* tmpMutablePtr,
+                boost::recursive_mutex* mutex)
 {
-#ifdef WARM_STARTING
-  {
-    // for warm starting, this seems to be necessary to prevent
-    // jerkiness in motor-driven joints. i have no idea why this works.
-    for (int i=0; i<m; i++) lambda[i] *= 0.9;
-  }
-#else
-  dSetZero (lambda,m);
-#endif
+  struct timeval tv;
+  double cur_time;
+  gettimeofday(&tv,NULL);
+  cur_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+  //printf("thread %d started at time %f\n",thread_id,cur_time);
 
-  // precompute iMJ = inv(M)*J'
-  dReal *iMJ = context->AllocateArray<dReal> (m*12);
-  compute_invM_JT (m,J,iMJ,jb,body,invI);
-
-  // compute fc=(inv(M)*J')*lambda. we will incrementally maintain fc
-  // as we change lambda.
-#ifdef WARM_STARTING
-  multiply_invM_JT (m,nb,iMJ,jb,lambda,fc);
-#else
-  dSetZero (fc,nb*6);
-#endif
-
-  dReal *Ad = context->AllocateArray<dReal> (m);
-
-  {
-    const dReal sor_w = qs->w;		// SOR over-relaxation parameter
-    // precompute 1 / diagonals of A
-    dRealPtr iMJ_ptr = iMJ;
-    dRealPtr J_ptr = J;
-    for (int i=0; i<m; J_ptr += 12, iMJ_ptr += 12, i++) {
-      dReal sum = 0;
-      for (int j=0; j<6; j++) sum += iMJ_ptr[j] * J_ptr[j];
-      if (jb[i*2+1] >= 0) {
-        for (int k=6; k<12; k++) sum += iMJ_ptr[k] * J_ptr[k];
-      }
-      Ad[i] = sor_w / (sum + cfm[i]);
-    }
-  }
-
-
-  /********************************/
-  /* allocate for J*invM*f_damp   */
-  /* which is a mX1 column vector */
-  /********************************/
-  dReal *Adcfm = context->AllocateArray<dReal> (m);
-
-
-  {
-    // NOTE: This may seem unnecessary but it's indeed an optimization 
-    // to move multiplication by Ad[i] and cfm[i] out of iteration loop.
-
-    // scale J and b by Ad
-    dRealMutablePtr J_ptr = J;
-    for (int i=0; i<m; J_ptr += 12, i++) {
-      dReal Ad_i = Ad[i];
-      for (int j=0; j<12; j++) {
-        J_ptr[j] *= Ad_i;
-      }
-      b[i] *= Ad_i;
-      // scale Ad by CFM. N.B. this should be done last since it is used above
-      Adcfm[i] = Ad_i * cfm[i];
-    }
-  }
-
-
-  // order to solve constraint rows in
-  IndexError *order = context->AllocateArray<IndexError> (m);
-
-#ifndef REORDER_CONSTRAINTS
-  {
-    // make sure constraints with findex < 0 come first.
-    IndexError *orderhead = order, *ordertail = order + (m - 1);
-
-    // Fill the array from both ends
-    for (int i=0; i<m; i++) {
-      if (findex[i] < 0) {
-        orderhead->index = i; // Place them at the front
-        ++orderhead;
-      } else {
-        ordertail->index = i; // Place them at the end
-        --ordertail;
-      }
-    }
-    dIASSERT (orderhead-ordertail==1);
-  }
-#endif
-
-#ifdef REORDER_CONSTRAINTS
-  // the lambda computed at the previous iteration.
-  // this is used to measure error for when we are reordering the indexes.
-  dReal *last_lambda = context->AllocateArray<dReal> (m);
-#endif
-
+  //boost::recursive_mutex::scoped_lock lock(*mutex); // put in fc read/writes?
+  int startRow           = tmpInt[0];
+  int nRows              = tmpInt[1];
+  int m                  = tmpInt[2];
+  int nb                 = tmpInt[3];
+  int m_damp             = tmpInt[4];
+  int num_iterations     = tmpInt[5];
+  dReal stepsize         = tmpReal[0];
+  dReal sor_lcp_tolerance= tmpReal[1];
+  const int* jb                = tmpIntPtr[0];
+  const int* findex            = tmpIntPtr[1];
+  const int* jb_damp           = tmpIntPtr[2];
+  dRealPtr        Ad           = tmpRealPtr[0];
+  dRealPtr        hi           = tmpRealPtr[1];
+  dRealPtr        lo           = tmpRealPtr[2];
+  dRealPtr        Adcfm        = tmpRealPtr[3];
+  dRealPtr        JiM          = tmpRealPtr[4];
+  dRealPtr        invI         = tmpRealPtr[5];
+  dRealPtr        coeff_damp   = tmpRealPtr[6];
+  dRealMutablePtr b            = tmpMutablePtr[0];
+  dRealMutablePtr J            = tmpMutablePtr[1];
+  dRealMutablePtr fc           = tmpMutablePtr[2];
+  dRealMutablePtr lambda       = tmpMutablePtr[3];
+  dRealMutablePtr iMJ          = tmpMutablePtr[4];
 #ifdef USE_JOINT_DAMPING
-  dReal *b_damp = context->AllocateArray<dReal> (m);
+  dRealMutablePtr b_damp       = tmpMutablePtr[5];
+  dRealMutablePtr f_damp       = tmpMutablePtr[6];
+  dRealMutablePtr v_damp       = tmpMutablePtr[7];
+  dRealMutablePtr J_damp       = tmpMutablePtr[8];
+  dRealMutablePtr v_joint_damp = tmpMutablePtr[9];
+#ifdef REORDER_CONSTRAINTS
+  dRealMutablePtr last_lambda  = tmpMutablePtr[10];
 #endif
+#endif
+  dRealMutablePtr delta_error  = tmpMutablePtr[11];
 
-  const int num_iterations = qs->num_iterations;
+  //printf("iiiiiiiii %d %d %d\n",thread_id,jb[0],jb[1]);
+  //for (int i=startRow; i<startRow+nRows; i++) // swap within boundary of our own segment
+  //  printf("wwwwwwwwwwwww>id %d start %d n %d  order[%d].index=%d\n",thread_id,startRow,nRows,i,order[i].index);
+
   for (int iteration=0; iteration < num_iterations; iteration++) {
 
 #ifdef REORDER_CONSTRAINTS
@@ -457,8 +428,9 @@ static void SOR_LCP (dxWorldProcessContext *context,
     if (iteration < 2) {
       // for the first two iterations, solve the constraints in
       // the given order
-      IndexError *ordercurr = order;
-      for (int i = 0; i != m; ordercurr++, i++) {
+      IndexError *ordercurr = order+startRow;
+      //for (int i = 0; i != m; ordercurr++, i++) { }
+      for (int i = startRow; i != startRow+nRows; ordercurr++, i++) {
         ordercurr->error = i;
         ordercurr->findex = findex[i];
         ordercurr->index = i;
@@ -467,7 +439,8 @@ static void SOR_LCP (dxWorldProcessContext *context,
     else {
       // sort the constraints so that the ones converging slowest
       // get solved last. use the absolute (not relative) error.
-      for (int i=0; i<m; i++) {
+      //for (int i=0; i<m; i++) { }
+      for (int i=startRow; i<startRow+nRows; i++) {
         dReal v1 = dFabs (lambda[i]);
         dReal v2 = dFabs (last_lambda[i]);
         dReal max = (v1 > v2) ? v1 : v2;
@@ -482,25 +455,57 @@ static void SOR_LCP (dxWorldProcessContext *context,
         order[i].index = i;
       }
     }
-    qsort (order,m,sizeof(IndexError),&compare_index_error);
+
+    //if (thread_id == 0) for (int i=startRow;i<startRow+nRows;i++) printf("=====> %d %d %d %f %d\n",thread_id,iteration,i,order[i].error,order[i].index);
+
+    //qsort (order,m,sizeof(IndexError),&compare_index_error);
+    qsort (order+startRow,nRows,sizeof(IndexError),&compare_index_error);
 
     //@@@ potential optimization: swap lambda and last_lambda pointers rather
     //    than copying the data. we must make sure lambda is properly
     //    returned to the caller
-    memcpy (last_lambda,lambda,m*sizeof(dReal));
+    //memcpy (last_lambda,lambda,m*sizeof(dReal));
+    memcpy (last_lambda+startRow,lambda+startRow,nRows*sizeof(dReal));
+
+    //if (thread_id == 0) for (int i=startRow;i<startRow+nRows;i++) printf("-----> %d %d %d %f %d\n",thread_id,iteration,i,order[i].error,order[i].index);
+
 #endif
 #ifdef RANDOMLY_REORDER_CONSTRAINTS
     if ((iteration & 7) == 0) {
-      for (int i=1; i<m; i++) {
-        int swapi = dRandInt(i+1);
+      #ifdef LOCK_WHILE_RANDOMLY_REORDER_CONSTRAINTS
+        boost::recursive_mutex::scoped_lock lock(*mutex); // lock for every swap
+      #endif
+      //for (int i=1; i<m; i++) {}   // swap across engire matrix
+      //  int swapi = dRandInt(i+1); // swap across engire matrix
+      for (int i=startRow+1; i<startRow+nRows; i++) { // swap within boundary of our own segment
+        int swapi = dRandInt(i+1-startRow)+startRow; // swap within boundary of our own segment
+        //printf("xxxxxxxx>id %d swaping order[%d].index=%d order[%d].index=%d\n",thread_id,i,order[i].index,swapi,order[swapi].index);
         IndexError tmp = order[i];
         order[i] = order[swapi];
         order[swapi] = tmp;
       }
+
+      // {
+      //   // verify
+      //   boost::recursive_mutex::scoped_lock lock(*mutex); // lock for every row
+      //   printf("  random id %d iter %d\n",thread_id,iteration);
+      //   for (int i=startRow+1; i<startRow+nRows; i++)
+      //     printf(" %5d,",i);
+      //   printf("\n");
+      //   for (int i=startRow+1; i<startRow+nRows; i++)
+      //     printf(" %5d;",(int)order[i].index);
+      //   printf("\n");
+      // }
     }
 #endif
 
-    for (int i=0; i<m; i++) {
+    //dSetZero (delta_error,m);
+    dReal rms_error = 0;
+
+    for (int i=startRow; i<startRow+nRows; i++) {
+
+      //boost::recursive_mutex::scoped_lock lock(*mutex); // lock for every row
+
       // @@@ potential optimization: we could pre-sort J and iMJ, thereby
       //     linearizing access to those arrays. hmmm, this does not seem
       //     like a win, but we should think carefully about our memory
@@ -615,6 +620,9 @@ static void SOR_LCP (dxWorldProcessContext *context,
         }
       }
 
+      rms_error += delta*delta;
+      delta_error[index] = dFabs(delta);
+
       //@@@ a trick that may or may not help
       //dReal ramp = (1-((dReal)(iteration+1)/(dReal)num_iterations));
       //delta *= ramp;
@@ -640,8 +648,50 @@ static void SOR_LCP (dxWorldProcessContext *context,
           fc_ptr2[5] += delta * iMJ_ptr[11];
         }
       }
-
     } // end of for loop on m
+
+
+// do we need to compute norm across entire solution space (0,m)?
+// since local convergence might produce errors in other nodes?
+#ifdef RECOMPUTE_RMS
+    // recompute rms_error to be sure swap is not corrupting arrays
+    rms_error = 0;
+    #ifdef USE_1NORM
+        //for (int i=startRow; i<startRow+nRows; i++)
+        for (int i=0; i<m; i++)
+        {
+          rms_error = dFabs(delta_error[order[i].index]) > rms_error ? dFabs(delta_error[order[i].index]) : rms_error; // 1norm test
+        }
+    #else // use 2 norm
+        //for (int i=startRow; i<startRow+nRows; i++)
+        for (int i=0; i<m; i++)  // use entire solution vector errors
+          rms_error += delta_error[order[i].index]*delta_error[order[i].index]; ///(dReal)nRows;
+        rms_error = sqrt(rms_error); ///(dReal)nRows;
+    #endif
+#else
+    rms_error = sqrt(rms_error); ///(dReal)nRows;
+#endif
+
+    //printf("------ %d %d %20.18f\n",thread_id,iteration,rms_error);
+
+    //for (int i=startRow; i<startRow+nRows; i++) printf("debug: %d %f\n",i,delta_error[i]);
+
+
+    //{
+    //  // verify
+    //  boost::recursive_mutex::scoped_lock lock(*mutex); // lock for every row
+    //  printf("  random id %d iter %d\n",thread_id,iteration);
+    //  for (int i=startRow+1; i<startRow+nRows; i++)
+    //    printf(" %10d,",i);
+    //  printf("\n");
+    //  for (int i=startRow+1; i<startRow+nRows; i++)
+    //    printf(" %10d;",order[i].index);
+    //  printf("\n");
+    //  for (int i=startRow+1; i<startRow+nRows; i++)
+    //    printf(" %10.8f,",delta_error[i]);
+    //  printf("\n%f\n",rms_error);
+    //}
+
 
 #ifdef USE_JOINT_DAMPING
     /****************************************************************/
@@ -654,7 +704,6 @@ static void SOR_LCP (dxWorldProcessContext *context,
     /*                                                              */
     /****************************************************************/
     {
-      IFTIMING (dTimerNow ("velocity update due to f_damp"));
       const dReal *invIrow = invI;
       dRealMutablePtr f_damp_ptr = f_damp;
       dRealMutablePtr v_damp_ptr = v_damp;
@@ -705,24 +754,301 @@ static void SOR_LCP (dxWorldProcessContext *context,
         int b1 = jb_damp[j*2];
         int b2 = jb_damp[j*2+1];
         v_joint_damp[j] = 0;
-        // ramp-up
-        dReal alpha = (dReal)iteration / (dReal)num_iterations;
-        for (int k=0;k<6;k++) v_joint_damp[j] += J_damp_ptr[k] * v_damp[b1*6+k];
-        if (b2 >= 0) for (int k=0;k<6;k++) v_joint_damp[j] += J_damp_ptr[k+6] * v_damp[b2*6+k];
+
+        // ramp-up : option to skip first few iterations to let the joint settle first
+        int skip = 10; //num_iterations-1;
+        dReal alpha = (iteration>=skip)?(dReal)(iteration-skip+1) / (dReal)(num_iterations-skip):0;
+
+        for (int k=0;k<6;k++) v_joint_damp[j] += alpha*J_damp_ptr[k] * v_damp[b1*6+k];
+        if (b2 >= 0) for (int k=0;k<6;k++) v_joint_damp[j] += alpha*J_damp_ptr[k+6] * v_damp[b2*6+k];
         // multiply by damping coefficients (B is diagnoal)
-        v_joint_damp[j] *= alpha * coeff_damp[j];
+        v_joint_damp[j] *= coeff_damp[j];
 
         // so now v_joint_damp = B * J_damp * v_damp
         // update f_damp = J_damp' * v_joint_damp
         for (int k=0; k<6; k++) f_damp[b1*6+k] -= J_damp_ptr[k]*v_joint_damp[j];
         if (b2 >= 0) for (int k=0; k<6; k++) f_damp[b2*6+k] -= J_damp_ptr[6+k]*v_joint_damp[j];
+
+        //if (v_joint_damp[j] < 1000)
+        //  printf("ITER: %d j: %d m1: %f m2: %f v: %f\n",iteration,j,1.0/body[b1]->invMass,1.0/body[b2]->invMass,v_joint_damp[j]);
       }
 
     }
 #endif
 
+#ifdef SHOW_CONVERGENCE
+    printf("MONITOR: id: %d iteration: %d error: %20.16f\n",thread_id,iteration,rms_error);
+#endif
+
+    if (rms_error < sor_lcp_tolerance)
+    {
+      #ifdef REPORT_MONITOR
+        printf("CONVERGED: id: %d steps: %d rms(%20.18f)\n",thread_id,iteration,rms_error);
+      #endif
+      break;
+    }
+    else if (iteration == num_iterations -1)
+    {
+      #ifdef REPORT_MONITOR
+        printf("**********ERROR: id: %d did not converge in %d steps, rms(%20.18f)\n",thread_id,num_iterations,rms_error);
+      #endif
+    }
 
   } // end of for loop on iterations
+
+  gettimeofday(&tv,NULL);
+  double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+  #ifdef REPORT_THREAD_TIMING
+  printf("      quickstep row thread %d start time %f ended time %f duration %f\n",thread_id,cur_time,end_time,end_time - cur_time);
+  #endif
+}
+
+static void SOR_LCP (dxWorldProcessContext *context,
+  const int m, const int nb, dRealMutablePtr J, int *jb, dxBody * const *body,
+  dRealPtr invI, dRealMutablePtr lambda, dRealMutablePtr fc, dRealMutablePtr b,
+  dRealPtr lo, dRealPtr hi, dRealPtr cfm, const int *findex,
+  const dxQuickStepParameters *qs,
+#ifdef USE_JOINT_DAMPING
+  const int m_damp,dRealMutablePtr J_damp, dRealPtr coeff_damp, int *jb_damp,dRealMutablePtr v_damp,
+  dRealMutablePtr f_damp,dRealMutablePtr v_joint_damp, dRealPtr JiM, // damping related
+#endif
+#ifdef USE_TPROW
+  boost::threadpool::pool* row_threadpool,
+#endif
+  const dReal stepsize) // for updating v_damp along the way
+{
+#ifdef WARM_STARTING
+  {
+    // for warm starting, this seems to be necessary to prevent
+    // jerkiness in motor-driven joints. i have no idea why this works.
+    for (int i=0; i<m; i++) lambda[i] *= 0.9;
+  }
+#else
+  dSetZero (lambda,m);
+#endif
+
+  // precompute iMJ = inv(M)*J'
+  dReal *iMJ = context->AllocateArray<dReal> (m*12);
+  compute_invM_JT (m,J,iMJ,jb,body,invI);
+
+  // compute fc=(inv(M)*J')*lambda. we will incrementally maintain fc
+  // as we change lambda.
+#ifdef WARM_STARTING
+  multiply_invM_JT (m,nb,iMJ,jb,lambda,fc);
+#else
+  dSetZero (fc,nb*6);
+#endif
+
+  dReal *Ad = context->AllocateArray<dReal> (m);
+
+  {
+    const dReal sor_w = qs->w;		// SOR over-relaxation parameter
+    // precompute 1 / diagonals of A
+    dRealPtr iMJ_ptr = iMJ;
+    dRealPtr J_ptr = J;
+    for (int i=0; i<m; J_ptr += 12, iMJ_ptr += 12, i++) {
+      dReal sum = 0;
+      for (int j=0; j<6; j++) sum += iMJ_ptr[j] * J_ptr[j];
+      if (jb[i*2+1] >= 0) {
+        for (int k=6; k<12; k++) sum += iMJ_ptr[k] * J_ptr[k];
+      }
+      Ad[i] = sor_w / (sum + cfm[i]);
+    }
+  }
+
+
+  /********************************/
+  /* allocate for J*invM*f_damp   */
+  /* which is a mX1 column vector */
+  /********************************/
+  dReal *Adcfm = context->AllocateArray<dReal> (m);
+
+
+  {
+    // NOTE: This may seem unnecessary but it's indeed an optimization 
+    // to move multiplication by Ad[i] and cfm[i] out of iteration loop.
+
+    // scale J and b by Ad
+    dRealMutablePtr J_ptr = J;
+    for (int i=0; i<m; J_ptr += 12, i++) {
+      dReal Ad_i = Ad[i];
+      for (int j=0; j<12; j++) {
+        J_ptr[j] *= Ad_i;
+      }
+      b[i] *= Ad_i;
+      // scale Ad by CFM. N.B. this should be done last since it is used above
+      Adcfm[i] = Ad_i * cfm[i];
+    }
+  }
+
+
+  // order to solve constraint rows in
+  IndexError *order = context->AllocateArray<IndexError> (m);
+
+  dReal *delta_error = context->AllocateArray<dReal> (m);
+
+#ifndef REORDER_CONSTRAINTS
+  {
+    // make sure constraints with findex < 0 come first.
+    IndexError *orderhead = order, *ordertail = order + (m - 1);
+
+    // Fill the array from both ends
+    for (int i=0; i<m; i++) {
+      if (findex[i] < 0) {
+        orderhead->index = i; // Place them at the front
+        ++orderhead;
+      } else {
+        ordertail->index = i; // Place them at the end
+        --ordertail;
+      }
+    }
+    dIASSERT (orderhead-ordertail==1);
+  }
+#endif
+
+#ifdef REORDER_CONSTRAINTS
+  // the lambda computed at the previous iteration.
+  // this is used to measure error for when we are reordering the indexes.
+  dReal *last_lambda = context->AllocateArray<dReal> (m);
+#endif
+
+#ifdef USE_JOINT_DAMPING
+  dReal *b_damp = context->AllocateArray<dReal> (m);
+#endif
+
+
+  boost::recursive_mutex* mutex = new boost::recursive_mutex();
+
+  const int num_iterations = qs->num_iterations;
+  // single iteration, through all the constraints
+
+
+
+
+
+
+
+
+
+  int num_chunks = qs->num_chunks;
+
+  // prepare pointers for threads
+  int tmpInt_size = 6;
+  int tmpInt[tmpInt_size*num_chunks];
+  int tmpReal_size = 2;
+  dReal tmpReal[tmpReal_size*num_chunks];
+  int tmpIntPtr_size = 3;
+  const int* tmpIntPtr[tmpIntPtr_size*num_chunks];
+  int tmpRealPtr_size = 7;
+  dRealPtr tmpRealPtr[tmpRealPtr_size*num_chunks];
+  int tmpMutablePtr_size = 12;
+  dRealMutablePtr tmpMutablePtr[tmpMutablePtr_size*num_chunks];
+
+  int num_overlap = qs->num_overlap;
+  int chunk = m / num_chunks+1;
+  chunk = chunk > 0 ? chunk : 1;
+  int thread_id = 0;
+
+
+
+
+  struct timeval tv;
+  double cur_time;
+  gettimeofday(&tv,NULL);
+  cur_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+  //printf("    quickstep start threads at time %f\n",cur_time);
+
+
+
+
+  IFTIMING (dTimerNow ("start pgs rows"));
+  for (int i=0; i<m; i+= chunk,thread_id++)
+  {
+    //for (int ijk=0;ijk<m;ijk++) printf("aaaaaaaaaaaaaaaaaaaaa> id:%d jb[%d]=%d\n",thread_id,ijk,jb[ijk]);
+
+    int nStart = i - num_overlap < 0 ? 0 : i - num_overlap;
+    int nEnd   = i + chunk + num_overlap;
+    if (nEnd > m) nEnd = m;
+    // if every one reorders constraints, this might just work
+    // comment out below if using defaults (0 and m) so every thread runs through all joints
+    tmpInt[0+thread_id*tmpInt_size] = nStart;   // 0
+    tmpInt[1+thread_id*tmpInt_size] = nEnd - nStart; // m
+    tmpInt[2+thread_id*tmpInt_size] = m; // m
+    tmpInt[3+thread_id*tmpInt_size] = nb;
+    tmpInt[4+thread_id*tmpInt_size] = m_damp;
+    tmpInt[5+thread_id*tmpInt_size] = num_iterations;
+    tmpReal[0+thread_id*tmpReal_size] = stepsize;
+    tmpReal[1+thread_id*tmpReal_size] = qs->sor_lcp_tolerance;
+    tmpIntPtr[0+thread_id*tmpIntPtr_size] = jb;
+    tmpIntPtr[1+thread_id*tmpIntPtr_size] = findex;
+    tmpIntPtr[2+thread_id*tmpIntPtr_size] = jb_damp;
+    tmpRealPtr[0+thread_id*tmpRealPtr_size] = Ad;
+    tmpRealPtr[1+thread_id*tmpRealPtr_size] = hi;
+    tmpRealPtr[2+thread_id*tmpRealPtr_size] = lo;
+    tmpRealPtr[3+thread_id*tmpRealPtr_size] = Adcfm;
+    tmpRealPtr[4+thread_id*tmpRealPtr_size] = JiM;
+    tmpRealPtr[5+thread_id*tmpRealPtr_size] = invI;
+    tmpRealPtr[6+thread_id*tmpRealPtr_size] = coeff_damp ;
+    tmpMutablePtr[0+thread_id*tmpMutablePtr_size] = b;
+    tmpMutablePtr[1+thread_id*tmpMutablePtr_size] = J;
+    tmpMutablePtr[2+thread_id*tmpMutablePtr_size] = fc;
+    tmpMutablePtr[3+thread_id*tmpMutablePtr_size] = lambda;
+    tmpMutablePtr[4+thread_id*tmpMutablePtr_size] = iMJ;
+    #ifdef USE_JOINT_DAMPING
+      tmpMutablePtr[5+thread_id*tmpMutablePtr_size] = b_damp;
+      tmpMutablePtr[6+thread_id*tmpMutablePtr_size] = f_damp;
+      tmpMutablePtr[7+thread_id*tmpMutablePtr_size] = v_damp;
+      tmpMutablePtr[8+thread_id*tmpMutablePtr_size] = J_damp;
+      tmpMutablePtr[9+thread_id*tmpMutablePtr_size] = v_joint_damp;
+      #ifdef REORDER_CONSTRAINTS
+        tmpMutablePtr[10+thread_id*tmpMutablePtr_size] = last_lambda;
+      #endif
+    #endif
+    tmpMutablePtr[11+thread_id*tmpMutablePtr_size] = delta_error ;
+
+#ifdef REPORT_MONITOR
+    printf("thread summary: id %d i %d m %d chunk %d start %d end %d \n",thread_id,i,m,chunk,nStart,nEnd);
+#endif
+#ifdef USE_TPROW
+    if (row_threadpool && row_threadpool->size() > 0)
+      row_threadpool->schedule(boost::bind(ComputeRows,thread_id,order, body, tmpInt+thread_id*tmpInt_size,
+                           tmpReal+thread_id*tmpReal_size, tmpIntPtr+thread_id*tmpIntPtr_size,
+                           tmpRealPtr+thread_id*tmpRealPtr_size, tmpMutablePtr+thread_id*tmpMutablePtr_size, mutex));
+    else //automatically skip threadpool if only 1 thread allocated
+      ComputeRows(thread_id,order, body, tmpInt+thread_id*tmpInt_size,
+                           tmpReal+thread_id*tmpReal_size, tmpIntPtr+thread_id*tmpIntPtr_size,
+                           tmpRealPtr+thread_id*tmpRealPtr_size, tmpMutablePtr+thread_id*tmpMutablePtr_size, mutex);
+#else
+    ComputeRows(thread_id,order, body, tmpInt+thread_id*tmpInt_size,
+                           tmpReal+thread_id*tmpReal_size, tmpIntPtr+thread_id*tmpIntPtr_size,
+                           tmpRealPtr+thread_id*tmpRealPtr_size, tmpMutablePtr+thread_id*tmpMutablePtr_size, mutex);
+#endif
+  }
+
+
+  // check time for scheduling, this is usually very quick
+  //gettimeofday(&tv,NULL);
+  //double wait_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+  //printf("      quickstep done scheduling start time %f stopped time %f duration %f\n",cur_time,wait_time,wait_time - cur_time);
+
+#ifdef USE_TPROW
+  IFTIMING (dTimerNow ("wait for threads"));
+  if (row_threadpool && row_threadpool->size() > 0)
+    row_threadpool->wait();
+  IFTIMING (dTimerNow ("threads done"));
+#endif
+
+
+
+  gettimeofday(&tv,NULL);
+  double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
+  #ifdef REPORT_THREAD_TIMING
+  printf("    quickstep threads start time %f stopped time %f duration %f\n",cur_time,end_time,end_time - cur_time);
+  #endif
+
+
+
+  delete mutex;
 }
 
 struct dJointWithInfo1
@@ -1083,6 +1409,7 @@ void dxQuickStepper (dxWorldProcessContext *shared_context,dxWorldProcessContext
           }
         }
         dIASSERT (jb_ptr == jb+2*m);
+        //printf("jjjjjjjjj %d %d\n",jb[0],jb[1]);
       }
 
 #ifdef USE_JOINT_DAMPING
@@ -1228,6 +1555,9 @@ void dxQuickStepper (dxWorldProcessContext *shared_context,dxWorldProcessContext
 #ifdef USE_JOINT_DAMPING
                m_damp,J_damp,coeff_damp,jb_damp,v_damp,f_damp,v_joint_damp,JiM,
 #endif
+#ifdef USE_TPROW
+               world->row_threadpool,
+#endif
                stepsize);
 
     } END_STATE_SAVE(context, lcpstate);
@@ -1255,7 +1585,6 @@ void dxQuickStepper (dxWorldProcessContext *shared_context,dxWorldProcessContext
     /****************************************************************/
     {
       const dReal *invIrow = invI;
-      IFTIMING (dTimerNow ("velocity update due to f_damp"));
 
       dRealMutablePtr f_damp_ptr = f_damp;
       dxBody *const *const bodyend = body + nb;
@@ -1403,6 +1732,7 @@ void dxQuickStepper (dxWorldProcessContext *shared_context,dxWorldProcessContext
 
   IFTIMING (dTimerEnd());
   IFTIMING (if (m > 0) dTimerReport (stdout,1));
+
 }
 
 #ifdef USE_CG_LCP
@@ -1423,6 +1753,7 @@ static size_t EstimateSOR_LCPMemoryRequirements(int m
   size_t res = dEFFICIENT_SIZE(sizeof(dReal) * 12 * m); // for iMJ
   res += dEFFICIENT_SIZE(sizeof(dReal) * m); // for Ad
   res += dEFFICIENT_SIZE(sizeof(dReal) * m); // for Adcfm
+  res += dEFFICIENT_SIZE(sizeof(dReal) * m); // for delta_error
   res += dEFFICIENT_SIZE(sizeof(IndexError) * m); // for order
 #ifdef REORDER_CONSTRAINTS
   res += dEFFICIENT_SIZE(sizeof(dReal) * m); // for last_lambda
@@ -1488,14 +1819,14 @@ size_t dxEstimateQuickStepMemoryRequirements (
     if (m > 0) {
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12 * m); // for J
       sub1_res2 += 4 * dEFFICIENT_SIZE(sizeof(dReal) * m); // for cfm, lo, hi, rhs
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * 12 * m); // for jb            FIXME: shoulbe be 2 not 12?
+      sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * 2 * m); // for jb            FIXME: shoulbe be 2 not 12?
       sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * m); // for findex
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12 * mfb); // for Jcopy
 
 #ifdef USE_JOINT_DAMPING
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12 * m_damp); // for J_damp
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * m_damp ); // for v_joint_damp
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * 12 * m_damp); // for jb_damp            FIXME: shoulbe be 2 not 12?
+      sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * 2 * m_damp); // for jb_damp            FIXME: shoulbe be 2 not 12?
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for f_damp
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12*m); // for JiM
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for v_damp
