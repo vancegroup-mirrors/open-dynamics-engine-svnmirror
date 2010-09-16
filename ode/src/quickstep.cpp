@@ -930,7 +930,7 @@ static void SOR_LCP (dxWorldProcessContext *context,
 
 
 
-  int num_chunks = qs->num_chunks;
+  int num_chunks = qs->num_chunks > 0 ? qs->num_chunks : 1; // min is 1
 
   // prepare pointers for threads
   int tmpInt_size = 6;
