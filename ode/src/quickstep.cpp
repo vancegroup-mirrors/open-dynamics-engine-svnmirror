@@ -41,7 +41,7 @@
 #define USE_TPROW
 #undef TIMING
 #undef REPORT_MONITOR
-#undef SHOW_CONVERGENCE
+#define SHOW_CONVERGENCE
 //#define LOCAL_STEPPING  // not yet implemented
 #undef RECOMPUTE_RMS
 #undef USE_1NORM
@@ -628,6 +628,7 @@ static void ComputeRows(
       //delta *= ramp;
       
       {
+        // no longer need iMJ, just need J' here
         dRealPtr iMJ_ptr = iMJ + index*12;
         // update fc.
         // @@@ potential optimization: SIMD for this and the b2 >= 0 case
@@ -828,8 +829,14 @@ static void SOR_LCP (dxWorldProcessContext *context,
 #endif
 
   // precompute iMJ = inv(M)*J'
-  dReal *iMJ = context->AllocateArray<dReal> (m*12);
-  compute_invM_JT (m,J,iMJ,jb,body,invI);
+  dReal *iMJ = context->AllocateArray<dReal> (m*12); // no longer needed
+  //compute_invM_JT (m,J,iMJ,jb,body,invI);
+  // iMJ should really just be J
+  dRealMutablePtr iMJ_ptr = iMJ;
+  dRealPtr J_ptr = J;
+  for (int i=0; i<m; J_ptr += 12, iMJ_ptr += 12, i++)
+    for (int j=0; j<12; j++) iMJ_ptr[j] = J_ptr[j];
+
 
   // compute fc=(inv(M)*J')*lambda. we will incrementally maintain fc
   // as we change lambda.
@@ -1074,11 +1081,13 @@ void dxQuickStepper (dxWorldProcessContext *context,
   // frame, and compute the rotational force and add it to the torque
   // accumulator. I and invI are a vertical stack of 3x4 matrices, one per body.
   dReal *invI = context->AllocateArray<dReal> (3*4*nb);
+  dReal *I = context->AllocateArray<dReal> (3*4*nb);
 
   {
     dReal *invIrow = invI;
+    dReal *Irow = I;
     dxBody *const *const bodyend = body + nb;
-    for (dxBody *const *bodycurr = body; bodycurr != bodyend; invIrow += 12, bodycurr++) {
+    for (dxBody *const *bodycurr = body; bodycurr != bodyend; invIrow += 12, Irow += 12, bodycurr++) {
       dMatrix3 tmp;
       dxBody *b = *bodycurr;
 
@@ -1086,13 +1095,13 @@ void dxQuickStepper (dxWorldProcessContext *context,
       dMultiply2_333 (tmp,b->invI,b->posr.R);
       dMultiply0_333 (invIrow,b->posr.R,tmp);
 
+      // also store I for later use by preconditioner
+      dMultiply2_333 (tmp,b->mass.I,b->posr.R);
+      dMultiply0_333 (Irow,b->posr.R,tmp);
+
       if (b->flags & dxBodyGyroscopic) {
-        dMatrix3 I;
-        // compute inertia tensor in global frame
-        dMultiply2_333 (tmp,b->mass.I,b->posr.R);
-        dMultiply0_333 (I,b->posr.R,tmp);
         // compute rotational force
-        dMultiply0_331 (tmp,I,b->avel);
+        dMultiply0_331 (tmp,Irow,b->avel);
         dSubtractVectorCross3(b->tacc,b->avel,tmp);
       }
     }
@@ -1469,28 +1478,9 @@ void dxQuickStepper (dxWorldProcessContext *context,
         {
           dRealPtr J_ptr = J;
           dRealMutablePtr JiM_ptr = JiM; // intermediate solution storage
-          for (int i=0; i<m;J_ptr+=12,JiM_ptr+=12, i++) {
-
-            // compute JiM = J * invM
-            int b1 = jb[i*2];
-            int b2 = jb[i*2+1];
-            dReal k1 = body[b1]->invMass;
-
-            for (int j=0; j<3 ; j++) JiM_ptr[j] = J_ptr[j]*k1;
-
-
-            const dReal *invI_ptr1 = invI + 12*b1;
-            for (int j=0;j<3;j++) for (int k=0;k<3;k++){
-              JiM_ptr[3+j] += J_ptr[3+k]*invI_ptr1[k*4+j];
-            }
-
-            if (b2 >= 0){
-              dReal k2 = body[b2]->invMass;
-              for (int j=0; j<3 ; j++) JiM_ptr[j+6] += k2*J_ptr[j+6];
-              const dReal *invI_ptr2 = invI + 12*b2;
-              for (int j=0;j<3;j++) for (int k=0;k<3;k++) JiM_ptr[9+j] += J_ptr[9+k]*invI_ptr2[k*4+j];
-            }
-          }
+          // no need for iM anymore, just copying J
+          for (int i=0; i<m;J_ptr+=12,JiM_ptr+=12, i++)
+            for (int j=0; j<12; j++) JiM_ptr[j] = J_ptr[j];
         }
 #endif
       
@@ -1498,6 +1488,165 @@ void dxQuickStepper (dxWorldProcessContext *context,
 
       // complete rhs
       for (int i=0; i<m; i++) rhs[i] = c[i]*stepsize1 - rhs[i];
+
+
+
+
+
+
+
+
+
+
+
+
+
+      // new rhs (or b) is preconditioned!
+      // perform Gauss Seidel on J*invJrhs = rhs
+      // invJrhs = GS(J,rhs,iterations)
+      // iterate on
+      //   
+      //   
+      // [m n] = size(A);
+      // for iter = 1:num_iters,
+      //   % sweep forwards
+      //   for i = 1:m,
+      //     [ma,mi] = max(A(i,:));
+      //     delta = 0;
+      //     for l = 1:n,
+      //       delta = A(i,l)*x(l);
+      //     end,
+      //     delta = (y(i) - delta)/A(i,mi);
+      //     x(mi) = x(mi) + delta;
+      //   end,
+      // end,
+      // in the end,
+      // new_rhs = J * M * invJ * rhs
+
+      dReal *invJrhs = context->AllocateArray<dReal> (6*nb);
+      dSetZero (invJrhs, 6*nb);
+
+      for (int gsiter = 0 ; gsiter < 30; gsiter++)
+      {
+        //printf("===============================\n");
+        //printf("   delta: ");
+        int J_index = 0;
+        for (int i = 0; i < m; i++)
+        {
+          // which x do we solve for?
+
+          int b1 = jb[i*2];
+          int b2 = jb[i*2+1];
+
+
+          //printf("iter[%d] i[%d] j[",gsiter,i);
+
+          dReal delta = 0;
+          dRealPtr invJrhs_ptr = invJrhs + b1*6; // corresponding location on invJrhs
+
+          dReal J_max = 0;
+          int J_max_i = 0;
+
+          // multiply J row * invJrhs
+          for (int j=0; j<6; j++) {
+            delta += J[J_index+j] * invJrhs_ptr[j];
+            if (dFabs(J[J_index+j]) > dFabs(J_max)) {
+              J_max = J[J_index+j];
+              J_max_i = b1*6 + j;
+            }
+            //printf("%f, ",J[J_index+j]);
+          }
+          J_index += 6;
+
+          if (b2 >= 0) {
+
+            //printf(" | ");
+
+            invJrhs_ptr = invJrhs + b2*6;
+            for (int j=0; j<6; j++) {
+              delta += J[J_index+j] * invJrhs_ptr[j];
+              if (dFabs(J[J_index+j]) > dFabs(J_max)) {
+                J_max = J[J_index+j];
+                J_max_i = b2*6 + j;
+              }
+              //printf("%f, ",J[J_index+j]);
+            }
+          }
+          J_index += 6;
+
+          //printf("] b1[%d] b2[%d] J_max[%f] J_max_i[%d] rhs[%f]\n",b1,b2,J_max,J_max_i,rhs[i]);
+          // update invJrhs where corresponding J element is largest for stability
+          delta = (rhs[i] - delta) / J_max;
+          //printf("%f, ",delta);
+          invJrhs[J_max_i] = invJrhs[J_max_i] + delta;
+
+        }
+
+
+        //printf("   invJrhs: ");
+        //for (int i=0; i<m;i++) printf("%f, ",invJrhs[i]);
+        //printf("\n");
+        //printf("\n");
+      }
+
+
+
+      // next, new rhs = J*M*invJrhs
+      //   first, tmpz = J*M for one row of J
+      //   then, rhs[some row] = tmpz * invJrhs
+      {
+        dRealPtr J_ptr = J;
+        dReal tmpz[12];
+        dSetZero (tmpz, 12);
+        for (int i=0; i<m;J_ptr+=12,i++) {
+
+          // compute rhs = J * M * tmpz
+          int b1 = jb[i*2];
+          int b2 = jb[i*2+1];
+          dReal k1 = body[b1]->mass.mass;
+
+          for (int j=0; j<3 ; j++) tmpz[j] = J_ptr[j]*k1;
+
+          const dReal *I_ptr1 = I + 12*b1;
+          for (int j=0;j<3;j++) {
+            tmpz[3+j] = 0;
+            for (int k=0;k<3;k++) tmpz[3+j] += J_ptr[3+k]*I_ptr1[k*4+j];
+          }
+
+          if (b2 >= 0){
+            dReal k2 = body[b2]->mass.mass;
+            for (int j=0; j<3 ; j++) tmpz[6+j] = k2*J_ptr[j+6];
+            const dReal *I_ptr2 = I + 12*b2;
+            for (int j=0;j<3;j++) {
+              tmpz[9+j] = 0;
+              for (int k=0;k<3;k++) tmpz[9+j] += J_ptr[9+k]*I_ptr2[k*4+j];
+            }
+          }
+          // now calculate rhs = tmpz * invJrhs
+          rhs[i] = 0;
+          for (int j=0; j<6; j++) rhs[i] += tmpz[j] * invJrhs[b1*6+j];
+          if (b2 >= 0)
+            for (int j=0; j<6; j++) rhs[i] += tmpz[j+6] * invJrhs[b2*6+j];
+        }
+      }
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       // scale CFM
       for (int j=0; j<m; j++) cfm[j] *= stepsize1;
@@ -1810,6 +1959,7 @@ size_t dxEstimateQuickStepMemoryRequirements (
   size_t res = 0;
 
   res += dEFFICIENT_SIZE(sizeof(dReal) * 3 * 4 * nb); // for invI
+  res += dEFFICIENT_SIZE(sizeof(dReal) * 3 * 4 * nb); // for I needed by preconditioner
   res += dEFFICIENT_SIZE(sizeof(dReal) * nb); // for invM
 
   {
@@ -1834,6 +1984,7 @@ size_t dxEstimateQuickStepMemoryRequirements (
 #endif
       {
         size_t sub2_res1 = dEFFICIENT_SIZE(sizeof(dReal) * m); // for c
+        sub2_res1 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for invJrhs
         {
           size_t sub3_res1 = dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for tmp1
     
