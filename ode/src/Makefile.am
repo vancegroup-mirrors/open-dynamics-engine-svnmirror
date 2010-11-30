@@ -139,4 +139,14 @@ AM_CPPFLAGS += $(BOOST_CPPFLAGS)
 #libode_la_LDFLAGS += $(BOOST_THREAD_LDFLAGS)
 #libode_la_LIBS += $(BOOST_THREAD_LIBS)
 
+if LIBCCD
+AM_CPPFLAGS += -I$(top_srcdir)/libccd/src -I$(top_builddir)/libccd/src -DdLIBCCD_ENABLED
+libode_la_LIBADD += $(top_builddir)/libccd/src/libccd.la
 
+libode_la_SOURCES += collision_libccd.cpp collision_libccd.h
+
+if LIBCCD_CYL_CYL
+AM_CPPFLAGS += -DdLIBCCD_CYL_CYL
+endif
+
+endif
