@@ -239,7 +239,7 @@ void ccdPtDumpSVT(ccd_pt_t *pt, const char *fn)
 {
     FILE *fout;
 
-    fout = fopen(fn, "a");
+    fopen_s(&fout, fn, "a");
     if (fout == NULL)
         return;
 
