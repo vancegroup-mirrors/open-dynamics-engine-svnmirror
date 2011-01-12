@@ -4,7 +4,6 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -D__ODE__
 
 # convenience library to simulate per object cflags
 noinst_LTLIBRARIES = libfast.la
-libfast_la_CFLAGS = -O3 -Wall
 libfast_la_SOURCES = fastldlt.c fastltsolve.c fastdot.c fastlsolve.c
 
 
@@ -134,5 +133,26 @@ libode_la_SOURCES += collision_libccd.cpp collision_libccd.h
 if LIBCCD_CYL_CYL
 AM_CPPFLAGS += -DdLIBCCD_CYL_CYL
 endif
+
+if LIBCCD_CAP_CYL
+AM_CPPFLAGS += -DdLIBCCD_CAP_CYL
+endif
+
+if LIBCCD_CONVEX_BOX
+AM_CPPFLAGS += -DdLIBCCD_CONVEX_BOX
+endif
+if LIBCCD_CONVEX_CAP
+AM_CPPFLAGS += -DdLIBCCD_CONVEX_CAP
+endif
+if LIBCCD_CONVEX_CYL
+AM_CPPFLAGS += -DdLIBCCD_CONVEX_CYL
+endif
+if LIBCCD_CONVEX_SPHERE
+AM_CPPFLAGS += -DdLIBCCD_CONVEX_SPHERE
+endif
+if LIBCCD_CONVEX_CONVEX
+AM_CPPFLAGS += -DdLIBCCD_CONVEX_CONVEX
+endif
+
 
 endif
