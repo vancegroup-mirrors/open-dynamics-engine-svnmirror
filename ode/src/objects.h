@@ -66,6 +66,7 @@ struct dObject : public dBase {
   dObject *next;		// next object of this type in list
   dObject **tome;		// pointer to previous object's next ptr
   int tag;			// used by dynamics algorithms
+  int island_tag;		// used by island algorithms for grouping
   void *userdata;		// user settable data
   dObject(dxWorld *w);
   virtual ~dObject() { }
@@ -140,6 +141,7 @@ struct dxBody : public dObject {
   dxBody(dxWorld *w);
 };
 
+#define MAX_PARALLEL_ISLANDS 1000
 
 struct dxWorld : public dBase {
   dxBody *firstbody;		// body linked list
@@ -151,6 +153,7 @@ struct dxWorld : public dBase {
   dxAutoDisable adis;		// auto-disable parameters
   int body_flags;               // flags for new bodies
   dxStepWorkingMemory *wmem; // Working memory object for dWorldStep/dWorldQuickStep
+  dxStepWorkingMemory *island_wmems[MAX_PARALLEL_ISLANDS]; // Working memory object for dWorldStep/dWorldQuickStep
 
   dxQuickStepParameters qs;
   dxContactParameters contactp;

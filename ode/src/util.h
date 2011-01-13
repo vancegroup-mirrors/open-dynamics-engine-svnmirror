@@ -187,8 +187,8 @@ struct dxWorldProcessContext
 
   void CleanupContext();
 
-  void SavePreallocations(int islandcount, int const *islandsizes, dxBody *const *bodies, dxJoint *const *joints);
-  void RetrievePreallocations(int &islandcount, int const *&islandsizes, dxBody *const *&bodies, dxJoint *const *&joints);
+  void SavePreallocations(int islandcount, int const *islandsizes, dxBody *const *bodies, dxJoint *const *joints, size_t const *islandreqs);
+  void RetrievePreallocations(int &islandcount, int const *&islandsizes, dxBody *const *&bodies, dxJoint *const *&joints, size_t const *&islandreqs);
   void OffsetPreallocations(size_t stOffset);
   void CopyPreallocations(const dxWorldProcessContext *othercontext);
   void ClearPreallocations();
@@ -204,6 +204,7 @@ struct dxWorldProcessContext
 
   int m_IslandCount;
   int const *m_pIslandSizes;
+  size_t const *m_pIslandReqs;
   dxBody *const *m_pBodies;
   dxJoint *const *m_pJoints;
 

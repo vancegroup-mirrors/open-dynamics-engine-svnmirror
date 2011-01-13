@@ -118,6 +118,26 @@ ODE_API void dInitODE(void);
  */
 ODE_API int dInitODE2(unsigned int uiInitFlags/*=0*/);
 
+/**
+ * @brief Set the number of threads used to process islands.
+ * @param num_island_threads The number of threads used to process islands.
+ *
+ * @note
+ * Only a value greater than one will actually result in islands being processed in parallel.
+ *
+ * @note
+ * Always call this again with zero islands to deinitialize the island threading, e.g. just before calling dCloseODE(), or your application will close down with a possible memory leak.
+ * @code
+ *     dInitODE();
+ *     dSetNumIslandThreads(4);
+ *     ...
+ *     dSetNumIslandThreads(0);
+ *     dDeinitODE();
+ * @endcode
+ *
+ * @ingroup init
+ */
+ODE_API void dSetNumIslandThreads(int num_island_threads);
 
 /**
  * @brief ODE data allocation flags.

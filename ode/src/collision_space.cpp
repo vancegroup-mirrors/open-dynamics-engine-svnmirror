@@ -168,7 +168,9 @@ void dxSpace::add (dxGeom *geom)
 
   // add
   geom->parent_space = this;
-  geom->spaceAdd (&first);
+  mutex.lock();   // lock mutex before altering the linked list
+  geom->spaceAdd (&first);  
+  mutex.unlock(); // unlock mutex after altering the linked list
   count++;
 
   // enumerator has been invalidated
@@ -189,7 +191,9 @@ void dxSpace::remove (dxGeom *geom)
   dUASSERT (geom->parent_space == this,"object is not in this space");
 
   // remove
-  geom->spaceRemove();
+  mutex.lock();   // lock mutex before altering the linked list
+  geom->spaceRemove();  
+  mutex.unlock(); // unlock mutex after altering the linked list
   count--;
 
   // safeguard
@@ -208,8 +212,10 @@ void dxSpace::remove (dxGeom *geom)
 
 void dxSpace::dirty (dxGeom *geom)
 {
+  mutex.lock();   // lock mutex before altering the linked list
   geom->spaceRemove();
   geom->spaceAdd (&first);
+  mutex.unlock(); // unlock mutex after altering the linked list
 }
 
 //****************************************************************************
