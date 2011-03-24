@@ -58,6 +58,7 @@ libode_la_SOURCES =     nextafterf.c \
                         sphere.cpp \
                         step.cpp step.h \
                         timer.cpp \
+			mutex.h \
                         util.cpp util.h
 
 
