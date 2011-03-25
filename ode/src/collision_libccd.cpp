@@ -266,6 +266,7 @@ static int ccdCollide(dGeomID o1, dGeomID o2, int flags,
     ccd.support2 = supp2;
     ccd.center1  = cen1;
     ccd.center2  = cen2;
+    ccd.max_iterations = 500;
     ccd.mpr_tolerance = 1E-6;
 
 
@@ -312,6 +313,20 @@ int dCollideCylinderCylinder(dxGeom *o1, dxGeom *o2, int flags,
     return ccdCollide(o1, o2, flags, contact, skip,
                    &cyl1, ccdSupportCyl, ccdCenter,
                    &cyl2, ccdSupportCyl, ccdCenter);
+}
+
+int dCollideBoxCylinderCCD(dxGeom *o1, dxGeom *o2, int flags,
+			               dContactGeom *contact, int skip)
+{
+    ccd_cyl_t cyl;
+    ccd_box_t box;
+
+    ccdGeomToBox(o1, &box);
+    ccdGeomToCyl(o2, &cyl);
+
+    return ccdCollide(o1, o2, flags, contact, skip,
+                   &box, ccdSupportBox, ccdCenter,
+                   &cyl, ccdSupportCyl, ccdCenter);
 }
 
 int dCollideCapsuleCylinder(dxGeom *o1, dxGeom *o2, int flags,

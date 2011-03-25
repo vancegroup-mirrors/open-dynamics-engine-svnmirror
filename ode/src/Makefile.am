@@ -125,11 +125,43 @@ libode_la_SOURCES+=     collision_trimesh_trimesh.cpp \
 endif
 
 
+#################################
+#   Export more files for external solver use
+#################################
+libode_la_includedir = $(includedir)/src
+libode_la_include_HEADERS = 	\
+			util.h \
+			step.h \
+			quickstep.h \
+			odetls.h \
+			odeou.h \
+			obstack.h \
+			objects.h \
+			mat.h \
+			lcp.h \
+			heightfield.h \
+			collision_util.h \
+			collision_trimesh_internal.h \
+			collision_trimesh_colliders.h \
+			collision_transform.h \
+			collision_std.h \
+			collision_space_internal.h \
+			collision_kernel.h \
+			array.h \
+			config.h \
+			collision_libccd.h
+
+
+
 if LIBCCD
 AM_CPPFLAGS += -I$(top_srcdir)/libccd/src -I$(top_builddir)/libccd/src -DdLIBCCD_ENABLED
 libode_la_LIBADD += $(top_builddir)/libccd/src/libccd.la
 
 libode_la_SOURCES += collision_libccd.cpp collision_libccd.h
+
+if LIBCCD_BOX_CYL
+AM_CPPFLAGS += -DdLIBCCD_BOX_CYL
+endif
 
 if LIBCCD_CYL_CYL
 AM_CPPFLAGS += -DdLIBCCD_CYL_CYL
