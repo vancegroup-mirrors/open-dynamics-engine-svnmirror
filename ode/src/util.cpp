@@ -667,6 +667,7 @@ static void UpdateNumIslandThreads()
         boost_threadpool = new boost::threadpool::pool(s_requested_num_island_threads);
 #endif
 #ifdef USE_TBB_TO_DO_PARALLEL_ISLANDS_PROCESSING
+    if (s_requested_num_island_threads != s_actual_num_island_threads)
         tbb_init = new tbb::task_scheduler_init(s_requested_num_island_threads);
 #endif
     }
