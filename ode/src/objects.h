@@ -155,6 +155,8 @@ struct dxBody : public dObject {
   dReal max_angular_speed;      // limit the angular velocity to this magnitude
 
   dxBody(dxWorld *w);
+
+  dxContactParameters* contactp; // option to set contact max_vel and min_depths per body
 };
 
 

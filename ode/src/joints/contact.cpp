@@ -120,7 +120,12 @@ dxJointContact::getInfo2( dxJoint::Info2 *info )
     if ( contact.surface.mode & dContactSoftERP )
         erp = contact.surface.soft_erp;
     dReal k = info->fps * erp;
-    dReal depth = contact.geom.depth - world->contactp.min_depth;
+
+    dReal depth;
+    if (node[0].body->contactp && node[1].body->contactp)
+      depth = std::min(node[1].body->contactp->min_depth,node[0].body->contactp->min_depth);
+    else
+      depth = contact.geom.depth - world->contactp.min_depth;
     if ( depth < 0 ) depth = 0;
 
     if ( contact.surface.mode & dContactSoftCFM )
@@ -135,7 +140,11 @@ dxJointContact::getInfo2( dxJoint::Info2 *info )
     info->c[0] = pushout;
 
     // note: this cap should not limit bounce velocity
-    const dReal maxvel = world->contactp.max_vel;
+    dReal maxvel;
+    if (node[0].body->contactp && node[1].body->contactp)
+      maxvel = std::min(node[1].body->contactp->max_vel,node[0].body->contactp->max_vel);
+    else
+      maxvel = world->contactp.max_vel;
     if ( info->c[0] > maxvel )
         info->c[0] = maxvel;
 

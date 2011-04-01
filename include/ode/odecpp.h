@@ -217,6 +217,11 @@ public:
   void *getData() const
     { return dBodyGetData (get_id()); }
 
+  void setMinDepth (dReal min_depth)
+    { dBodySetMinDepth (get_id(), min_depth); }
+  void setMaxVel (dReal max_vel)
+    { dBodySetMaxVel (get_id(), max_vel); }
+
   void setPosition (dReal x, dReal y, dReal z)
     { dBodySetPosition (get_id(), x, y, z); }
   void setPosition (const dVector3 p)

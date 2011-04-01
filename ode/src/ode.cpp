@@ -291,6 +291,8 @@ dxBody *dBodyCreate (dxWorld *w)
 
   b->flags |= dxBodyGyroscopic;
 
+  b->contactp = NULL;
+
   return b;
 }
 
@@ -335,6 +337,8 @@ void dBodyDestroy (dxBody *b)
 	  b->average_avel_buffer = 0;
   }
 
+  if (b->contactp) delete b->contactp;
+
   delete b;
 }
 
@@ -350,6 +354,22 @@ void *dBodyGetData (dBodyID b)
 {
   dAASSERT (b);
   return b->userdata;
+}
+
+void dBodySetMinDepth (dBodyID b, dReal min_depth)
+{
+  dAASSERT (b);
+  if (b->contactp == NULL)
+    b->contactp = new dxContactParameters();
+  b->contactp->min_depth = min_depth;
+}
+
+void dBodySetMaxVel (dBodyID b, dReal max_vel)
+{
+  dAASSERT (b);
+  if (b->contactp == NULL)
+    b->contactp = new dxContactParameters();
+  b->contactp->max_vel = max_vel;
 }
 
 

@@ -958,6 +958,26 @@ ODE_API void dBodySetPosition   (dBodyID, dReal x, dReal y, dReal z);
  * if the new configuration is inconsistent with the joints/constraints
  * that are present.
  */
+ODE_API void dBodySetMinDepth   (dBodyID, const double d);
+
+/**
+ * @brief Set the orientation of a body.
+ * @ingroup bodies
+ * @remarks
+ * After setting, the outcome of the simulation is undefined
+ * if the new configuration is inconsistent with the joints/constraints
+ * that are present.
+ */
+ODE_API void dBodySetMaxVel   (dBodyID, const double d);
+
+/**
+ * @brief Set the orientation of a body.
+ * @ingroup bodies
+ * @remarks
+ * After setting, the outcome of the simulation is undefined
+ * if the new configuration is inconsistent with the joints/constraints
+ * that are present.
+ */
 ODE_API void dBodySetRotation   (dBodyID, const dMatrix3 R);
 
 /**
