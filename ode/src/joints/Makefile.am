@@ -7,6 +7,7 @@ libjoints_la_SOURCES =  joints.h \
                         joint_internal.h \
                         ball.h ball.cpp \
                         hinge.h hinge.cpp \
+                        screw.h screw.cpp \
                         slider.h slider.cpp \
                         contact.h contact.cpp \
                         universal.h universal.cpp \
@@ -37,6 +38,7 @@ libode_la_include_HEADERS = 	\
 				joint_internal.h \
 				joint.h \
 				hinge.h \
+				screw.h \
 				hinge2.h \
 				fixed.h \
 				contact.h \

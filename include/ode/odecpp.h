@@ -730,6 +730,58 @@ public:
 
 
 template <class dJointTemplateBase, class dWorldTemplateBase, class dBodyTemplateBase>
+class dScrewJointTemplate : public dJointTemplate<dJointTemplateBase, dWorldTemplateBase, dBodyTemplateBase> {
+private:
+  // intentionally undefined, don't use these
+  dScrewJointTemplate (const dScrewJointTemplate<dJointTemplateBase, dWorldTemplateBase, dBodyTemplateBase> &);
+  void operator = (const dScrewJointTemplate<dJointTemplateBase, dWorldTemplateBase, dBodyTemplateBase> &);
+
+protected:
+  typedef dJointTemplate<dJointTemplateBase, dWorldTemplateBase, dBodyTemplateBase> dBaseTemplate;
+
+  dJointID get_id() const { return dBaseTemplate::get_id(); }
+  void set_id(dJointID value) { dBaseTemplate::set_id(value); }
+
+  void destroy() { dBaseTemplate::destroy(); }
+
+public:
+  dScrewJointTemplate() { }
+  dScrewJointTemplate (dWorldID world, dJointGroupID group=0)
+    { set_id(dJointCreateScrew(world, group)); }
+  dScrewJointTemplate (dWorldTemplate<dWorldTemplateBase>& world, dJointGroupID group=0)
+    { set_id(dJointCreateScrew(world.id(), group)); }
+
+  void create (dWorldID world, dJointGroupID group=0) {
+    destroy();
+    set_id(dJointCreateScrew(world, group));
+  }
+  void create (dWorldTemplate<dWorldTemplateBase>& world, dJointGroupID group=0)
+    { create(world.id(), group); }
+
+  void setAxis (dReal x, dReal y, dReal z)
+    { dJointSetScrewAxis (get_id(), x, y, z); }
+  void setAxis (const dVector3 a)
+    { setAxis (a[0], a[1], a[2]); }
+  void getAxis (dVector3 result) const
+    { dJointGetScrewAxis (get_id(), result); }
+
+  dReal getPosition() const
+    { return dJointGetScrewPosition (get_id()); }
+  dReal getPositionRate() const
+    { return dJointGetScrewPositionRate (get_id()); }
+
+  virtual void setParam (int parameter, dReal value)
+    { dJointSetScrewParam (get_id(), parameter, value); }
+  virtual dReal getParam (int parameter) const
+    { return dJointGetScrewParam (get_id(), parameter); }
+  // TODO: expose params through methods
+
+  void addForce (dReal force)
+	{ dJointAddScrewForce(get_id(), force); }
+};
+
+
+template <class dJointTemplateBase, class dWorldTemplateBase, class dBodyTemplateBase>
 class dUniversalJointTemplate : public dJointTemplate<dJointTemplateBase, dWorldTemplateBase, dBodyTemplateBase> {
 private:
   // intentionally undefined, don't use these
@@ -1337,6 +1389,7 @@ typedef dJointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE,
 typedef dBallJointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE, dODECPP_BODY_TEMPLATE_BASE> dBallJoint;
 typedef dHingeJointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE, dODECPP_BODY_TEMPLATE_BASE> dHingeJoint;
 typedef dSliderJointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE, dODECPP_BODY_TEMPLATE_BASE> dSliderJoint;
+typedef dScrewJointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE, dODECPP_BODY_TEMPLATE_BASE> dScrewJoint;
 typedef dUniversalJointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE, dODECPP_BODY_TEMPLATE_BASE> dUniversalJoint;
 typedef dHinge2JointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE, dODECPP_BODY_TEMPLATE_BASE> dHinge2Joint;
 typedef dPRJointTemplate<dODECPP_JOINT_TEMPLATE_BASE, dODECPP_WORLD_TEMPLATE_BASE, dODECPP_BODY_TEMPLATE_BASE> dPRJoint;

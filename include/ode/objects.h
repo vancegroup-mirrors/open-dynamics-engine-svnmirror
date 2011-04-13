@@ -1635,6 +1635,14 @@ ODE_API dJointID dJointCreateHinge (dWorldID, dJointGroupID);
 ODE_API dJointID dJointCreateSlider (dWorldID, dJointGroupID);
 
 /**
+ * @brief Create a new joint of the screw type.
+ * @ingroup joints
+ * @param dJointGroupID set to 0 to allocate the joint normally.
+ * If it is nonzero the joint is allocated in the given joint group.
+ */
+ODE_API dJointID dJointCreateScrew (dWorldID, dJointGroupID);
+
+/**
  * @brief Create a new joint of the contact type.
  * @ingroup joints
  * @param dJointGroupID set to 0 to allocate the joint normally.
@@ -1803,7 +1811,13 @@ ODE_API int dJointIsEnabled (dJointID);
 ODE_API void dJointSetData (dJointID, void *data);
 
 /**
- * @brief Set the user-data pointer
+ * @brief Set screw joint thread pitch
+ * @ingroup joints
+ */
+ODE_API void dJointSetScrewThreadPitch (dJointID, dReal thread_pitch);
+
+/**
+ * @brief Set joint viscous damping coefficient
  * @ingroup joints
  */
 ODE_API void dJointSetDamping (dJointID, dReal damping);
@@ -1821,6 +1835,7 @@ ODE_API void *dJointGetData (dJointID);
  * \li dJointTypeBall
  * \li dJointTypeHinge
  * \li dJointTypeSlider
+ * \li dJointTypeScrew
  * \li dJointTypeContact
  * \li dJointTypeUniversal
  * \li dJointTypeHinge2
@@ -1969,6 +1984,34 @@ ODE_API void dJointSetSliderParam (dJointID, int parameter, dReal value);
  * @ingroup joints
  */
 ODE_API void dJointAddSliderForce(dJointID joint, dReal force);
+
+/**
+ * @brief set the joint axis
+ * @ingroup joints
+ */
+ODE_API void dJointSetScrewAxis (dJointID, dReal x, dReal y, dReal z);
+
+/**
+ * @ingroup joints
+ */
+ODE_API void dJointSetScrewAxisDelta (dJointID, dReal x, dReal y, dReal z, dReal ax, dReal ay, dReal az);
+
+/**
+ * @brief set joint parameter
+ * @ingroup joints
+ */
+ODE_API void dJointSetScrewParam (dJointID, int parameter, dReal value);
+
+/**
+ * @brief Applies the given force in the screw's direction.
+ *
+ * That is, it applies a force with specified magnitude, in the direction of
+ * screw's axis, to body1, and with the same magnitude but opposite
+ * direction to body2.  This function is just a wrapper for dBodyAddForce().
+ * @ingroup joints
+ */
+ODE_API void dJointAddScrewForce(dJointID joint, dReal force);
+ODE_API void dJointAddScrewTorque(dJointID joint, dReal torque);
 
 /**
  * @brief set anchor
@@ -2536,6 +2579,39 @@ ODE_API void dJointGetSliderAxis (dJointID, dVector3 result);
  * @ingroup joints
  */
 ODE_API dReal dJointGetSliderParam (dJointID, int parameter);
+
+/**
+ * @brief Get the screw linear position (i.e. the screw's extension)
+ *
+ * When the axis is set, the current position of the attached bodies is
+ * examined and that position will be the zero position.
+
+ * The position is the distance, with respect to the zero position,
+ * along the screw axis of body 1 with respect to
+ * body 2. (A NULL body is replaced by the world).
+ * @ingroup joints
+ */
+ODE_API dReal dJointGetScrewPosition (dJointID);
+ODE_API dReal dJointGetScrewAngle (dJointID);
+
+/**
+ * @brief Get the screw linear position's time derivative.
+ * @ingroup joints
+ */
+ODE_API dReal dJointGetScrewPositionRate (dJointID);
+ODE_API dReal dJointGetScrewAngleRate (dJointID);
+
+/**
+ * @brief Get the screw axis
+ * @ingroup joints
+ */
+ODE_API void dJointGetScrewAxis (dJointID, dVector3 result);
+
+/**
+ * @brief get joint parameter
+ * @ingroup joints
+ */
+ODE_API dReal dJointGetScrewParam (dJointID, int parameter);
 
 /**
  * @brief Get the joint anchor point, in world coordinates.

@@ -400,6 +400,7 @@ static void ComputeRows(
   dRealPtr        JiM          = tmpRealPtr[4];
   dRealPtr        invI         = tmpRealPtr[5];
   dRealPtr        coeff_damp   = tmpRealPtr[6];
+  dRealPtr        JiMratio     = tmpRealPtr[7];
   dRealMutablePtr b            = tmpMutablePtr[0];
   dRealMutablePtr J            = tmpMutablePtr[1];
   dRealMutablePtr fc           = tmpMutablePtr[2];
@@ -812,6 +813,7 @@ static void SOR_LCP (dxWorldProcessContext *context,
   const int m_damp,dRealMutablePtr J_damp, dRealPtr coeff_damp, int *jb_damp,dRealMutablePtr v_damp,
   dRealMutablePtr f_damp,dRealMutablePtr v_joint_damp, dRealPtr JiM, // damping related
 #endif
+  dRealPtr JiMratio,
 #ifdef USE_TPROW
   boost::threadpool::pool* row_threadpool,
 #endif
@@ -939,7 +941,7 @@ static void SOR_LCP (dxWorldProcessContext *context,
   dReal tmpReal[tmpReal_size*num_chunks];
   int tmpIntPtr_size = 3;
   const int* tmpIntPtr[tmpIntPtr_size*num_chunks];
-  int tmpRealPtr_size = 7;
+  int tmpRealPtr_size = 8;
   dRealPtr tmpRealPtr[tmpRealPtr_size*num_chunks];
   int tmpMutablePtr_size = 12;
   dRealMutablePtr tmpMutablePtr[tmpMutablePtr_size*num_chunks];
@@ -989,6 +991,7 @@ static void SOR_LCP (dxWorldProcessContext *context,
     tmpRealPtr[4+thread_id*tmpRealPtr_size] = JiM;
     tmpRealPtr[5+thread_id*tmpRealPtr_size] = invI;
     tmpRealPtr[6+thread_id*tmpRealPtr_size] = coeff_damp ;
+    tmpRealPtr[7+thread_id*tmpRealPtr_size] = JiMratio;
     tmpMutablePtr[0+thread_id*tmpMutablePtr_size] = b;
     tmpMutablePtr[1+thread_id*tmpMutablePtr_size] = J;
     tmpMutablePtr[2+thread_id*tmpMutablePtr_size] = fc;
@@ -1217,6 +1220,7 @@ void dxQuickStepper (dxWorldProcessContext *context,
   dReal *v_joint_damp = NULL;
   dReal* f_damp = NULL;
   dReal *JiM = NULL;
+  dReal *JiMratio = NULL;
   int *jb_damp = NULL;
   dReal *coeff_damp = NULL;
 #endif
@@ -1258,6 +1262,11 @@ void dxQuickStepper (dxWorldProcessContext *context,
       JiM = context->AllocateArray<dReal> (mlocal*12); // for computing b_damp
       dSetZero (JiM,jelements);
 #endif
+      // JiMratio is the element-wise maximum ratio between
+      //   Ja*inv(Ma) and Jb*inv(Mb) for a joint
+      // if the joint is one sided, then we preset it to 1
+      JiMratio = context->AllocateArray<dReal> (mlocal); // for computing b_damp
+      dSetZero (JiMratio,mlocal);
     }
 
 #ifdef USE_JOINT_DAMPING
@@ -1469,6 +1478,7 @@ void dxQuickStepper (dxWorldProcessContext *context,
         {
           dRealPtr J_ptr = J;
           dRealMutablePtr JiM_ptr = JiM; // intermediate solution storage
+          dRealMutablePtr JiMratio_ptr = JiMratio; // intermediate solution storage
           for (int i=0; i<m;J_ptr+=12,JiM_ptr+=12, i++) {
 
             // compute JiM = J * invM
@@ -1484,11 +1494,23 @@ void dxQuickStepper (dxWorldProcessContext *context,
               JiM_ptr[3+j] += J_ptr[3+k]*invI_ptr1[k*4+j];
             }
 
+            // preset JiMratio to 1
+            JiMratio_ptr[0] = 1.0;
+
             if (b2 >= 0){
               dReal k2 = body[b2]->invMass;
               for (int j=0; j<3 ; j++) JiM_ptr[j+6] += k2*J_ptr[j+6];
               const dReal *invI_ptr2 = invI + 12*b2;
               for (int j=0;j<3;j++) for (int k=0;k<3;k++) JiM_ptr[9+j] += J_ptr[9+k]*invI_ptr2[k*4+j];
+
+              // check element-wise ratio for JiMratio
+              JiMratio_ptr[0] = 1.0;
+              for (int j=0;j<3;j++) {
+                if  (JiM_ptr[  j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[6+j]/JiM_ptr[  j]);
+                if  (JiM_ptr[3+j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[9+j]/JiM_ptr[3+j]);
+                if  (JiM_ptr[6+j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[  j]/JiM_ptr[6+j]);
+                if  (JiM_ptr[9+j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[3+j]/JiM_ptr[9+j]);
+              }
             }
           }
         }
@@ -1555,6 +1577,7 @@ void dxQuickStepper (dxWorldProcessContext *context,
 #ifdef USE_JOINT_DAMPING
                m_damp,J_damp,coeff_damp,jb_damp,v_damp,f_damp,v_joint_damp,JiM,
 #endif
+               JiMratio,
 #ifdef USE_TPROW
                world->row_threadpool,
 #endif
@@ -1829,6 +1852,7 @@ size_t dxEstimateQuickStepMemoryRequirements (
       sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * 2 * m_damp); // for jb_damp            FIXME: shoulbe be 2 not 12?
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for f_damp
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12*m); // for JiM
+      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * m); // for JiMratio
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for v_damp
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * m_damp); // for coeff_damp
 #endif

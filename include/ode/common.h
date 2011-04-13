@@ -245,6 +245,7 @@ typedef enum {
   dJointTypeNone = 0,		/* or "unknown" */
   dJointTypeBall,
   dJointTypeHinge,
+  dJointTypeScrew,
   dJointTypeSlider,
   dJointTypeContact,
   dJointTypeUniversal,

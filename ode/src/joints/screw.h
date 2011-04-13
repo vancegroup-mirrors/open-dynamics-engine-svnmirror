@@ -20,27 +20,39 @@
  *                                                                       *
  *************************************************************************/
 
-#ifndef _ODE_JOINTS_H_
-#define _ODE_JOINTS_H_
-
-#include <ode/common.h>
+#ifndef _ODE_JOINT_SCREW_H_
+#define _ODE_JOINT_SCREW_H_
 
 #include "joint.h"
 
-#include "ball.h"
-#include "hinge.h"
-#include "slider.h"
-#include "screw.h"
-#include "contact.h"
-#include "universal.h"
-#include "hinge2.h"
-#include "fixed.h"
-#include "null.h"
-#include "amotor.h"
-#include "lmotor.h"
-#include "plane2d.h"
-#include "pu.h"
-#include "pr.h"
-#include "piston.h"
+
+// screw
+
+struct dxJointScrew : public dxJoint
+{
+    dVector3 anchor1;   // anchor w.r.t first body
+    dVector3 anchor2;   // anchor w.r.t second body
+    dVector3 axis1;     // axis w.r.t first body
+    dVector3 axis2;     // axis w.r.t second body
+    dVector3 offset;    // point relative to body2 that should be // aligned with body1 center along axis1
+    dQuaternion qrel;   // initial relative rotation body1 -> body2
+    dxJointLimitMotor limot; // limit and motor information
+    dReal cumulative_angle; // save a cumulative angle so we can use larger then +/-pi limits
+    dReal thread_pitch;  // set to be radians per meters
+
+    dxJointScrew( dxWorld *w );
+    virtual void getSureMaxInfo( SureMaxInfo* info );
+    virtual void getInfo1( Info1* info );
+    virtual void getInfo2( Info2* info );
+    virtual dJointType type() const;
+    virtual size_t size() const;
+
+    virtual void setRelativeValues();
+
+    void computeOffset();
+    void computeInitialRelativeRotation();
+};
+
+
 
 #endif

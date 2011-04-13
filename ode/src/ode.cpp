@@ -1218,6 +1218,12 @@ dxJoint * dJointCreateSlider (dWorldID w, dJointGroupID group)
     return createJoint<dxJointSlider>(w,group);
 }
 
+dxJoint * dJointCreateScrew (dWorldID w, dJointGroupID group)
+{
+    dAASSERT (w);
+    return createJoint<dxJointScrew>(w,group);
+}
+
 
 dxJoint * dJointCreateContact (dWorldID w, dJointGroupID group,
 			       const dContact *c)
@@ -1475,17 +1481,34 @@ void dJointSetFeedback (dxJoint *joint, dJointFeedback *f)
   joint->feedback = f;
 }
 
+void dJointSetScrewThreadPitch (dxJoint *joint, dReal thread_pitch)
+{
+  dAASSERT (joint);
+
+  // make sure this is a dxJointScrew
+  if (joint->type() == dJointTypeHinge)
+  {
+    // set joint thread_pitch
+    ((dxJointScrew*)joint)->thread_pitch = thread_pitch;
+  }
+}
+
 void dJointSetDamping (dxJoint *joint, dReal damping)
 {
   dAASSERT (joint);
 
-  if (damping > 0.0)
+  if (joint->type() == dJointTypeHinge || joint->type() == dJointTypeSlider || 
+      joint->type() == dJointTypeHinge)
   {
-    // set use_damping to true
-    joint->use_damping = true;
-    // damping coefficient is in jicurr->info.damping_coefficient);
-    joint->damping_coefficient = damping;
-    // FIXME: only hinge joint and slider are implemented at this time
+    if (damping != 0.0)
+    {
+      if (damping < 0.0) printf("bad to have negative viscous joint damping, make sure you know what's going on.\n");
+      // set use_damping to true
+      joint->use_damping = true;
+      // damping coefficient is in jicurr->info.damping_coefficient);
+      joint->damping_coefficient = damping;
+      // FIXME: only hinge joint and slider are implemented at this time, extend?
+    }
   }
 }
 
