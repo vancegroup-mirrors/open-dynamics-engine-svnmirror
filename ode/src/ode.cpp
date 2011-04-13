@@ -1486,10 +1486,11 @@ void dJointSetScrewThreadPitch (dxJoint *joint, dReal thread_pitch)
   dAASSERT (joint);
 
   // make sure this is a dxJointScrew
-  if (joint->type() == dJointTypeHinge)
+  if (joint->type() == dJointTypeScrew)
   {
     // set joint thread_pitch
     ((dxJointScrew*)joint)->thread_pitch = thread_pitch;
+    //printf("setting thread_pitch to %f\n",thread_pitch);
   }
 }
 

@@ -261,7 +261,7 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
       for ( i = 0; i < 3; i++ ) info->J1a[s2+i] = ax1[i]/thread_pitch;
       for ( i = 0; i < 3; i++ ) info->J1a[s3+i] = ax1[i]/thread_pitch;
       for ( i = 0; i < 3; i++ ) info->J1l[s3+i] = ax1[i];
-      //printf("screw err lin[%f], ang[%f], diff[%f] [%d]\n",thread_pitch*lin_disp, cumulative_angle, lin_err, (int)this->use_damping);
+      //printf("screw err lin[%f], ang[%f], diff[%f] [%d] tp[%f]\n",thread_pitch*lin_disp, cumulative_angle, lin_err, (int)this->use_damping, thread_pitch);
 
       // compute last two elements of right hand side. we want to align the offset
       // point (in body 2's frame) with the center of body 1.
