@@ -247,6 +247,14 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
           // linear constraints
           for ( i = 0; i < 3; i++ ) info->J2l[s0+i] = -p[i];
           for ( i = 0; i < 3; i++ ) info->J2l[s1+i] = -q[i];
+
+          // screw constraint: compensate for linear axial force induced torque
+          //   not sure how to mix this with screw constraint
+          //   for now, MAKE SURE THE AXIS IS ALIGNED WITH c!!!
+          // dCalcVectorCross3( tmp, c, ax1 );
+          // dScaleVector3( tmp, REAL( 0.5 ));
+          // for ( i = 0; i < 3; i++ ) info->J1a[s2+i] = tmp[i];
+          // for ( i = 0; i < 3; i++ ) info->J2a[s2+i] = tmp[i];
           // screw constraint: now constrain the sliding axis by rotation of the other body
           for ( i = 0; i < 3; i++ ) info->J2a[s2+i] = -ax1[i]/thread_pitch;
           for ( i = 0; i < 3; i++ ) info->J2l[s2+i] = -ax1[i];
