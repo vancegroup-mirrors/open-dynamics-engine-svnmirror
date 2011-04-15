@@ -294,7 +294,8 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
       // if the slider is powered, or has joint limits, add in the extra row
       // limot.addLimot ( this, info, 5, ax1, 0 ); // comment out as this will be the screw constraint
 
-      // joint damping
+      /* comment out linear damping, use only rotation damping
+      // linear joint damping
       if (this->use_damping)
       {
         // added J1ld and J2ld for damping, only 1 row
@@ -309,6 +310,7 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
         }
         // there's no rhs for damping setup, all we want to use is the jacobian information above
       }
+      */
     }
 
     // constrain the hinge like DOFs
@@ -381,7 +383,7 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
       // if the screw is powered, or has joint limits, add in the stuff
       //limot.addLimot( this, info, 5, ax1, 1 ); // comment out as this will be the screw constraint
 
-      // joint damping
+      // rotational joint damping
       if (this->use_damping)
       {
         // added J1ad and J2ad for damping, only 1 row
