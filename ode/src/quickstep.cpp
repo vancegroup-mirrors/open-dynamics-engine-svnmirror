@@ -757,7 +757,7 @@ static void ComputeRows(
         v_joint_damp[j] = 0;
 
         // ramp-up : option to skip first few iterations to let the joint settle first
-        int skip = 10; //num_iterations-1;
+        int skip = 3; //num_iterations-1;
         dReal alpha = (iteration>=skip)?(dReal)(iteration-skip+1) / (dReal)(num_iterations-skip):0;
 
         for (int k=0;k<6;k++) v_joint_damp[j] += alpha*J_damp_ptr[k] * v_damp[b1*6+k];
