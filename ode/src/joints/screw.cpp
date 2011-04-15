@@ -111,9 +111,9 @@ dxJointScrew::getSureMaxInfo( SureMaxInfo* info )
 void
 dxJointScrew::getInfo1( dxJoint::Info1 *info )
 {
-    info->nub = 6;
+    info->nub = 5;
 
-    info->m = 6;
+    info->m = 5;
 
 /* comment out joint limits for now, add back later after verifying continuous is working
     // if proper joint limits are specified
@@ -223,7 +223,6 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
       int s0 = 0 * info->rowskip;
       int s1 = 1 * info->rowskip;
       int s2 = 2 * info->rowskip;
-      int s3 = 3 * info->rowskip;
       // remaining two rows. we want: vel2 = vel1 + w1 x c ... but this would
       // result in three equations, so we project along the planespace vectors
       // so that sliding along the slider axis is disregarded. for symmetry we
@@ -251,16 +250,12 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
           // screw constraint: now constrain the sliding axis by rotation of the other body
           for ( i = 0; i < 3; i++ ) info->J2a[s2+i] = -ax1[i]/thread_pitch;
           for ( i = 0; i < 3; i++ ) info->J2l[s2+i] = -ax1[i];
-          for ( i = 0; i < 3; i++ ) info->J2l[s3+i] = -ax1[i];
-          for ( i = 0; i < 3; i++ ) info->J2a[s3+i] = -ax1[i]/thread_pitch;
       }
       for ( i = 0; i < 3; i++ ) info->J1l[s0+i] = p[i];
       for ( i = 0; i < 3; i++ ) info->J1l[s1+i] = q[i];
       // screw constraint: now constrain the sliding axis by rotation of the other body
       for ( i = 0; i < 3; i++ ) info->J1l[s2+i] = ax1[i];
       for ( i = 0; i < 3; i++ ) info->J1a[s2+i] = ax1[i]/thread_pitch;
-      for ( i = 0; i < 3; i++ ) info->J1a[s3+i] = ax1[i]/thread_pitch;
-      for ( i = 0; i < 3; i++ ) info->J1l[s3+i] = ax1[i];
       //printf("screw err lin[%f], ang[%f], diff[%f] [%d] tp[%f]\n",thread_pitch*lin_disp, cumulative_angle, lin_err, (int)this->use_damping, thread_pitch);
 
       // compute last two elements of right hand side. we want to align the offset
@@ -275,7 +270,6 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
           info->c[1] = k * dCalcVectorDot3 ( q, c );
           // interpenetration error for screw constraint
           info->c[2] = k * lin_err;
-          info->c[3] = k * lin_err;
       }
       else
       {
@@ -285,7 +279,6 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
           info->c[1] = k * dCalcVectorDot3 ( q, ofs );
           // interpenetration error for screw constraint
           info->c[2] = k * lin_err;
-          info->c[3] = k * lin_err;
 
           if ( flags & dJOINT_REVERSE )
               for ( i = 0; i < 3; ++i ) ax1[i] = -ax1[i];
@@ -328,24 +321,24 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
       dMultiply0_331( ax1, node[0].body->posr.R, axis1 );
       dPlaneSpace( ax1, p, q );
 
+      int s3 = 3 * info->rowskip;
       int s4 = 4 * info->rowskip;
-      int s5 = 5 * info->rowskip;
 
-      info->J1a[s4+0] = p[0];
-      info->J1a[s4+1] = p[1];
-      info->J1a[s4+2] = p[2];
-      info->J1a[s5+0] = q[0];
-      info->J1a[s5+1] = q[1];
-      info->J1a[s5+2] = q[2];
+      info->J1a[s3+0] = p[0];
+      info->J1a[s3+1] = p[1];
+      info->J1a[s3+2] = p[2];
+      info->J1a[s4+0] = q[0];
+      info->J1a[s4+1] = q[1];
+      info->J1a[s4+2] = q[2];
 
       if ( node[1].body )
       {
-          info->J2a[s4+0] = -p[0];
-          info->J2a[s4+1] = -p[1];
-          info->J2a[s4+2] = -p[2];
-          info->J2a[s5+0] = -q[0];
-          info->J2a[s5+1] = -q[1];
-          info->J2a[s5+2] = -q[2];
+          info->J2a[s3+0] = -p[0];
+          info->J2a[s3+1] = -p[1];
+          info->J2a[s3+2] = -p[2];
+          info->J2a[s4+0] = -q[0];
+          info->J2a[s4+1] = -q[1];
+          info->J2a[s4+2] = -q[2];
       }
 
       // compute the right hand side of the constraint equation. set relative
@@ -377,8 +370,8 @@ dxJointScrew::getInfo2( dxJoint::Info2 *info )
       }
       dCalcVectorCross3( b, ax1, ax2 );
       dReal k = info->fps * info->erp;
-      info->c[4] = k * dCalcVectorDot3( b, p );
-      info->c[5] = k * dCalcVectorDot3( b, q );
+      info->c[3] = k * dCalcVectorDot3( b, p );
+      info->c[4] = k * dCalcVectorDot3( b, q );
 
       // if the screw is powered, or has joint limits, add in the stuff
       //limot.addLimot( this, info, 5, ax1, 1 ); // comment out as this will be the screw constraint
