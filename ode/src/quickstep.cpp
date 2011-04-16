@@ -86,8 +86,6 @@ typedef dReal *dRealMutablePtr;
 #define RANDOMLY_REORDER_CONSTRAINTS 1
 #undef LOCK_WHILE_RANDOMLY_REORDER_CONSTRAINTS
 
-#define USE_JOINT_DAMPING
-
 //****************************************************************************
 // special matrix multipliers
 
@@ -386,35 +384,23 @@ static void ComputeRows(
   int nRows              = tmpInt[1];
   int m                  = tmpInt[2];
   int nb                 = tmpInt[3];
-  int m_damp             = tmpInt[4];
   int num_iterations     = tmpInt[5];
   dReal stepsize         = tmpReal[0];
   dReal sor_lcp_tolerance= tmpReal[1];
   const int* jb                = tmpIntPtr[0];
   const int* findex            = tmpIntPtr[1];
-  const int* jb_damp           = tmpIntPtr[2];
   dRealPtr        Ad           = tmpRealPtr[0];
   dRealPtr        hi           = tmpRealPtr[1];
   dRealPtr        lo           = tmpRealPtr[2];
   dRealPtr        Adcfm        = tmpRealPtr[3];
-  dRealPtr        JiM          = tmpRealPtr[4];
   dRealPtr        invI         = tmpRealPtr[5];
-  dRealPtr        coeff_damp   = tmpRealPtr[6];
-  dRealPtr        JiMratio     = tmpRealPtr[7];
   dRealMutablePtr b            = tmpMutablePtr[0];
   dRealMutablePtr J            = tmpMutablePtr[1];
   dRealMutablePtr fc           = tmpMutablePtr[2];
   dRealMutablePtr lambda       = tmpMutablePtr[3];
   dRealMutablePtr iMJ          = tmpMutablePtr[4];
-#ifdef USE_JOINT_DAMPING
-  dRealMutablePtr b_damp       = tmpMutablePtr[5];
-  dRealMutablePtr f_damp       = tmpMutablePtr[6];
-  dRealMutablePtr v_damp       = tmpMutablePtr[7];
-  dRealMutablePtr J_damp       = tmpMutablePtr[8];
-  dRealMutablePtr v_joint_damp = tmpMutablePtr[9];
 #ifdef REORDER_CONSTRAINTS
   dRealMutablePtr last_lambda  = tmpMutablePtr[10];
-#endif
 #endif
   dRealMutablePtr delta_error  = tmpMutablePtr[11];
 
@@ -525,53 +511,10 @@ static void ComputeRows(
         fc_ptr2 = (b2 >= 0) ? fc + 6*b2 : NULL;
       }
 
-#ifdef USE_JOINT_DAMPING
-      /*************************************************************/
-      /* compute b_damp                                            */
-      /* b is to be modified by b_damp                             */
-      /* where b_damp = -J*inv(M)*f_damp / Ad  (since b is rhs/Ad) */
-      /*                                                           */
-      /* initially f_damp is 0, so motion is undamped on first     */
-      /* iteration.                                                */
-      /*                                                           */
-      /*************************************************************/
-      {
-        b_damp[index] = 0;
-        int b1 = jb[index*2];
-        int b2 = jb[index*2+1];
-        dRealMutablePtr f_damp_ptr1 = f_damp + 6*b1;
-        dRealMutablePtr f_damp_ptr2 = (b2 >= 0) ? f_damp + 6*b2 : NULL;
-   
-        dRealPtr JiM_ptr = JiM + index*12;
-
-        // compute b_damp = JiM * f_damp, b_damp is preset to zero already
-        for (int j=0;j<6;j++) {
-          b_damp[index] += JiM_ptr[j] * f_damp_ptr1[j];
-          if (b2>=0) b_damp[index] += JiM_ptr[j+6] * f_damp_ptr2[j];
-        }
-   
-        // and scale JiM by Ad
-        b_damp[index] *= Ad[index];
-        // FIXME: find some kind of limiters that works as artificial dampers
-        // b_damp must make b smaller
-        // so b_damp must have opposite sign as b
-        // and abs(b_damp) < abs(b)
-        //if (b_damp[index]*b[index]>0) b_damp[index]=0;
-        //if (dFabs(b_damp[index])>dFabs(b[index])) b_damp[index]=-b[index];
-      }
-#endif
-
       dReal old_lambda = lambda[index];
 
       {
         delta = b[index] - old_lambda*Adcfm[index];
-#ifdef USE_JOINT_DAMPING
-        /***************************************************************************/
-        /* b is to be modified by b_damp = -J*inv(M)*f_damp / Ad since b is rhs/Ad */
-        /***************************************************************************/
-        delta += b_damp[index];
-#endif
-
         dRealPtr J_ptr = J + index*12;
         // @@@ potential optimization: SIMD-ize this and the b2 >= 0 case
         delta -=fc_ptr1[0] * J_ptr[0] + fc_ptr1[1] * J_ptr[1] +
@@ -693,90 +636,6 @@ static void ComputeRows(
     //  printf("\n%f\n",rms_error);
     //}
 
-
-#ifdef USE_JOINT_DAMPING
-    /****************************************************************/
-    /* compute v_damp per fc update                                 */
-    /*   based on all external forces fe, fc, f_damp                */
-    /*   v_damp should have started out same as v(n)                */
-    /*   v_damp should end up being v(n+1)                          */
-    /*                                                              */
-    /*  v_damp = v_current + stepsize * invM * f_all                */
-    /*                                                              */
-    /****************************************************************/
-    {
-      const dReal *invIrow = invI;
-      dRealMutablePtr f_damp_ptr = f_damp;
-      dRealMutablePtr v_damp_ptr = v_damp;
-      dxBody *const *const bodyend = body + nb;
-      const dReal *fc_ptr = fc;
-
-      for (dxBody *const *bodycurr = body; bodycurr != bodyend; fc_ptr+=6, invIrow += 12, f_damp_ptr+=6, v_damp_ptr+=6, bodycurr++) {
-        // f_damp should be updated in SOR LCP
-
-        // compute the velocity update:
-        // add stepsize * invM * f_damp to the body velocity
-        dxBody *b = *bodycurr;
-        dReal body_invMass_mul_stepsize = stepsize * b->invMass;
-        dReal tmp3[3];
-        for (int j=0; j<3; j++) {
-          // note that cforce(fc) is really not a force but an acceleration, hence there is
-          // no premultiplying of invM here (compare to update due to external force 'facc' below)
-          // add stepsize * cforce(fc) to the body velocity
-          v_damp_ptr[j]   = b->lvel[j] + stepsize * fc_ptr[j]   + body_invMass_mul_stepsize * ( b->facc[j] + f_damp_ptr[j] );
-          v_damp_ptr[j+3] = b->avel[j] + stepsize * fc_ptr[j+3];
-
-          // accumulate step*torques
-          tmp3[j] = stepsize*(b->tacc[j] + f_damp_ptr[j+3]);
-        }
-        // v_damp = invI * f_damp
-        dMultiplyAdd0_331 (v_damp_ptr+3, invIrow, tmp3);
-
-      }
-    }
-
-    /****************************************************************/
-    /* compute f_damp per v_damp update                             */
-    /* compute damping force f_damp = J_damp' * B * J_damp * v_damp */
-    /*                                                              */
-    /*  we probably want to apply some kind of limiter on f_damp    */
-    /*  based on changes in v_damp.                                 */
-    /*                                                              */
-    /*  for starters, ramp up damping to increase stability.        */
-    /*                                                              */
-    /****************************************************************/
-    {
-      dSetZero (f_damp,6*nb); // reset f_damp, following update skips around, so cannot set to 0 inline
-      dRealPtr J_damp_ptr = J_damp;
-      // compute f_damp and velocity updates
-      // first compute v_joint_damp = J_damp * v_damp
-      // v_joint_damp is m_damp X 1 single column vector
-      for (int j=0; j<m_damp;J_damp_ptr+=12, j++) {
-        int b1 = jb_damp[j*2];
-        int b2 = jb_damp[j*2+1];
-        v_joint_damp[j] = 0;
-
-        // ramp-up : option to skip first few iterations to let the joint settle first
-        int skip = 3; //num_iterations-1;
-        dReal alpha = (iteration>=skip)?(dReal)(iteration-skip+1) / (dReal)(num_iterations-skip):0;
-
-        for (int k=0;k<6;k++) v_joint_damp[j] += alpha*J_damp_ptr[k] * v_damp[b1*6+k];
-        if (b2 >= 0) for (int k=0;k<6;k++) v_joint_damp[j] += alpha*J_damp_ptr[k+6] * v_damp[b2*6+k];
-        // multiply by damping coefficients (B is diagnoal)
-        v_joint_damp[j] *= coeff_damp[j];
-
-        // so now v_joint_damp = B * J_damp * v_damp
-        // update f_damp = J_damp' * v_joint_damp
-        for (int k=0; k<6; k++) f_damp[b1*6+k] -= J_damp_ptr[k]*v_joint_damp[j];
-        if (b2 >= 0) for (int k=0; k<6; k++) f_damp[b2*6+k] -= J_damp_ptr[6+k]*v_joint_damp[j];
-
-        //if (v_joint_damp[j] < 1000)
-        //  printf("ITER: %d j: %d m1: %f m2: %f v: %f\n",iteration,j,1.0/body[b1]->invMass,1.0/body[b2]->invMass,v_joint_damp[j]);
-      }
-
-    }
-#endif
-
 #ifdef SHOW_CONVERGENCE
     printf("MONITOR: id: %d iteration: %d error: %20.16f\n",thread_id,iteration,rms_error);
 #endif
@@ -809,15 +668,10 @@ static void SOR_LCP (dxWorldProcessContext *context,
   dRealPtr invI, dRealMutablePtr lambda, dRealMutablePtr fc, dRealMutablePtr b,
   dRealPtr lo, dRealPtr hi, dRealPtr cfm, const int *findex,
   const dxQuickStepParameters *qs,
-#ifdef USE_JOINT_DAMPING
-  const int m_damp,dRealMutablePtr J_damp, dRealPtr coeff_damp, int *jb_damp,dRealMutablePtr v_damp,
-  dRealMutablePtr f_damp,dRealMutablePtr v_joint_damp, dRealPtr JiM, // damping related
-#endif
-  dRealPtr JiMratio,
 #ifdef USE_TPROW
   boost::threadpool::pool* row_threadpool,
 #endif
-  const dReal stepsize) // for updating v_damp along the way
+  const dReal stepsize)
 {
 #ifdef WARM_STARTING
   {
@@ -860,7 +714,7 @@ static void SOR_LCP (dxWorldProcessContext *context,
 
 
   /********************************/
-  /* allocate for J*invM*f_damp   */
+  /* allocate for Adcfm           */
   /* which is a mX1 column vector */
   /********************************/
   dReal *Adcfm = context->AllocateArray<dReal> (m);
@@ -913,11 +767,6 @@ static void SOR_LCP (dxWorldProcessContext *context,
   // this is used to measure error for when we are reordering the indexes.
   dReal *last_lambda = context->AllocateArray<dReal> (m);
 #endif
-
-#ifdef USE_JOINT_DAMPING
-  dReal *b_damp = context->AllocateArray<dReal> (m);
-#endif
-
 
   boost::recursive_mutex* mutex = new boost::recursive_mutex();
 
@@ -977,36 +826,21 @@ static void SOR_LCP (dxWorldProcessContext *context,
     tmpInt[1+thread_id*tmpInt_size] = nEnd - nStart; // m
     tmpInt[2+thread_id*tmpInt_size] = m; // m
     tmpInt[3+thread_id*tmpInt_size] = nb;
-    tmpInt[4+thread_id*tmpInt_size] = m_damp;
     tmpInt[5+thread_id*tmpInt_size] = num_iterations;
     tmpReal[0+thread_id*tmpReal_size] = stepsize;
     tmpReal[1+thread_id*tmpReal_size] = qs->sor_lcp_tolerance;
     tmpIntPtr[0+thread_id*tmpIntPtr_size] = jb;
     tmpIntPtr[1+thread_id*tmpIntPtr_size] = findex;
-    tmpIntPtr[2+thread_id*tmpIntPtr_size] = jb_damp;
     tmpRealPtr[0+thread_id*tmpRealPtr_size] = Ad;
     tmpRealPtr[1+thread_id*tmpRealPtr_size] = hi;
     tmpRealPtr[2+thread_id*tmpRealPtr_size] = lo;
     tmpRealPtr[3+thread_id*tmpRealPtr_size] = Adcfm;
-    tmpRealPtr[4+thread_id*tmpRealPtr_size] = JiM;
     tmpRealPtr[5+thread_id*tmpRealPtr_size] = invI;
-    tmpRealPtr[6+thread_id*tmpRealPtr_size] = coeff_damp ;
-    tmpRealPtr[7+thread_id*tmpRealPtr_size] = JiMratio;
     tmpMutablePtr[0+thread_id*tmpMutablePtr_size] = b;
     tmpMutablePtr[1+thread_id*tmpMutablePtr_size] = J;
     tmpMutablePtr[2+thread_id*tmpMutablePtr_size] = fc;
     tmpMutablePtr[3+thread_id*tmpMutablePtr_size] = lambda;
     tmpMutablePtr[4+thread_id*tmpMutablePtr_size] = iMJ;
-    #ifdef USE_JOINT_DAMPING
-      tmpMutablePtr[5+thread_id*tmpMutablePtr_size] = b_damp;
-      tmpMutablePtr[6+thread_id*tmpMutablePtr_size] = f_damp;
-      tmpMutablePtr[7+thread_id*tmpMutablePtr_size] = v_damp;
-      tmpMutablePtr[8+thread_id*tmpMutablePtr_size] = J_damp;
-      tmpMutablePtr[9+thread_id*tmpMutablePtr_size] = v_joint_damp;
-      #ifdef REORDER_CONSTRAINTS
-        tmpMutablePtr[10+thread_id*tmpMutablePtr_size] = last_lambda;
-      #endif
-    #endif
     tmpMutablePtr[11+thread_id*tmpMutablePtr_size] = delta_error ;
 
 #ifdef REPORT_MONITOR
@@ -1190,40 +1024,9 @@ void dxQuickStepper (dxWorldProcessContext *context,
     mfb = mfbcurr;
   }
 
-#ifdef USE_JOINT_DAMPING
-  /************************************************************************/
-  /* for joint damping, get the total number of rows for damping jacobian */
-  /************************************************************************/
-  int m_damp; // number of rows for damped joint jacobian
-  {
-    int mcurr = 0;
-    const dJointWithInfo1 *jicurr = jointiinfos; // info1 stored in jointiinfos
-    const dJointWithInfo1 *const jiend = jicurr + nj;
-    for (; jicurr != jiend; jicurr++)
-      if (jicurr->joint->use_damping)
-        mcurr ++;
-
-    m_damp = mcurr;
-  }
-#endif
-
   // if there are constraints, compute the constraint force
   dReal *J = NULL;
   int *jb = NULL;
-
-#ifdef USE_JOINT_DAMPING
-  /*********************************/
-  /* do the same for damped joints */
-  /*********************************/
-  dReal *v_damp;
-  dReal *J_damp = NULL;
-  dReal *v_joint_damp = NULL;
-  dReal* f_damp = NULL;
-  dReal *JiM = NULL;
-  dReal *JiMratio = NULL;
-  int *jb_damp = NULL;
-  dReal *coeff_damp = NULL;
-#endif
 
   if (m > 0) {
     dReal *cfm, *lo, *hi, *rhs, *Jcopy;
@@ -1257,53 +1060,7 @@ void dxQuickStepper (dxWorldProcessContext *context,
       rhs = context->AllocateArray<dReal> (mlocal);
 
       Jcopy = context->AllocateArray<dReal> (mfb*12);
-
-#ifdef USE_JOINT_DAMPING
-      JiM = context->AllocateArray<dReal> (mlocal*12); // for computing b_damp
-      dSetZero (JiM,jelements);
-#endif
-      // JiMratio is the element-wise maximum ratio between
-      //   Ja*inv(Ma) and Jb*inv(Mb) for a joint
-      // if the joint is one sided, then we preset it to 1
-      JiMratio = context->AllocateArray<dReal> (mlocal); // for computing b_damp
-      dSetZero (JiMratio,mlocal);
     }
-
-#ifdef USE_JOINT_DAMPING
-    /*********************************/
-    /* for damped joints             */
-    /*********************************/
-    {
-      int mlocal = m_damp;
-
-      const unsigned jelements = mlocal*12;
-      J_damp = context->AllocateArray<dReal> (jelements);
-      dSetZero (J_damp,jelements);
-
-      // v_joint = J_damp * v
-      // v_joint is the velocity of the joint in joint space
-      // (relative angular rates of attached bodies)
-      const unsigned v_joint_damp_elements = mlocal;
-      v_joint_damp = context->AllocateArray<dReal> (v_joint_damp_elements);
-      dSetZero (v_joint_damp,v_joint_damp_elements);
-
-      // jb is the body index for each jacobian
-      const unsigned jbelements = mlocal*2;
-      jb_damp = context->AllocateArray<int> (jbelements);
-
-      const unsigned f_damp_elements = nb*6;
-      f_damp = context->AllocateArray<dReal> (f_damp_elements);
-      dSetZero (f_damp,f_damp_elements);
-
-      const unsigned v_damp_elements = nb*6;
-      v_damp = context->AllocateArray<dReal> (v_damp_elements);
-      dSetZero (v_damp,v_damp_elements);
-
-      const unsigned coeffelements = mlocal;
-      coeff_damp = context->AllocateArray<dReal> (coeffelements);
-      dSetZero (coeff_damp,coeffelements);
-    }
-#endif
 
     BEGIN_STATE_SAVE(context, cstate) {
       dReal *c = context->AllocateArray<dReal> (m);
@@ -1331,9 +1088,6 @@ void dxQuickStepper (dxWorldProcessContext *context,
 
         dReal *Jcopyrow = Jcopy;
         unsigned ofsi = 0;
-#ifdef USE_JOINT_DAMPING
-        unsigned ofsi_damp = 0; // for joint damping
-#endif
         const dJointWithInfo1 *jicurr = jointiinfos;
         const dJointWithInfo1 *const jiend = jicurr + nj;
         for (; jicurr != jiend; jicurr++) {
@@ -1348,30 +1102,6 @@ void dxQuickStepper (dxWorldProcessContext *context,
           Jinfo.hi = hi + ofsi;
           Jinfo.findex = findex + ofsi;
 
-
-
-#ifdef USE_JOINT_DAMPING
-          /*******************************************************/
-          /*  allocate space for damped joint Jacobians          */
-          /*******************************************************/
-          if (jicurr->joint->use_damping)
-          {
-            // damping coefficient is in jicurr->info.damping_coefficient);
-            coeff_damp[ofsi_damp] = jicurr->joint->damping_coefficient;
-
-            // setup joint damping pointers so getinfo2 will fill in J_damp
-            dReal *const Jrow_damp = J_damp + ofsi_damp * 12;
-            Jinfo.J1ld = Jrow_damp;
-            Jinfo.J1ad = Jrow_damp + 3;
-            Jinfo.J2ld = Jrow_damp + 6;
-            Jinfo.J2ad = Jrow_damp + 9;
-            // one row of constraint per joint
-            ofsi_damp ++;
-          }
-#endif
-
-
-          
           // now write all information into J
           dxJoint *joint = jicurr->joint;
           joint->getInfo2 (&Jinfo);
@@ -1421,35 +1151,6 @@ void dxQuickStepper (dxWorldProcessContext *context,
         //printf("jjjjjjjjj %d %d\n",jb[0],jb[1]);
       }
 
-#ifdef USE_JOINT_DAMPING
-      {
-        /*************************************************************/
-        /* create an array of body numbers for each damped joint row */
-        /*************************************************************/
-        int *jb_damp_ptr = jb_damp;
-        const dJointWithInfo1 *jicurr = jointiinfos;
-        const dJointWithInfo1 *const jiend = jicurr + nj;
-        for (; jicurr != jiend; jicurr++) {
-          if (jicurr->joint->use_damping)
-          {
-            dxJoint *joint = jicurr->joint;
-            const int infom = 1; // one damping jacobian row per hinge joint
-
-            int b1 = (joint->node[0].body) ? (joint->node[0].body->tag) : -1;
-            int b2 = (joint->node[1].body) ? (joint->node[1].body->tag) : -1;
-            for (int j=0; j<infom; j++) {
-              jb_damp_ptr[0] = b1;
-              jb_damp_ptr[1] = b2;
-              jb_damp_ptr += 2;
-            }
-          }
-        }
-        dIASSERT (jb_damp_ptr == jb_damp+2*m_damp);
-      }
-#endif
-
-
-
       BEGIN_STATE_SAVE(context, tmp1state) {
         IFTIMING (dTimerNow ("compute rhs"));
         // compute the right hand side `rhs'
@@ -1468,53 +1169,6 @@ void dxQuickStepper (dxWorldProcessContext *context,
 
         // put J*tmp1 into rhs
         multiply_J (m,J,jb,tmp1,rhs);
-
-#ifdef USE_JOINT_DAMPING
-        /*************************************************************/
-        /* compute J*inv(M) here JiM, it does not change             */
-        /* where b_damp = -J*inv(M)*f_damp / Ad  (since b is rhs/Ad) */
-        /* and b is to be modified by b_damp                         */
-        /*************************************************************/
-        {
-          dRealPtr J_ptr = J;
-          dRealMutablePtr JiM_ptr = JiM; // intermediate solution storage
-          dRealMutablePtr JiMratio_ptr = JiMratio; // intermediate solution storage
-          for (int i=0; i<m;J_ptr+=12,JiM_ptr+=12, i++) {
-
-            // compute JiM = J * invM
-            int b1 = jb[i*2];
-            int b2 = jb[i*2+1];
-            dReal k1 = body[b1]->invMass;
-
-            for (int j=0; j<3 ; j++) JiM_ptr[j] = J_ptr[j]*k1;
-
-
-            const dReal *invI_ptr1 = invI + 12*b1;
-            for (int j=0;j<3;j++) for (int k=0;k<3;k++){
-              JiM_ptr[3+j] += J_ptr[3+k]*invI_ptr1[k*4+j];
-            }
-
-            // preset JiMratio to 1
-            JiMratio_ptr[0] = 1.0;
-
-            if (b2 >= 0){
-              dReal k2 = body[b2]->invMass;
-              for (int j=0; j<3 ; j++) JiM_ptr[j+6] += k2*J_ptr[j+6];
-              const dReal *invI_ptr2 = invI + 12*b2;
-              for (int j=0;j<3;j++) for (int k=0;k<3;k++) JiM_ptr[9+j] += J_ptr[9+k]*invI_ptr2[k*4+j];
-
-              // check element-wise ratio for JiMratio
-              JiMratio_ptr[0] = 1.0;
-              for (int j=0;j<3;j++) {
-                if  (JiM_ptr[  j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[6+j]/JiM_ptr[  j]);
-                if  (JiM_ptr[3+j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[9+j]/JiM_ptr[3+j]);
-                if  (JiM_ptr[6+j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[  j]/JiM_ptr[6+j]);
-                if  (JiM_ptr[9+j] != 0) JiMratio_ptr[0] = std::max(JiMratio_ptr[0],JiM_ptr[3+j]/JiM_ptr[9+j]);
-              }
-            }
-          }
-        }
-#endif
       
       } END_STATE_SAVE(context, tmp1state);
 
@@ -1525,29 +1179,6 @@ void dxQuickStepper (dxWorldProcessContext *context,
       for (int j=0; j<m; j++) cfm[j] *= stepsize1;
 
     } END_STATE_SAVE(context, cstate);
-
-
-#ifdef USE_JOINT_DAMPING
-    /***************************************************************************/
-    /* create a nb*6 by 1 vector (v_damp) to store estimated implicit velocity */
-    /*  as it is updated in the iterative loop                                 */
-    /***************************************************************************/
-    {
-      // allocate v_damp
-      dRealMutablePtr v_damp_ptr = v_damp;
-      dxBody *const *const bodyend = body + nb;
-      for (dxBody *const *bodycurr = body; bodycurr != bodyend; v_damp_ptr+=6, bodycurr++) {
-        dxBody *b = *bodycurr;
-        v_damp_ptr[0] = b->lvel[0];
-        v_damp_ptr[1] = b->lvel[1];
-        v_damp_ptr[2] = b->lvel[2];
-        v_damp_ptr[3] = b->avel[0];
-        v_damp_ptr[4] = b->avel[1];
-        v_damp_ptr[5] = b->avel[2];
-      }
-    }
-#endif
-
 
     // load lambda from the value saved on the previous iteration
     dReal *lambda = context->AllocateArray<dReal> (m);
@@ -1565,19 +1196,12 @@ void dxQuickStepper (dxWorldProcessContext *context,
     }
 #endif
 
-
-
     dReal *cforce = context->AllocateArray<dReal> (nb*6);
-
 
     BEGIN_STATE_SAVE(context, lcpstate) {
       IFTIMING (dTimerNow ("solving LCP problem"));
       // solve the LCP problem and get lambda and invM*constraint_force
       SOR_LCP (context,m,nb,J,jb,body,invI,lambda,cforce,rhs,lo,hi,cfm,findex,&world->qs,
-#ifdef USE_JOINT_DAMPING
-               m_damp,J_damp,coeff_damp,jb_damp,v_damp,f_damp,v_joint_damp,JiM,
-#endif
-               JiMratio,
 #ifdef USE_TPROW
                world->row_threadpool,
 #endif
@@ -1601,36 +1225,9 @@ void dxQuickStepper (dxWorldProcessContext *context,
     }
 #endif
 
-#ifdef USE_JOINT_DAMPING
-    /****************************************************************/
-    /* perform velocity update due to damping force                 */
-    /*  v_new = n_old + stepsize * invM * f_damp                    */
-    /****************************************************************/
-    {
-      const dReal *invIrow = invI;
-
-      dRealMutablePtr f_damp_ptr = f_damp;
-      dxBody *const *const bodyend = body + nb;
-      for (dxBody *const *bodycurr = body; bodycurr != bodyend; invIrow += 12, f_damp_ptr+=6, bodycurr++) {
-        // f_damp should be updated in SOR LCP
-
-        // compute the velocity update:
-        // add stepsize * invM * f_damp to the body velocity
-        dxBody *b = *bodycurr;
-        dReal body_invMass_mul_stepsize = stepsize * b->invMass;
-        for (int j=0; j<3; j++) {
-          b->lvel[j] += body_invMass_mul_stepsize * f_damp_ptr[j];
-          f_damp_ptr[3+j] *= stepsize; // multiply torque part by step size
-        }
-        dMultiplyAdd0_331 (b->avel, invIrow, f_damp_ptr+3);
-      }
-
-    }
-#endif
-
-
     // note that the SOR method overwrites rhs and J at this point, so
     // they should not be used again.
+
     {
       IFTIMING (dTimerNow ("velocity update due to constraint forces"));
       // note that cforce is really not a force but an acceleration, hence there is
@@ -1755,7 +1352,6 @@ void dxQuickStepper (dxWorldProcessContext *context,
 
   IFTIMING (dTimerEnd());
   IFTIMING (if (m > 0) dTimerReport (stdout,1));
-
 }
 
 #ifdef USE_CG_LCP
@@ -1767,11 +1363,7 @@ static size_t EstimateGR_LCPMemoryRequirements(int m)
 }
 #endif
 
-static size_t EstimateSOR_LCPMemoryRequirements(int m
-#ifdef USE_JOINT_DAMPING
-                                               ,int m_damp
-#endif
-                                               )
+static size_t EstimateSOR_LCPMemoryRequirements(int m)
 {
   size_t res = dEFFICIENT_SIZE(sizeof(dReal) * 12 * m); // for iMJ
   res += dEFFICIENT_SIZE(sizeof(dReal) * m); // for Ad
@@ -1780,9 +1372,6 @@ static size_t EstimateSOR_LCPMemoryRequirements(int m
   res += dEFFICIENT_SIZE(sizeof(IndexError) * m); // for order
 #ifdef REORDER_CONSTRAINTS
   res += dEFFICIENT_SIZE(sizeof(dReal) * m); // for last_lambda
-#endif
-#ifdef USE_JOINT_DAMPING
-  res += dEFFICIENT_SIZE(sizeof(dReal) * m); // for b_damp
 #endif
   return res;
 }
@@ -1812,24 +1401,6 @@ size_t dxEstimateQuickStepMemoryRequirements (
     nj = njcurr; m = mcurr; mfb = mfbcurr;
   }
 
-#ifdef USE_JOINT_DAMPING
-  int m_damp;
-  {
-    int m_dampcurr = 0;
-    dxJoint::SureMaxInfo info;
-    dxJoint *const *const _jend = _joint + _nj;
-    for (dxJoint *const *_jcurr = _joint; _jcurr != _jend; _jcurr++) {
-      dxJoint *j = *_jcurr;
-      /***************************/
-      /* size for damping joints */
-      /***************************/
-      if (j->use_damping)
-        m_dampcurr ++;
-    }
-    m_damp = m_dampcurr;
-  }
-#endif
-
   size_t res = 0;
 
   res += dEFFICIENT_SIZE(sizeof(dReal) * 3 * 4 * nb); // for invI
@@ -1845,17 +1416,6 @@ size_t dxEstimateQuickStepMemoryRequirements (
       sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * 2 * m); // for jb            FIXME: shoulbe be 2 not 12?
       sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * m); // for findex
       sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12 * mfb); // for Jcopy
-
-#ifdef USE_JOINT_DAMPING
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12 * m_damp); // for J_damp
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * m_damp ); // for v_joint_damp
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(int) * 2 * m_damp); // for jb_damp            FIXME: shoulbe be 2 not 12?
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for f_damp
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 12*m); // for JiM
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * m); // for JiMratio
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for v_damp
-      sub1_res2 += dEFFICIENT_SIZE(sizeof(dReal) * m_damp); // for coeff_damp
-#endif
       {
         size_t sub2_res1 = dEFFICIENT_SIZE(sizeof(dReal) * m); // for c
         {
@@ -1869,11 +1429,7 @@ size_t dxEstimateQuickStepMemoryRequirements (
         size_t sub2_res2 = dEFFICIENT_SIZE(sizeof(dReal) * m); // for lambda
         sub2_res2 += dEFFICIENT_SIZE(sizeof(dReal) * 6 * nb); // for cforce
         {
-          size_t sub3_res1 = EstimateSOR_LCPMemoryRequirements(m
-#ifdef USE_JOINT_DAMPING
-                                                              ,m_damp
-#endif
-                                                              ); // for SOR_LCP
+          size_t sub3_res1 = EstimateSOR_LCPMemoryRequirements(m); // for SOR_LCP
 
           size_t sub3_res2 = 0;
 #ifdef CHECK_VELOCITY_OBEYS_CONSTRAINT
