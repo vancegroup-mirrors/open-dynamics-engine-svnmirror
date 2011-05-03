@@ -447,6 +447,18 @@ ODE_API void dWorldSetQuickStepNumIterations (dWorldID, int num);
 
 
 /**
+ * @brief Set the number of preconditioning iterations that the QuickStep method performs per
+ *        step.
+ * @ingroup world
+ * @remarks
+ * More iterations will give a more accurate solution, but will take
+ * longer to compute.
+ * @param num The default is 0 iterations.
+ */
+ODE_API void dWorldSetQuickStepPreconIterations (dWorldID, int num);
+
+
+/**
  * @brief Get the number of iterations that the QuickStep method performs per
  *        step.
  * @ingroup world

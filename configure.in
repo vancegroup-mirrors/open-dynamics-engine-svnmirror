@@ -1,9 +1,9 @@
 dnl AC_INIT does not take a macro as a version nr: set it separately! - Bram
 # add another minor for wg
-AC_INIT([ODE],[0.11.1.70],[ode@ode.org])
+AC_INIT([ODE],[0.11.1.71],[ode@ode.org])
 AC_CONFIG_SRCDIR([ode/src/ode.cpp])
 # add another minor for wg
-ODE_RELEASE=0.11.1.70
+ODE_RELEASE=0.11.1.71
 AC_SUBST(ODE_RELEASE)
 
 # Those are instructions from the Libtool manual:
