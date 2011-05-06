@@ -630,13 +630,10 @@ static void ComputeRows(
   // FIME: preconditioning can be defined insdie iterations loop now, becareful to match last iteration with
   //       velocity update
   bool preconditioning;
-  for (int iteration=0; iteration < num_iterations; iteration++) {
+  for (int iteration=0; iteration < num_iterations+precon_iterations; iteration++) {
 
     if (iteration < precon_iterations) preconditioning = true;
     else                               preconditioning = false;
-
-    //if (iteration%precon_iterations == 0) preconditioning = true; // every precon_iterations, do preconditioning
-    //else                                  preconditioning = false;
 
 #ifdef REORDER_CONSTRAINTS
     // constraints with findex < 0 always come first.
@@ -946,9 +943,10 @@ static void ComputeRows(
       #ifdef REPORT_MONITOR
         printf("CONVERGED: id: %d steps: %d rms(%20.18f < %20.18f)\n",thread_id,iteration,rms_error,sor_lcp_tolerance);
       #endif
-      break;
+      if (iteration < precon_iterations) iteration = precon_iterations; // goto non-precon step
+      else                               break;                         // finished
     }
-    else if (iteration == num_iterations -1)
+    else if (iteration == num_iterations+precon_iterations -1)
     {
       #ifdef REPORT_MONITOR
         printf("WARNING: id: %d did not converge in %d steps, rms(%20.18f > %20.18f)\n",thread_id,num_iterations,rms_error,sor_lcp_tolerance);
