@@ -28,6 +28,7 @@ noinst_PROGRAMS = \
                 demo_heightfield \
                 demo_hinge \
                 demo_I \
+                demo_I_quickstep \
                 demo_jointPR \
                 demo_joints \
                 demo_jointPU \
