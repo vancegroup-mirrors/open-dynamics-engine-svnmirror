@@ -24,6 +24,7 @@ noinst_PROGRAMS = \
                 demo_cylvssphere \
                 demo_feedback \
                 demo_friction \
+                demo_friction_quickstep \
                 demo_gyroscopic \
                 demo_heightfield \
                 demo_hinge \
@@ -56,10 +57,12 @@ demo_crash_SOURCES = demo_crash.cpp
 demo_cylvssphere_SOURCES = demo_cylvssphere.cpp
 demo_feedback_SOURCES = demo_feedback.cpp
 demo_friction_SOURCES = demo_friction.cpp
+demo_friction_quickstep_SOURCES = demo_friction_quickstep.cpp
 demo_gyroscopic_SOURCES = demo_gyroscopic.cpp
 demo_heightfield_SOURCES = demo_heightfield.cpp
 demo_hinge_SOURCES = demo_hinge.cpp
 demo_I_SOURCES = demo_I.cpp
+demo_I_quickstep_SOURCES = demo_I_quickstep.cpp
 demo_jointPR_SOURCES = demo_jointPR.cpp
 demo_joints_SOURCES = demo_joints.cpp
 demo_jointPU_SOURCES = demo_jointPU.cpp
