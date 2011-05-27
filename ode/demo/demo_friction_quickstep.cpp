@@ -71,10 +71,12 @@ slide.
 #define FORCE 0.05	// force applied to box[i][j] = (j+1) * FORCE
 #define MU 0.5		// the global mu to use
 #define GRAVITY 0.5	// the global gravity to use
-#define N1 30		// number of different forces to try
-#define N2 30		// number of different masses to try
-#define ITERS 100       // number of different masses to try
-#define GL 100     	// number of different masses to try
+#define N1 20		// number of different forces to try
+#define N2 20		// number of different masses to try
+#define ITERS 300       // number of different masses to try
+#define GLENGTH 1000    // number of different masses to try
+#define GHEIGHT 1       // number of different masses to try
+#define GMASS 10000     // number of different masses to try
 
 
 // dynamics and collision objects
@@ -98,9 +100,9 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
   int i;
 
   // only collide things with the ground
-  int g1 = (o1 == ground);
-  int g2 = (o2 == ground);
-  if (!(g1 ^ g2)) return;
+  //int g1 = (o1 == ground);
+  //int g2 = (o2 == ground);
+  //if (!(g1 ^ g2)) return;
 
   dBodyID b1 = dGeomGetBody(o1);
   dBodyID b2 = dGeomGetBody(o2);
@@ -109,7 +111,7 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
   for (i=0; i<3; i++) {
     contact[i].surface.mode = dContactSoftCFM | dContactApprox1;
     contact[i].surface.mu = MU;
-    contact[i].surface.soft_cfm = 0.01;
+    contact[i].surface.soft_cfm = 0; //0.01;
   }
   if (int numc = dCollide (o1,o2,3,&contact[0].geom,sizeof(dContact))) {
     for (i=0; i<numc; i++) {
@@ -153,7 +155,7 @@ static void simLoop (int pause)
   }
 
   dsSetColor (0,0,1);
-  dReal ground_sides[3] = {GL,GL,1};
+  dReal ground_sides[3] = {GLENGTH,GLENGTH,1};
   dsDrawBox (dGeomGetPosition(ground1),dGeomGetRotation(ground1), ground_sides);
   dsSetColor (1,0,1);
   dReal sides[3] = {LENGTH,LENGTH,HEIGHT};
@@ -183,18 +185,20 @@ int main (int argc, char **argv)
   // create world
   dInitODE2(0);
   world = dWorldCreate();
-  space = dHashSpaceCreate (0);
+  //space = dHashSpaceCreate (0);
+  space = dSimpleSpaceCreate (0);
   contactgroup = dJointGroupCreate (0);
   dWorldSetGravity (world,0,0,-GRAVITY);
   ground = dCreatePlane (space,0,0,1,0);
   dWorldSetQuickStepNumIterations (world,ITERS);
+  //dWorldSetQuickStepPreconIterations (world , 10);
 
   ground1_body = dBodyCreate (world);
-  dMassSetBox (&m,1,GL,GL,1);
-  dMassAdjust (&m,GL);
+  dMassSetBox (&m,1,GLENGTH,GLENGTH,GHEIGHT);
+  dMassAdjust (&m,GMASS);
   dBodySetMass (ground1_body,&m);
-  dBodySetPosition (ground1_body,0,0,0.5);
-  ground1 = dCreateBox (space,GL,GL,1);
+  dBodySetPosition (ground1_body,0,0,GHEIGHT*0.5);
+  ground1 = dCreateBox (space,GLENGTH,GLENGTH,GHEIGHT);
   dGeomSetBody (ground1,ground1_body);
 
   // bodies
@@ -204,7 +208,7 @@ int main (int argc, char **argv)
       dMassSetBox (&m,1,LENGTH,LENGTH,HEIGHT);
       dMassAdjust (&m,MASS*(j+1));
       dBodySetMass (body[i][j],&m);
-      dBodySetPosition (body[i][j],i*2*LENGTH,j*2*LENGTH,2+HEIGHT*0.5);
+      dBodySetPosition (body[i][j],i*2*LENGTH,j*2*LENGTH,1+HEIGHT*0.5);
 
       box[i][j] = dCreateBox (space,LENGTH,LENGTH,HEIGHT);
       dGeomSetBody (box[i][j],body[i][j]);
