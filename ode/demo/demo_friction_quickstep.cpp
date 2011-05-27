@@ -45,6 +45,7 @@ slide.
 
 
 #include <ode/ode.h>
+#include <unistd.h>
 #include <drawstuff/drawstuff.h>
 #include "texturepath.h"
 
@@ -70,8 +71,10 @@ slide.
 #define FORCE 0.05	// force applied to box[i][j] = (j+1) * FORCE
 #define MU 0.5		// the global mu to use
 #define GRAVITY 0.5	// the global gravity to use
-#define N1 10		// number of different forces to try
-#define N2 10		// number of different masses to try
+#define N1 30		// number of different forces to try
+#define N2 30		// number of different masses to try
+#define ITERS 100       // number of different masses to try
+#define GL 100     	// number of different masses to try
 
 
 // dynamics and collision objects
@@ -79,8 +82,10 @@ slide.
 static dWorldID world;
 static dSpaceID space;
 static dBodyID body[N1][N2];
+static dBodyID ground1_body;
 static dJointGroupID contactgroup;
 static dGeomID ground;
+static dGeomID ground1;
 static dGeomID box[N1][N2];
 
 
@@ -147,6 +152,9 @@ static void simLoop (int pause)
     dJointGroupEmpty (contactgroup);
   }
 
+  dsSetColor (0,0,1);
+  dReal ground_sides[3] = {GL,GL,1};
+  dsDrawBox (dGeomGetPosition(ground1),dGeomGetRotation(ground1), ground_sides);
   dsSetColor (1,0,1);
   dReal sides[3] = {LENGTH,LENGTH,HEIGHT};
   for (i=0; i<N1; i++) {
@@ -179,6 +187,15 @@ int main (int argc, char **argv)
   contactgroup = dJointGroupCreate (0);
   dWorldSetGravity (world,0,0,-GRAVITY);
   ground = dCreatePlane (space,0,0,1,0);
+  dWorldSetQuickStepNumIterations (world,ITERS);
+
+  ground1_body = dBodyCreate (world);
+  dMassSetBox (&m,1,GL,GL,1);
+  dMassAdjust (&m,GL);
+  dBodySetMass (ground1_body,&m);
+  dBodySetPosition (ground1_body,0,0,0.5);
+  ground1 = dCreateBox (space,GL,GL,1);
+  dGeomSetBody (ground1,ground1_body);
 
   // bodies
   for (i=0; i<N1; i++) {
@@ -187,7 +204,7 @@ int main (int argc, char **argv)
       dMassSetBox (&m,1,LENGTH,LENGTH,HEIGHT);
       dMassAdjust (&m,MASS*(j+1));
       dBodySetMass (body[i][j],&m);
-      dBodySetPosition (body[i][j],i*2*LENGTH,j*2*LENGTH,HEIGHT*0.5);
+      dBodySetPosition (body[i][j],i*2*LENGTH,j*2*LENGTH,2+HEIGHT*0.5);
 
       box[i][j] = dCreateBox (space,LENGTH,LENGTH,HEIGHT);
       dGeomSetBody (box[i][j],body[i][j]);
