@@ -480,6 +480,13 @@ ODE_API void dWorldSetQuickStepW (dWorldID, dReal over_relaxation);
  */
 ODE_API dReal dWorldGetQuickStepW (dWorldID);
 
+/**
+ * @brief Get the RMS error of the quickstep step
+ * @ingroup world
+ * @returns the rms error
+ */
+ODE_API dReal dWorldGetQuickStepRMSError (dWorldID);
+
 /* World contact parameter functions */
 
 /**
