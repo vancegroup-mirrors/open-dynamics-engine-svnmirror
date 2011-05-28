@@ -39,7 +39,7 @@
 
 #undef REPORT_THREAD_TIMING
 #define USE_TPROW
-#undef TIMING
+#define TIMING
 #undef REPORT_MONITOR
 #undef SHOW_CONVERGENCE
 //#define LOCAL_STEPPING  // not yet implemented
@@ -831,10 +831,10 @@ static void ComputeRows(
 
       // record error
       qs->rms_error += delta*delta;
-      if (fabs(delta) > qs->max_delta) {
-        qs->max_delta = fabs(delta);
-        qs->max_delta_id = index;
-      }
+      // if (fabs(delta) > qs->max_delta) {
+      //   qs->max_delta = fabs(delta);
+      //   qs->max_delta_id = index;
+      // }
 
       delta_error[index] = dFabs(delta);
 
