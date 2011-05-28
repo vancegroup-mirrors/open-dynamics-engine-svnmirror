@@ -102,6 +102,8 @@ public:
     { dWorldSetQuickStepW (get_id(), over_relaxation); }
   dReal getQuickStepW() const
     { return dWorldGetQuickStepW (get_id()); }
+  dReal getQuickStepRMSError() const
+    { return dWorldGetQuickStepRMSError (get_id()); }
 
   void  setAutoDisableLinearThreshold (dReal threshold) 
     { dWorldSetAutoDisableLinearThreshold (get_id(), threshold); }
