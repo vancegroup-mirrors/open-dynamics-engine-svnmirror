@@ -102,6 +102,9 @@ struct dxQuickStepParameters {
   int num_chunks;		// divide rows to these many chunks
   int num_overlap;		// divide rows but over lap this many rows
   dReal sor_lcp_tolerance;	// the stop if rms_error falls below this
+  dReal rms_error;      	// rms_error for this time step
+  int max_delta_id;      	// joint id for the max delta (dlambda)
+  dReal max_delta;    	        // maximum delta (dlambda)
 };
 
 // robust-step parameters

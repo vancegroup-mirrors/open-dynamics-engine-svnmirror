@@ -89,14 +89,12 @@ typedef dReal *dRealMutablePtr;
 
 // structure for passing variable pointers in SOR_LCP
 struct dxSORLCPParameters {
+    dxQuickStepParameters *qs;
     int nStart;   // 0
     int nChunkSize;
     int m; // m
     int nb;
-    int num_iterations;
-    int precon_iterations;
     dReal stepsize;
-    dReal sor_lcp_tolerance;
     int* jb;
     const int* findex;
     dRealPtr Ad;
@@ -542,14 +540,12 @@ static void ComputeRows(
   //printf("thread %d started at time %f\n",thread_id,cur_time);
 
   //boost::recursive_mutex::scoped_lock lock(*mutex); // put in ac read/writes?
+  dxQuickStepParameters *qs    = params.qs;
   int startRow                 = params.nStart;   // 0
   int nRows                    = params.nChunkSize; // m
   int m                        = params.m; // m
   int nb                       = params.nb;
-  int num_iterations           = params.num_iterations;
-  int precon_iterations        = params.precon_iterations;
   dReal stepsize               = params.stepsize;
-  dReal sor_lcp_tolerance      = params.sor_lcp_tolerance;
   int* jb                      = params.jb;
   const int* findex            = params.findex;
   dRealPtr        Ad           = params.Ad;
@@ -630,9 +626,9 @@ static void ComputeRows(
   // FIME: preconditioning can be defined insdie iterations loop now, becareful to match last iteration with
   //       velocity update
   bool preconditioning;
-  for (int iteration=0; iteration < num_iterations+precon_iterations; iteration++) {
+  for (int iteration=0; iteration < qs->num_iterations + qs->precon_iterations; iteration++) {
 
-    if (iteration < precon_iterations) preconditioning = true;
+    if (iteration < qs->precon_iterations) preconditioning = true;
     else                               preconditioning = false;
 
 #ifdef REORDER_CONSTRAINTS
@@ -712,7 +708,9 @@ static void ComputeRows(
 #endif
 
     //dSetZero (delta_error,m);
-    dReal rms_error = 0;
+    qs->max_delta = 0;
+    qs->max_delta_id = -1;
+    qs->rms_error = 0;
 
     dRealMutablePtr ac_ptr1;
     dRealMutablePtr ac_ptr2;
@@ -831,11 +829,17 @@ static void ComputeRows(
         }
       }
 
-      rms_error += delta*delta;
+      // record error
+      qs->rms_error += delta*delta;
+      if (fabs(delta) > qs->max_delta) {
+        qs->max_delta = fabs(delta);
+        qs->max_delta_id = index;
+      }
+
       delta_error[index] = dFabs(delta);
 
       //@@@ a trick that may or may not help
-      //dReal ramp = (1-((dReal)(iteration+1)/(dReal)num_iterations));
+      //dReal ramp = (1-((dReal)(iteration+1)/(dReal)qs->num_iterations));
       //delta *= ramp;
       
       {
@@ -897,24 +901,24 @@ static void ComputeRows(
 // since local convergence might produce errors in other nodes?
 #ifdef RECOMPUTE_RMS
     // recompute rms_error to be sure swap is not corrupting arrays
-    rms_error = 0;
+    qs->rms_error = 0;
     #ifdef USE_1NORM
         //for (int i=startRow; i<startRow+nRows; i++)
         for (int i=0; i<m; i++)
         {
-          rms_error = dFabs(delta_error[order[i].index]) > rms_error ? dFabs(delta_error[order[i].index]) : rms_error; // 1norm test
+          qs->rms_error = dFabs(delta_error[order[i].index]) > qs->rms_error ? dFabs(delta_error[order[i].index]) : qs->rms_error; // 1norm test
         }
     #else // use 2 norm
         //for (int i=startRow; i<startRow+nRows; i++)
         for (int i=0; i<m; i++)  // use entire solution vector errors
-          rms_error += delta_error[order[i].index]*delta_error[order[i].index]; ///(dReal)nRows;
-        rms_error = sqrt(rms_error); ///(dReal)nRows;
+          qs->rms_error += delta_error[order[i].index]*delta_error[order[i].index]; ///(dReal)nRows;
+        qs->rms_error = sqrt(qs->rms_error); ///(dReal)nRows;
     #endif
 #else
-    rms_error = sqrt(rms_error); ///(dReal)nRows;
+    qs->rms_error = sqrt(qs->rms_error); ///(dReal)nRows;
 #endif
 
-    //printf("------ %d %d %20.18f\n",thread_id,iteration,rms_error);
+    //printf("------ %d %d %20.18f\n",thread_id,iteration,qs->rms_error);
 
     //for (int i=startRow; i<startRow+nRows; i++) printf("debug: %d %f\n",i,delta_error[i]);
 
@@ -931,25 +935,25 @@ static void ComputeRows(
     //  printf("\n");
     //  for (int i=startRow+1; i<startRow+nRows; i++)
     //    printf(" %10.8f,",delta_error[i]);
-    //  printf("\n%f\n",rms_error);
+    //  printf("\n%f\n",qs->rms_error);
     //}
 
 #ifdef SHOW_CONVERGENCE
-    printf("MONITOR: id: %d iteration: %d error: %20.16f\n",thread_id,iteration,rms_error);
+    printf("MONITOR: id: %d iteration: %d error: %20.16f\n",thread_id,iteration,qs->rms_error);
 #endif
 
-    if (rms_error < sor_lcp_tolerance)
+    if (qs->rms_error < qs->sor_lcp_tolerance)
     {
       #ifdef REPORT_MONITOR
-        printf("CONVERGED: id: %d steps: %d rms(%20.18f < %20.18f)\n",thread_id,iteration,rms_error,sor_lcp_tolerance);
+        printf("CONVERGED: id: %d steps: %d rms(%20.18f < %20.18f)\n",thread_id,iteration,qs->rms_error,qs->sor_lcp_tolerance);
       #endif
-      if (iteration < precon_iterations) iteration = precon_iterations; // goto non-precon step
+      if (iteration < qs->precon_iterations) iteration = qs->precon_iterations; // goto non-precon step
       else                               break;                         // finished
     }
-    else if (iteration == num_iterations+precon_iterations -1)
+    else if (iteration == qs->num_iterations + qs->precon_iterations -1)
     {
       #ifdef REPORT_MONITOR
-        printf("WARNING: id: %d did not converge in %d steps, rms(%20.18f > %20.18f)\n",thread_id,num_iterations,rms_error,sor_lcp_tolerance);
+        printf("WARNING: id: %d did not converge in %d steps, rms(%20.18f > %20.18f)\n",thread_id,qs->num_iterations,qs->rms_error,qs->sor_lcp_tolerance);
       #endif
     }
 
@@ -966,7 +970,7 @@ static void SOR_LCP (dxWorldProcessContext *context,
   const int m, const int nb, dRealMutablePtr J, dRealMutablePtr J_precon, dRealMutablePtr J_orig, int *jb, dxBody * const *body,
   dRealPtr invI, dRealPtr I, dRealMutablePtr lambda, dRealMutablePtr ac, dRealMutablePtr fc, dRealMutablePtr b, dRealMutablePtr b_precon,
   dRealPtr lo, dRealPtr hi, dRealPtr cfm, const int *findex,
-  const dxQuickStepParameters *qs,
+  dxQuickStepParameters *qs,
   dRealMutablePtr JiM, dRealMutablePtr JiMratio,
 #ifdef USE_TPROW
   boost::threadpool::pool* row_threadpool,
@@ -1152,14 +1156,12 @@ static void SOR_LCP (dxWorldProcessContext *context,
     if (nEnd > m) nEnd = m;
     // if every one reorders constraints, this might just work
     // comment out below if using defaults (0 and m) so every thread runs through all joints
+    params[thread_id].qs  = qs ;
     params[thread_id].nStart = nStart;   // 0
     params[thread_id].nChunkSize = nEnd - nStart; // m
     params[thread_id].m = m; // m
     params[thread_id].nb = nb;
-    params[thread_id].num_iterations = qs->num_iterations;
-    params[thread_id].precon_iterations = qs->precon_iterations;
     params[thread_id].stepsize = stepsize;
-    params[thread_id].sor_lcp_tolerance = qs->sor_lcp_tolerance;
     params[thread_id].jb = jb;
     params[thread_id].findex = findex;
     params[thread_id].Ad = Ad;

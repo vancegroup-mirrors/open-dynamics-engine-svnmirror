@@ -2182,6 +2182,12 @@ dReal dWorldGetQuickStepW (dWorldID w)
 	return w->qs.w;
 }
 
+dReal dWorldGetQuickStepRMSError (dWorldID w)
+{
+	dAASSERT(w);
+	return w->qs.rms_error;
+}
+
 
 void dWorldSetContactMaxCorrectingVel (dWorldID w, dReal vel)
 {
