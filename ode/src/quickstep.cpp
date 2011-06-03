@@ -620,15 +620,19 @@ static void ComputeRows(
 */
 
 
-
+  qs->rms_error = 0;
+  double rms_error = qs->rms_error;
+  int num_iterations = qs->num_iterations;
+  int precon_iterations = qs->precon_iterations;
+  double sor_lcp_tolerance = qs->sor_lcp_tolerance;
 
 
   // FIME: preconditioning can be defined insdie iterations loop now, becareful to match last iteration with
   //       velocity update
   bool preconditioning;
-  for (int iteration=0; iteration < qs->num_iterations + qs->precon_iterations; iteration++) {
+  for (int iteration=0; iteration < num_iterations + precon_iterations; iteration++) {
 
-    if (iteration < qs->precon_iterations) preconditioning = true;
+    if (iteration < precon_iterations) preconditioning = true;
     else                               preconditioning = false;
 
 #ifdef REORDER_CONSTRAINTS
@@ -708,9 +712,6 @@ static void ComputeRows(
 #endif
 
     //dSetZero (delta_error,m);
-    qs->max_delta = 0;
-    qs->max_delta_id = -1;
-    qs->rms_error = 0;
 
     dRealMutablePtr ac_ptr1;
     dRealMutablePtr ac_ptr2;
@@ -830,16 +831,12 @@ static void ComputeRows(
       }
 
       // record error
-      qs->rms_error += delta*delta;
-      // if (fabs(delta) > qs->max_delta) {
-      //   qs->max_delta = fabs(delta);
-      //   qs->max_delta_id = index;
-      // }
+      rms_error += delta*delta;
 
       delta_error[index] = dFabs(delta);
 
       //@@@ a trick that may or may not help
-      //dReal ramp = (1-((dReal)(iteration+1)/(dReal)qs->num_iterations));
+      //dReal ramp = (1-((dReal)(iteration+1)/(dReal)iterations));
       //delta *= ramp;
       
       {
@@ -901,24 +898,24 @@ static void ComputeRows(
 // since local convergence might produce errors in other nodes?
 #ifdef RECOMPUTE_RMS
     // recompute rms_error to be sure swap is not corrupting arrays
-    qs->rms_error = 0;
+    rms_error = 0;
     #ifdef USE_1NORM
         //for (int i=startRow; i<startRow+nRows; i++)
         for (int i=0; i<m; i++)
         {
-          qs->rms_error = dFabs(delta_error[order[i].index]) > qs->rms_error ? dFabs(delta_error[order[i].index]) : qs->rms_error; // 1norm test
+          rms_error = dFabs(delta_error[order[i].index]) > rms_error ? dFabs(delta_error[order[i].index]) : rms_error; // 1norm test
         }
     #else // use 2 norm
         //for (int i=startRow; i<startRow+nRows; i++)
         for (int i=0; i<m; i++)  // use entire solution vector errors
-          qs->rms_error += delta_error[order[i].index]*delta_error[order[i].index]; ///(dReal)nRows;
-        qs->rms_error = sqrt(qs->rms_error); ///(dReal)nRows;
+          rms_error += delta_error[order[i].index]*delta_error[order[i].index]; ///(dReal)nRows;
+        rms_error = sqrt(rms_error); ///(dReal)nRows;
     #endif
 #else
-    qs->rms_error = sqrt(qs->rms_error); ///(dReal)nRows;
+    rms_error = sqrt(rms_error); ///(dReal)nRows;
 #endif
 
-    //printf("------ %d %d %20.18f\n",thread_id,iteration,qs->rms_error);
+    //printf("------ %d %d %20.18f\n",thread_id,iteration,rms_error);
 
     //for (int i=startRow; i<startRow+nRows; i++) printf("debug: %d %f\n",i,delta_error[i]);
 
@@ -935,29 +932,31 @@ static void ComputeRows(
     //  printf("\n");
     //  for (int i=startRow+1; i<startRow+nRows; i++)
     //    printf(" %10.8f,",delta_error[i]);
-    //  printf("\n%f\n",qs->rms_error);
+    //  printf("\n%f\n",rms_error);
     //}
 
 #ifdef SHOW_CONVERGENCE
-    printf("MONITOR: id: %d iteration: %d error: %20.16f\n",thread_id,iteration,qs->rms_error);
+    printf("MONITOR: id: %d iteration: %d error: %20.16f\n",thread_id,iteration,rms_error);
 #endif
 
-    if (qs->rms_error < qs->sor_lcp_tolerance)
+    if (rms_error < sor_lcp_tolerance)
     {
       #ifdef REPORT_MONITOR
-        printf("CONVERGED: id: %d steps: %d rms(%20.18f < %20.18f)\n",thread_id,iteration,qs->rms_error,qs->sor_lcp_tolerance);
+        printf("CONVERGED: id: %d steps: %d rms(%20.18f < %20.18f)\n",thread_id,iteration,rms_error,sor_lcp_tolerance);
       #endif
-      if (iteration < qs->precon_iterations) iteration = qs->precon_iterations; // goto non-precon step
+      if (iteration < precon_iterations) iteration = precon_iterations; // goto non-precon step
       else                               break;                         // finished
     }
-    else if (iteration == qs->num_iterations + qs->precon_iterations -1)
+    else if (iteration == num_iterations + precon_iterations -1)
     {
       #ifdef REPORT_MONITOR
-        printf("WARNING: id: %d did not converge in %d steps, rms(%20.18f > %20.18f)\n",thread_id,qs->num_iterations,qs->rms_error,qs->sor_lcp_tolerance);
+        printf("WARNING: id: %d did not converge in %d steps, rms(%20.18f > %20.18f)\n",thread_id,num_iterations,rms_error,sor_lcp_tolerance);
       #endif
     }
 
   } // end of for loop on iterations
+
+  qs->rms_error          = rms_error        ;
 
   gettimeofday(&tv,NULL);
   double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
