@@ -620,8 +620,6 @@ static void ComputeRows(
 */
 
 
-  qs->rms_error = 0;
-  double rms_error = qs->rms_error;
   int num_iterations = qs->num_iterations;
   int precon_iterations = qs->precon_iterations;
   double sor_lcp_tolerance = qs->sor_lcp_tolerance;
@@ -631,6 +629,9 @@ static void ComputeRows(
   //       velocity update
   bool preconditioning;
   for (int iteration=0; iteration < num_iterations + precon_iterations; iteration++) {
+
+    qs->rms_error = 0;
+    double rms_error = qs->rms_error;
 
     if (iteration < precon_iterations) preconditioning = true;
     else                               preconditioning = false;
@@ -909,10 +910,10 @@ static void ComputeRows(
         //for (int i=startRow; i<startRow+nRows; i++)
         for (int i=0; i<m; i++)  // use entire solution vector errors
           rms_error += delta_error[order[i].index]*delta_error[order[i].index]; ///(dReal)nRows;
-        rms_error = sqrt(rms_error); ///(dReal)nRows;
+        rms_error = sqrt(rms_error/(dReal)nRows);
     #endif
 #else
-    rms_error = sqrt(rms_error); ///(dReal)nRows;
+    rms_error = sqrt(rms_error/(dReal)nRows);
 #endif
 
     //printf("------ %d %d %20.18f\n",thread_id,iteration,rms_error);
@@ -956,7 +957,7 @@ static void ComputeRows(
 
   } // end of for loop on iterations
 
-  qs->rms_error          = rms_error        ;
+  qs->rms_error          = rms_error;
 
   gettimeofday(&tv,NULL);
   double end_time = (double)tv.tv_sec + (double)tv.tv_usec / 1.e6;
