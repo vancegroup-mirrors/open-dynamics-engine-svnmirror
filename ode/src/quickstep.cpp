@@ -620,6 +620,7 @@ static void ComputeRows(
 */
 
 
+  double rms_error;
   int num_iterations = qs->num_iterations;
   int precon_iterations = qs->precon_iterations;
   double sor_lcp_tolerance = qs->sor_lcp_tolerance;
@@ -630,8 +631,7 @@ static void ComputeRows(
   bool preconditioning;
   for (int iteration=0; iteration < num_iterations + precon_iterations; iteration++) {
 
-    qs->rms_error = 0;
-    double rms_error = qs->rms_error;
+    rms_error = 0;
 
     if (iteration < precon_iterations) preconditioning = true;
     else                               preconditioning = false;
