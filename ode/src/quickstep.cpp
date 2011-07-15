@@ -45,7 +45,7 @@
 
 #undef REPORT_THREAD_TIMING
 #define USE_TPROW
-#define TIMING
+#undef TIMING
 #undef REPORT_MONITOR
 #undef SHOW_CONVERGENCE
 //#define LOCAL_STEPPING  // not yet implemented
