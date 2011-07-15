@@ -19,7 +19,7 @@
 * LICENSE.TXT and LICENSE-BSD.TXT for more details.                     *
 *                                                                       *
 *************************************************************************/
-
+#undef NDEBUG
 #include <ode/common.h>
 #include <ode/odemath.h>
 #include <ode/rotation.h>
@@ -35,11 +35,17 @@
 
 #include <sys/time.h>
 
+#define SSE 1
+
+#if SSE
+#include <xmmintrin.h>
+#define Kf(x) _mm_set_pd((x),(x))
+#endif
 
 
 #undef REPORT_THREAD_TIMING
 #define USE_TPROW
-#undef TIMING
+#define TIMING
 #undef REPORT_MONITOR
 #undef SHOW_CONVERGENCE
 //#define LOCAL_STEPPING  // not yet implemented
@@ -83,7 +89,7 @@ typedef dReal *dRealMutablePtr;
 // during the solution. depending on the situation, this can help a lot
 // or hardly at all, but it doesn't seem to hurt.
 
-//#define RANDOMLY_REORDER_CONSTRAINTS 1
+#define RANDOMLY_REORDER_CONSTRAINTS 1
 #undef LOCK_WHILE_RANDOMLY_REORDER_CONSTRAINTS
 
 
@@ -525,6 +531,39 @@ void computeRHSPrecon(dxWorldProcessContext *context, const int m, const int nb,
     //for (int i=0; i<m; i++) rhs_precon[i] = - rhs_precon[i];
 }
 
+static inline dReal dot6(dRealPtr a, dRealPtr b)
+{
+#if SSE
+  __m128d d = _mm_load_pd(a+0) * _mm_load_pd(b+0) + _mm_load_pd(a+2) * _mm_load_pd(b+2) + _mm_load_pd(a+4) * _mm_load_pd(b+4);
+  double r[2];
+  _mm_store_pd(r, d);
+  return r[0] + r[1];
+#else
+  return a[0] * b[0] +
+         a[1] * b[1] +
+         a[2] * b[2] +
+         a[3] * b[3] +
+         a[4] * b[4] +
+         a[5] * b[5];
+#endif
+}
+
+static inline void sum6(dRealMutablePtr a, dReal delta, dRealPtr b)
+{
+#if SSE
+  __m128d __delta = Kf(delta);
+  _mm_store_pd(a + 0, _mm_load_pd(a + 0) + __delta * _mm_load_pd(b + 0));
+  _mm_store_pd(a + 2, _mm_load_pd(a + 2) + __delta * _mm_load_pd(b + 2));
+  _mm_store_pd(a + 4, _mm_load_pd(a + 4) + __delta * _mm_load_pd(b + 4));
+#else
+  a[0] += delta * b[0];
+  a[1] += delta * b[1];
+  a[2] += delta * b[2];
+  a[3] += delta * b[3];
+  a[4] += delta * b[4];
+  a[5] += delta * b[5];
+#endif
+}
 
 static void ComputeRows(
                 int thread_id,
@@ -563,7 +602,9 @@ static void ComputeRows(
   dRealMutablePtr ac           = params.ac;
   dRealMutablePtr lambda       = params.lambda;
   dRealMutablePtr iMJ          = params.iMJ;
+#ifdef RECOMPUTE_RMS
   dRealMutablePtr delta_error  = params.delta_error;
+#endif
   dRealMutablePtr b_precon     = params.b_precon;
   dRealMutablePtr J_precon     = params.J_precon;
   dRealMutablePtr J_orig       = params.J_orig;
@@ -575,8 +616,6 @@ static void ComputeRows(
   //printf("iiiiiiiii %d %d %d\n",thread_id,jb[0],jb[1]);
   //for (int i=startRow; i<startRow+nRows; i++) // swap within boundary of our own segment
   //  printf("wwwwwwwwwwwww>id %d start %d n %d  order[%d].index=%d\n",thread_id,startRow,nRows,i,order[i].index);
-
-
 
 
 
@@ -719,7 +758,6 @@ static void ComputeRows(
     dRealMutablePtr fc_ptr1;
     dRealMutablePtr fc_ptr2;
     for (int i=startRow; i<startRow+nRows; i++) {
-
       //boost::recursive_mutex::scoped_lock lock(*mutex); // lock for every row
 
       // @@@ potential optimization: we could pre-sort J and iMJ, thereby
@@ -742,58 +780,35 @@ static void ComputeRows(
 
       dReal old_lambda = lambda[index];
 
-      {
-        if (preconditioning)
-        {
-          // modify rhs_precon by adding J * M * vnew / stepsize
-          // update delta
-          delta = b_precon[index] /* + vnew[index] */ - old_lambda*Adcfm_precon[index];
+      if (preconditioning) {
+        // modify rhs_precon by adding J * M * vnew / stepsize
+        // update delta
+        delta = b_precon[index] /* + vnew[index] */ - old_lambda*Adcfm_precon[index];
 
-          // ac is constraint acceleration in the non-precon case,
-          //  and fc is the actual constraint force in the precon case
-          // J_precon and J differs essentially in Ad and Ad_precon,
-          //  Ad is derived from diagonal of J inv(M) J'
-          //  Ad_precon is derived from diagonal of J J'
-          dRealPtr J_ptr = J_precon + index*12;
+        // ac is constraint acceleration in the non-precon case,
+        //  and fc is the actual constraint force in the precon case
+        // J_precon and J differs essentially in Ad and Ad_precon,
+        //  Ad is derived from diagonal of J inv(M) J'
+        //  Ad_precon is derived from diagonal of J J'
+        dRealPtr J_ptr = J_precon + index*12;
 
-          // for preconditioned case, update delta using fc, not ac
+        // for preconditioned case, update delta using fc, not ac
 
-          // @@@ potential optimization: SIMD-ize this and the b2 >= 0 case
-          delta -=fc_ptr1[0] * J_ptr[0] + fc_ptr1[1] * J_ptr[1] +
-                  fc_ptr1[2] * J_ptr[2] + fc_ptr1[3] * J_ptr[3] +
-                  fc_ptr1[4] * J_ptr[4] + fc_ptr1[5] * J_ptr[5];
-          // @@@ potential optimization: handle 1-body constraints in a separate
-          //     loop to avoid the cost of test & jump?
-          if (fc_ptr2) {
-            delta -=fc_ptr2[0] * J_ptr[6]  + fc_ptr2[1] * J_ptr[7] +
-                    fc_ptr2[2] * J_ptr[8]  + fc_ptr2[3] * J_ptr[9] +
-                    fc_ptr2[4] * J_ptr[10] + fc_ptr2[5] * J_ptr[11];
-          }
+        delta -= dot6(fc_ptr1, J_ptr);
+        if (fc_ptr2)
+          delta -= dot6(fc_ptr2, J_ptr + 6);
+      } else {
+        delta = b[index] - old_lambda*Adcfm[index];
+        // update vnew,
+        //updateVnew(nb, invI, ac, body, stepsize, vnew);
+        // compute J * M * vnew / stepsize and store in vnew
+        //multiply_JM (nb, m, J, I, body, jb, stepsize, vnew);
+
+        dRealPtr J_ptr = J + index*12;
+        delta -= dot6(ac_ptr1, J_ptr);
+        if (ac_ptr2) {
+          delta -= dot6(ac_ptr2, J_ptr + 6);
         }
-        else
-        {
-          delta = b[index] - old_lambda*Adcfm[index];
-          // update vnew,
-          //updateVnew(nb, invI, ac, body, stepsize, vnew);
-          // compute J * M * vnew / stepsize and store in vnew
-          //multiply_JM (nb, m, J, I, body, jb, stepsize, vnew);
-
-          dRealPtr J_ptr = J + index*12;
-          // @@@ potential optimization: SIMD-ize this and the b2 >= 0 case
-          delta -=ac_ptr1[0] * J_ptr[0] + ac_ptr1[1] * J_ptr[1] +
-                  ac_ptr1[2] * J_ptr[2] + ac_ptr1[3] * J_ptr[3] +
-                  ac_ptr1[4] * J_ptr[4] + ac_ptr1[5] * J_ptr[5];
-          // @@@ potential optimization: handle 1-body constraints in a separate
-          //     loop to avoid the cost of test & jump?
-          if (ac_ptr2) {
-            delta -=ac_ptr2[0] * J_ptr[6]  + ac_ptr2[1] * J_ptr[7] +
-                    ac_ptr2[2] * J_ptr[8]  + ac_ptr2[3] * J_ptr[9] +
-                    ac_ptr2[4] * J_ptr[10] + ac_ptr2[5] * J_ptr[11];
-          }
-        }
-
-
-
       }
 
       {
@@ -815,8 +830,8 @@ static void ComputeRows(
         }
 
         // compute lambda and clamp it to [lo,hi].
-        // @@@ potential optimization: does SSE have clamping instructions
-        //     to save test+jump penalties here?
+        // @@@ SSE not a win here
+#if 1
         dReal new_lambda = old_lambda + delta;
         if (new_lambda < lo_act) {
           delta = lo_act-old_lambda;
@@ -829,12 +844,19 @@ static void ComputeRows(
         else {
           lambda[index] = new_lambda;
         }
+#else
+        dReal nl = old_lambda + delta;
+        _mm_store_sd(&nl, _mm_max_sd(_mm_min_sd(_mm_load_sd(&nl), _mm_load_sd(&hi_act)), _mm_load_sd(&lo_act)));
+        lambda[index] = nl;
+        delta = nl - old_lambda;
+#endif
       }
 
       // record error
       rms_error += delta*delta;
-
+#ifdef RECOMPUTE_RMS
       delta_error[index] = dFabs(delta);
+#endif
 
       //@@@ a trick that may or may not help
       //dReal ramp = (1-((dReal)(iteration+1)/(dReal)iterations));
@@ -849,23 +871,9 @@ static void ComputeRows(
           dRealPtr J_ptr = J_orig + index*12; // FIXME: need un-altered unscaled J, not J_precon!!
 
           // update fc.
-          // @@@ potential optimization: SIMD for this and the b2 >= 0 case
-          fc_ptr1[0] += delta * J_ptr[0];
-          fc_ptr1[1] += delta * J_ptr[1];
-          fc_ptr1[2] += delta * J_ptr[2];
-          fc_ptr1[3] += delta * J_ptr[3];
-          fc_ptr1[4] += delta * J_ptr[4];
-          fc_ptr1[5] += delta * J_ptr[5];
-          // @@@ potential optimization: handle 1-body constraints in a separate
-          //     loop to avoid the cost of test & jump?
-          if (fc_ptr2) {
-            fc_ptr2[0] += delta * J_ptr[6];
-            fc_ptr2[1] += delta * J_ptr[7];
-            fc_ptr2[2] += delta * J_ptr[8];
-            fc_ptr2[3] += delta * J_ptr[9];
-            fc_ptr2[4] += delta * J_ptr[10];
-            fc_ptr2[5] += delta * J_ptr[11];
-          }
+          sum6(fc_ptr1, delta, J_ptr);
+          if (fc_ptr2)
+            sum6(fc_ptr2, delta, J_ptr + 6);
         }
         //else
         {
@@ -873,27 +881,12 @@ static void ComputeRows(
           dRealPtr iMJ_ptr = iMJ + index*12;
 
           // update ac.
-          // @@@ potential optimization: SIMD for this and the b2 >= 0 case
-          ac_ptr1[0] += delta * iMJ_ptr[0];
-          ac_ptr1[1] += delta * iMJ_ptr[1];
-          ac_ptr1[2] += delta * iMJ_ptr[2];
-          ac_ptr1[3] += delta * iMJ_ptr[3];
-          ac_ptr1[4] += delta * iMJ_ptr[4];
-          ac_ptr1[5] += delta * iMJ_ptr[5];
-          // @@@ potential optimization: handle 1-body constraints in a separate
-          //     loop to avoid the cost of test & jump?
-          if (ac_ptr2) {
-            ac_ptr2[0] += delta * iMJ_ptr[6];
-            ac_ptr2[1] += delta * iMJ_ptr[7];
-            ac_ptr2[2] += delta * iMJ_ptr[8];
-            ac_ptr2[3] += delta * iMJ_ptr[9];
-            ac_ptr2[4] += delta * iMJ_ptr[10];
-            ac_ptr2[5] += delta * iMJ_ptr[11];
-          }
+          sum6(ac_ptr1, delta, iMJ_ptr);
+          if (ac_ptr2)
+            sum6(ac_ptr2, delta, iMJ_ptr + 6);
         }
       }
     } // end of for loop on m
-
 
 // do we need to compute norm across entire solution space (0,m)?
 // since local convergence might produce errors in other nodes?
